@@ -1,20 +1,30 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+# 写入 openspec 制品（proposal/design/specs/tasks）时强制注入的项目背景。
+# 与根目录 CLAUDE.md 同源，保证 /opsx:propose、/opsx:apply 链路必定带上项目规范。
+context: |
+  必须完整遵守根目录 CLAUDE.md（项目全局规范）。写任何 proposal / design / specs / tasks 或业务代码前，先对照 CLAUDE.md §1 项目边界、§2 技术栈、§5 架构、§6 开发规范、§7 协作红线自检。
+  各组件 IP/端口/用户名/密码/连接串一律查 docs/test-env.md；后端配置必须三份 application.yml + application-dev.yml + application-test.yml。
+  技术栈：Vue3 + Vue Router + TypeScript + Pinia + Element Plus；Java 21 + Spring Boot + Spring Security + MyBatis-Plus + Spring Cloud Gateway + Nacos；MySQL / Redis；Nginx 接入层。
+  仓库为多系统容器：frontend/<system>/ 与 backend/<system>/ 并列，禁止跨系统嵌套源码。
+  后端 Maven 多模块：{system}-common 必选（零配置纯基础：Result/错误码/异常/分页契约/枚举/工具，禁止 MyBatis-Plus/Redis/Entity）；{system}-framework 必选（需配置组件：MyBatis-Plus/Redis/Swagger/ID与审计/Long序列化）；Entity 只在拥有表的 {domain}-service；跨服务只走 {domain}-api（DTO/VO+Feign），禁止共享 Entity；网关只做边缘治理；业务服务按域拆分，数据自治，Feign 通信。
+  硬契约：接口统一 {code,msg,data}；分页 {records,total,size,current}；错误码 1xxxx/2xxxx/3xxxx；实体审计字段 createTime/updateTime/createBy/updateBy/deleted；主键 Long 14 位序列，禁止自增；Long 出参序列化为 String；入参 Bean Validation。
+  禁止：生产密钥入仓；SELECT *；${} 拼 SQL；Controller 调 Mapper；事务内 Feign；业务模块自建返回体/异常/分页；网关/Nginx 写业务规则；未走 SDD 且无验收标准直接落代码。
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - 必须写清 Non-goals / 项目边界（对齐 CLAUDE.md §1，防功能蔓延）
+    - Impact 不得违反多系统独立边界；跨系统只走显式接口
+    - 不得把服务清单/表结构细节写进 CLAUDE.md，结构写在本变更制品
+  design:
+    - 模块与包结构对齐 CLAUDE.md §5.4–5.6（common=零配置基础，framework=MyBatis-Plus/Redis 等需配置组件，Entity 在拥有表的 domain-service，跨模块只走 domain-api，Controller→Service→Mapper，Entity/DTO/VO/BO 边界）
+    - 接口与数据模型对齐 §6.2、§6.5；鉴权对齐 §5.2 双重鉴权模型
+    - 配置必须三份 application.yml + application-dev.yml + application-test.yml；组件 IP/端口/账密以 docs/test-env.md 为准；密钥分级对齐 §6.7、§6.10
+    - 需要替换技术栈时，先改 CLAUDE.md §2 再写入 design，禁止平行框架
+  tasks:
+    - 任务须可对应 CLAUDE.md §3.2 自检命令（lint / type-check / test / mvn test）
+    - 不得安排「业务模块自建返回体/异常/分页」「MyBatis-Plus/Redis 进 common」「Entity 进 common/framework 或跨服务共享 Entity」「Controller 注入 Mapper」「事务内 Feign」类实现
+    - 含库表变更时，审计字段、主键发号、索引命名对齐 §6.4.5、§6.5
+  specs:
+    - 需求与验收标准必须可测；禁止只写实现步骤当规格
+    - 字段/枚举以后端契约与数据库为准，禁止前端自造枚举值

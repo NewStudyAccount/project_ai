@@ -1,0 +1,7 @@
+{
+  "$schema": "https://mimo.xiaomi.com/mimocode/config.json",
+  // 强制将项目规范注入每次会话上下文（Trae「强制带入」等价能力）
+  "instructions": [
+    "CLAUDE.md"
+  ]
+}

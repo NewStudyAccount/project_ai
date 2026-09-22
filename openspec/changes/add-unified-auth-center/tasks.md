@@ -1,44 +1,46 @@
 # Tasks: add-unified-auth-center
 
-## 1. 工程与数据基础
+## 1. 工程与数据层
 
-- [x] 1.1 创建单体 `backend/auth/auth-service`（可选 `auth-api` 契约 jar；及共享 `*-common`）Maven/Vite 骨架
-- [x] 1.2 迁移 `auth_db`：`sys_sequence`、`sys_user`、`sys_dept`、登录/SSO 日志表
-- [x] 1.3 实现 14 位 ID 发号与审计字段自动填充（MetaObjectHandler / TableLogic）
-- [x] 1.4 测试环境种子管理员与部门（禁止生产账号入仓）
+- [x] 1.1 创建 `backend/auth` Maven 多模块：`auth-common`（Result/错误码/异常/分页契约，禁 MyBatis-Plus/Redis）→ `auth-framework`（MyBatis-Plus/Redis/Swagger/ID 与审计/Long 序列化）→ `auth-service`（可运行，三份 `application*.yml`）
+- [x] 1.2 `auth_db` 迁移脚本（`deploy/db/migration/auth_db/`）：`sys_sequence`、`sys_credential`、`oauth_client`、`auth_session`、`auth_grant`、`auth_refresh_token`、`login_attempt`、`auth_audit_log`；审计字段与 14 位发号对齐 CLAUDE.md §6.4.5/§6.5
+- [x] 1.3 SAS 协议存储表（如 `oauth2_authorization`）迁移；`oauth_client` → `RegisteredClientRepository` 适配
+- [x] 1.4 配置三文件与 Nacos/本地 profile；连接信息与 `docs/test-env.md` 一致；生产密钥不入仓
 
-## 2. 认证核心
+## 2. 用户中心契约与凭证
 
-- [x] 2.1 账密登录：BCrypt、启停校验、失败限流、登录日志
-- [x] 2.2 JWT 签发（Access 30m）与 Refresh（7d，Redis）轮转/吊销
-- [x] 2.3 登出、改密后强制失效 sid + refresh
-- [x] 2.4 SSO 会话 sid（Redis + Cookie）与 `/sso/authorize` 回跳换 JWT
+- [x] 2.1 跨系统契约模块（如 `user-api`）：用户中心 Feign 接口 + Fallback + DTO（by-username / by-id / profile）；禁止 Entity、禁止 RestTemplate
+- [x] 2.2 `sys_credential` 读写：初始化凭证 API（供用户中心建号）、BCrypt/Argon2 校验；事务外调 Feign
+- [x] 2.3 登录解析 `username → user_id + status`，短 TTL 状态缓存；用户中心不可用时 503 语义
 
-## 3. 用户只读 API 与账号安全
+## 3. OIDC 协议内核（SAS）
 
-- [x] 3.1 用户搜索、按 id 批量查询（无凭证字段）
-- [x] 3.2 改密/启用停用等账号安全接口
-- [x] 3.3 Nginx 直反代认证前缀（不经业务网关）
+- [x] 3.1 接入 Spring Authorization Server：`/oauth2/authorize`、`/oauth2/token`、`/oauth2/jwks`、`/oauth2/revoke`、`/oauth2/userinfo`、`/.well-known/openid-configuration`
+- [x] 3.2 自定义 `OAuth2RefreshTokenGenerator`（路线 1：public + authorization_code 发 RT）；强制 PKCE S256；RT 轮转与重用检测吊销全链
+- [x] 3.3 TokenCustomizer：Claims 最小集（`iss,sub,aud,exp,iat,jti,auth_time,preferred_username`），`sub` = 用户中心 `user.id`；userinfo 走用户中心 profile
+- [x] 3.4 `redirect_uri` 精确白名单、`state`/`nonce` 校验；AT 默认 600s、RT 默认 7 天可配
 
-## 3B. 统一认证前端 auth-portal（必需）
+## 4. 登录与 SSO
 
-- [x] 3B.1 搭建 `frontend/auth-portal`：Vue3 + Vite + TypeScript + Element Plus
-- [x] 3B.2 登录页：账密表单、错误提示、失败锁定文案
-- [x] 3B.3 对接 `/auth/login` `/auth/logout` `/auth/refresh`；Access/Refresh 本地策略与 401 引导
-- [x] 3B.4 SSO：携带 `client_id`/`return_url` 登录后走 authorize；处理回跳 `code` 并 `POST /auth/sso/token`
-- [x] 3B.5 构建产物由 Nginx 静态托管（与 `/auth` API 同域或按域名分流）
-- [x] 3B.6 `npm run build` / lint 通过；不在前端存储密码或打印完整 Token
+- [x] 4.1 账密登录流程：formLogin → 用户中心解析 → 本地验 `sys_credential` → 建 `auth_session` → 继续发码
+- [x] 4.2 SSO 会话生命周期（过期/吊销/同域续权）；Cookie 强制 HTTPS、SameSite 按跨站 redirect 配置；令牌仅存哈希
+- [x] 4.3 `login_attempt` 记录与失败限制；防撞库文案；`auth_audit_log` 记录 LOGIN/TOKEN_ISSUE/REFRESH/REVOKE/CLIENT_UPDATE（detail 禁密码/完整 token）
 
-## 4. 子系统接入（首个系统）
+## 5. 客户端运营与踢下线
 
-- [x] 4.1 common 内 JWT 验签 starter（iss/JWK 统一配置）
-- [x] 4.2 `{system}-gateway` 验 JWT 并透传 uid
-- [x] 4.3 业务库 RBAC 表：`sys_role`/`sys_permission`/`sys_user_role`/`sys_role_permission`/`sys_user_ref`
-- [x] 4.4 赋权/成员列表 + 登录 upsert / batch 补洞投影同步
-- [x] 4.5 服务方法级鉴权（permission_code）与菜单按钮查询
+- [x] 5.1 Client CRUD / 启停 / 重置密钥（secret 仅创建/重置明文一次，库内存哈希）管理 API（`{code,msg,data}` + 分页）
+- [x] 5.2 `auth_grant` + `auth_refresh_token` 台账；按用户/客户端踢下线（先 SAS 失效再更新台账）
+- [x] 5.3 登录审计与安全审计分页查询 API（按时间/用户/IP/`client_id`/action 筛选）
 
-## 5. 验证与收尾
+## 6. 前端
 
-- [ ] 5.1 SSO 跨两入口免密、停用即失效、投影失败不影响赋权（含 auth-portal 页面路径）
-- [x] 5.2 核心 Service 单测与 MockMvc；前端 build/lint；lint/type-check/mvn test
-- [x] 5.3 确认生产密钥不入库、auth 单体不经业务网关、业务不直读 auth 库、未引入外购 IdP/认证微服务拆分
+- [x] 6.1 `frontend/auth-portal`：Vue3 + TS + Pinia + Element Plus 登录页（账密、失败/锁定提示；无注册/找回）；对接 SAS 登录流程
+- [x] 6.2 `frontend/auth-admin` 骨架：**独立 public + PKCE（S256）OIDC Client** 登录（路线 1，AT/RT）；路由 meta `title/icon/hidden/requiresAuth`；axios 解包 `{code,msg,data}`，`id` 为 string
+- [x] 6.3 auth-admin 页面：客户端列表/详情编辑、新建/重置密钥、令牌与会话（踢下线）、登录/安全审计查询
+- [x] 6.4 前端自检：`npm run lint && npm run type-check && npm run test`
+
+## 7. 安全与验证
+
+- [x] 7.1 后端单测：PKCE 失败、code 重放、RT 重用吊销、凭证校验、redirect_uri 白名单；`mvn test`
+- [x] 7.2 确认无生产密钥入仓、无密码/完整 token 进日志、Entity 仅在 `auth-service`、无 Controller→Mapper、无事务内 Feign
+- [ ] 7.3 集成冒烟：SPA 授权码换票 → RS 验 JWT → 刷新轮转 → 踢下线后刷新失败；连接信息见 `docs/test-env.md`

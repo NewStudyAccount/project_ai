@@ -1,0 +1,24 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: blog-gateway
+
+blog:
+  auth:
+    issuer: auth-service
+    jwt-secret: ${AUTH_JWT_SECRET:change-me-local-dev-secret-not-for-prod}
+    public-prefixes: /api/v1/public/,/actuator/
+  content:
+    base-url: ${BLOG_CONTENT_BASE_URL:http://127.0.0.1:8084}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+logging:
+  level:
+    com.example.blog: info

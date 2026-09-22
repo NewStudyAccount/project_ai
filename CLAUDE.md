@@ -29,7 +29,7 @@
 - 项目边界（明确不做，防功能蔓延）：
   - 不做 C 端独立 App / 小程序原生壳（若需要，另开变更）
   - 不把本仓库做成无关工具集合或一次性脚本堆场
-  - 不在仓库内存放**生产**密钥/密码/Token、真实生产数据；测试/开发/本地环境账号密码可写入仓库文档（见 6.7）
+  - 不在仓库内存放**生产**密钥/密码/Token、真实生产数据；测试/开发环境账号密码可写入仓库文档（见 6.7 与 `docs/test-env.md`）
   - 未走 SDD（第 8 节）且未写清验收标准的功能，不直接落代码
   - 不引入与第 2 节技术栈冲突的平行框架（如再叠一套 UI 库、ORM、网关）
   - 空项目阶段不预先锁死服务拆分与库表清单；拆分随变更提案确定
@@ -49,6 +49,45 @@
 
 禁止引入与上表冲突的平行框架。确需替换技术栈时，先改本节并走变更流程。
 
+### 2.1 系统基础依赖
+
+各后端系统**统一**使用下列基础库，禁止同类平行选型（如再引入 Hibernate/JPA、Jedis、
+另一套锁客户端、另一套对象映射）。具体坐标与版本以各系统父 `pom.xml` 的
+`dependencyManagement` 为准，**不在本文件粘贴版本号**；升级先评估兼容性并走变更流程。
+
+| 依赖 | 用途 | 落点 | 约定 |
+|------|------|------|------|
+| **MyBatis-Plus** | ORM、通用 Mapper、分页、逻辑删除、自动填充 | `{system}-framework` 装配；Entity/Mapper 在 `{domain}-service` | 业务模块禁止自建 `SqlSessionFactory` / 分页插件 / `MetaObjectHandler`；一律用 framework 统一装配 |
+| **Redis（Spring Data Redis + Redisson）** | 缓存、会话、分布式锁、限流计数 | `{system}-framework`（连接与序列化）；业务按需注入 | 缓存 key 见 6.9；分布式锁用 Redisson；禁止业务模块自建 RedisTemplate / RedissonClient |
+| **Lombok** | `@Data` / `@Builder` / `@Slf4j` 等样板消除 | 编译期，全模块可用 | 仅用于样板；Entity 关键字段仍可读性优先；CI 需开启注解处理 |
+| **Spring Boot Actuator** | 健康检查、指标、存活探针 | 可运行模块（`*-service` / `*-gateway`） | 每个服务必须暴露 `/actuator/health`；生产仅开放必要端点 |
+| **MapStruct** | Entity ↔ DTO/VO 对象映射 | 编译期，业务模块使用 | Entity 出参禁止手写逐字段拷贝；映射接口放 `mapper` 或 `converter` 包；禁止用 BeanUtils 反射拷贝做主路径 |
+| **SpringDoc OpenAPI** | 接口文档（`@Operation` / `@Schema`） | `{system}-framework` 统一配置；业务只写注解 | 禁止各模块另起 Swagger 配置类 |
+| **Bean Validation** | 入参校验（`@Valid` 等） | 全模块；契约见 6.4.4 | 校验失败走全局异常处理 |
+| **Jackson** | JSON 序列化；Long→String 全局策略 | `{system}-framework` 统一 `ObjectMapper` | 禁止字段上散落 `@JsonSerialize`（见 6.4.7） |
+| **SLF4J + Logback** | 日志门面与实现 | 全模块 | 业务用 `@Slf4j` / 注入 Logger；禁止 `System.out` / `printStackTrace` |
+| **Micrometer Tracing**（Brave / OpenTelemetry 桥） | 分布式链路（TraceId / SpanId） | `{system}-framework` 传播与采样；可运行模块上报 | 禁止 Sleuth；业务禁止手写透传头；规范见 6.11.1 |
+
+**落点原则（与 5.4 / 6.4 一致）：**
+
+- 需要连接中间件或额外配置才能工作的依赖（MyBatis-Plus、Redis/Redisson、Swagger、Jackson 装配）
+  **只**在 `{system}-framework` 封装一次；业务模块依赖 framework 后直接用，禁止重复装配。
+- 纯编译期 / 零配置工具（Lombok、MapStruct）可随模块引入，不算「需配置组件」。
+- Actuator 随可运行模块引入；`common` / `framework` 不自带健康检查实现。
+- `common` **禁止**依赖 MyBatis-Plus、Redis/Redisson、数据源、Actuator。
+
+**常见反模式：**
+
+| 反模式 | 正确做法 |
+|--------|----------|
+| 业务模块再引 JPA / MyBatis（非 Plus）/ Jedis | 统一 MyBatis-Plus + Redisson |
+| 各服务各写一套 RedisTemplate / Redisson 配置 | framework 统一装配，业务只注入使用 |
+| Entity→VO 用 `BeanUtils.copyProperties` 做主路径 | MapStruct 或集中转换层 |
+| 去掉 Actuator 或不暴露 health | 可运行模块必须暴露 `/actuator/health` |
+| 日志无 TraceId / 手工拼 Header 透传 | MDC + Micrometer Tracing（见 6.11.1） |
+| 引入 Sleuth 等 Boot2 旧追踪 | 统一 Micrometer Tracing（Boot3） |
+| 在本文件或代码注释锁死基础库版本号 | 版本在父 POM `dependencyManagement` 维护 |
+
 ---
 
 ## 3. 环境配置与启动
@@ -58,7 +97,7 @@
 | 工具 | 版本要求 | 说明 |
 |------|---------|------|
 | JDK | 21+ | 后端运行环境 |
-| Node.js | 18+ | 前端运行环境 |
+| Node.js | 24+ | 前端运行环境（统一用 24） |
 | npm | 9+ | 前端包管理 |
 | Nginx | 1.20+ | 接入层（静态、反向代理、TLS） |
 | MySQL | 8.0+ | 数据库 |
@@ -71,9 +110,6 @@
 > 脚手架落地后必须以真实 `package.json` scripts / Maven 模块为准跑通，再允许提交业务代码。
 
 ```bash
-# 基础设施（按需：Nginx / MySQL / Redis / Nacos）
-docker-compose up -d nginx mysql redis nacos
-
 # 后端：在某一系统的 backend 目录下，用 -pl 启动具体模块
 cd backend/<system> && mvn clean install -DskipTests
 cd backend/<system> && mvn spring-boot:run -pl <module>
@@ -90,15 +126,17 @@ cd backend/<system> && mvn test
 ```
 
 - 缺 lint / type-check / test 命令时，先在脚手架变更中补上，不得用“跳过检查”换提交速度。
-- 端口、网关前缀、环境差异以 Nacos 与 `application-{profile}.yml` 为准，本文件不写死。
+- **各组件接入信息（IP、端口、用户名、密码、连接串、Bucket/库名等）一律查 `docs/test-env.md`**，本文件不写死具体值。
+- 端口、网关前缀、环境差异以 `docs/test-env.md` 与后端 `application.yml` / `application-dev.yml` / `application-test.yml` 为准；生产敏感项以 Nacos / 密钥管理为准。
 
 ### 3.3 环境变量管理
 
 - 环境变量统一通过 `.env` 管理，禁止把配置散落硬编码在业务逻辑中。
 - **密钥分级入仓（必须遵守）：**
   - **禁止入仓**：生产（`prod`）密码、私钥、Token、生产连接串 → 只放 Nacos/密钥管理/Jenkins Credentials。
-  - **允许入仓**：本地（`local`）、开发、测试（`test`）环境的账号密码，可写入 `docs/test-env.md`、`application-local.yml` / `application-test.yml` 等文档与配置。
+  - **允许入仓**：开发（`dev`）、测试（`test`）环境的账号密码，可写入 `docs/test-env.md`、`application-dev.yml` / `application-test.yml` 等文档与配置。
   - 仍建议测试环境只推公司内网仓库，不同步到公开仓库。
+- **查各组件配置（MySQL 等的 IP、端口、用户名、密码）时，直接打开 `docs/test-env.md`**，不要在本文件或对话里猜。
 - `.env`：本地私密可选（gitignore）；测试/开发密码优先写入上款允许的文档或测试配置，不必强依赖 `.env`。
 - 敏感配置优先走 Nacos；**生产必须走配置中心或密钥管理，禁止明文进仓库。**
 - 环境变量命名：`SERVICE_NAME_ENV_KEY` 大写下划线格式。
@@ -119,10 +157,12 @@ cd backend/<system> && mvn test
 ├── backend/                     # 多系统后端容器
 │   └── <system>/                # 一个独立后端系统（Maven 多模块）
 │       ├── pom.xml              # 父 POM（聚合模块、锁依赖版本）
-│       ├── <system>-common/     # 必选：基础 common 模块（见 5.3）
+│       ├── <system>-common/     # 必选：纯基础（见 5.4；不含需额外配置的组件）
+│       ├── <system>-framework/  # 必选：基础设施（MyBatis-Plus/Redis 等，见 5.4）
 │       ├── <system>-gateway/    # 建议有：该系统网关（仅边缘治理，见 5.2）
-│       └── <system>-…-service/  # 业务模块（按域拆分，随变更增加）
-├── docs/                        # 流程指导 + 环境信息（测试/开发/本地密码可写；生产密钥禁止）
+│       ├── <system>-{domain}-api/   # 按需：对外 DTO/VO+Feign 契约（无 Entity，见 5.6.1）
+│       └── <system>-…-service/  # 业务模块（自带本域 Entity；按域拆分，随变更增加）
+├── docs/                        # 流程指导 + 环境信息（test-env.md 为组件 IP/端口/账密真相源；生产密钥禁止）
 ├── deploy/                      # 部署配置（如 nginx.conf、compose、Jenkins 共享脚本；按系统可再分）
 ├── openspec/                    # SDD 制品（勿改定义，见第 8 节）
 ├── .claude/                     # Claude Code 命令与技能
@@ -135,7 +175,7 @@ cd backend/<system> && mvn test
 - 新增系统 = 新增 `frontend/<system>/` 与（如需后端）`backend/<system>/`，彼此不共享源码目录；
   跨系统复用只允许通过接口，或极薄的、已在变更中说明的基础库，禁止直接 `import` 另一系统业务代码。
 - 系统名用小写连字符，一经确定不随意改名；新建/删除顶层或系统级目录时同步更新本节。
-- **脚手架落地顺序（每个系统内）：** `common`（返回体/错误码/异常/审计与 ID/分页/Swagger 等）→
+- **脚手架落地顺序（每个系统内）：** `common`（纯基础契约）→ `framework`（MyBatis-Plus/Redis 等需配置组件）→
   网关与认证 → 前端壳（布局/路由/axios/Pinia）→ 再按 openspec 变更扩业务。
 
 ---
@@ -163,7 +203,7 @@ cd backend/<system> && mvn test
                                                       ┌──────────▼───────────┐
                                                       │  业务服务集群         │
                                                       │  按业务域微服务拆分    │
-                                                      │  共同依赖 common      │
+                                                      │  依赖 framework+common│
                                                       └──────────┬───────────┘
                                                                  │
                                               ┌──────────────────┼──────────────────┐
@@ -178,7 +218,7 @@ cd backend/<system> && mvn test
 - 禁止把 A 系统的页面/服务/库表嵌进 B 系统；跨系统只走显式接口（且须走变更）。
 - 服务按业务域拆分：单一职责、高内聚、低耦合、独立部署、数据自治。
 - 服务命名：`{domain}-service`；**具体服务列表随变更确定，不在此预定。**
-- 服务间只通过 API（Feign）通信，禁止跨服务直接读对方数据库。
+- 服务间只通过 API（Feign）通信，禁止跨服务直接读对方数据库；禁止跨服务共享 Entity（见 5.6.1）。
 - 跨服务一致性优先最终一致（消息/补偿），禁止随意引入强一致分布式事务。
 
 ### 5.2 接入层 Nginx 与网关职责边界
@@ -218,6 +258,7 @@ cd backend/<system> && mvn test
 浏览器/客户端
   → Nginx：TLS、静态资源、反代 /api → 网关、写接入访问日志
   → 网关：认证、限流、写应用访问日志、注入/透传 TraceId 与用户身份
+  → 业务服务：MDC 输出 traceId（见 6.11.1），日志/链路同一关联
   → 业务服务 Controller：参数校验（DTO + Bean Validation）
   → Service：业务规则、事务边界、细粒度鉴权
   → Mapper/DB 或 Feign 下游（Feign 必须在事务外）
@@ -230,31 +271,55 @@ cd backend/<system> && mvn test
 
 ### 5.4 系统内部模块关系（后端）
 
+**模块分层原则：**
+- **`common` 只放「零额外配置」的纯基础**（类型/契约/工具/注解）。
+- **凡是需要额外配置文件或中间件连接才能工作的一律放 `framework`**（如 MyBatis-Plus、Redis、Swagger、ID 发号、审计填充）。
+- `common` **禁止**依赖 MyBatis-Plus、Redis、数据源等；`framework` 可依赖 `common`。
+- **实体（Entity）只属于拥有该表的 `{domain}-service`**；跨服务共享只走 `{domain}-api`（DTO/VO + Feign），**禁止**共享 Entity。
+
 ```
         ┌──────────────────────────────────────────┐
         │              {system}-common              │
-        │  Result/错误码/全局异常/分页/ID与审计/       │
-        │  Long序列化/通用配置/Swagger/工具与注解      │
+        │  Result/错误码/异常类型/分页契约/通用枚举/  │
+        │  常量/工具/注解（零额外配置，禁止 ORM/Redis）│
+        └───────────────────┬──────────────────────┘
+                            │ 被依赖（编译期）
+        ┌───────────────────▼──────────────────────┐
+        │            {system}-framework             │
+        │  MyBatis-Plus/Redis/Swagger/ID与审计/     │
+        │  Long序列化/通用配置绑定（需配置文件）      │
         └───────────────────┬──────────────────────┘
                             │ 被依赖（编译期）
         ┌───────────────────┼──────────────────────┐
         │                   │                      │
         ▼                   ▼                      ▼
  {system}-gateway    {domain}-service        {domain}-service
- （边缘治理）         （业务A）                （业务B）
-                          │                      │
-                          └──────── Feign ───────┘
-                          （禁止互读数据库）
+ （边缘治理）         （业务A，自带 Entity）    （业务B，自带 Entity）
+ （可仅依赖 common）  （依赖 framework）        （依赖 framework）
+        │                   │                      │
+        │                   ▼                      │
+        │            {domain}-api                  │
+        │         （DTO/VO + Feign 接口）           │
+        │                   ▲                      │
+        │                   └────── Feign 调用 ─────┘
+        │                  （禁止互读数据库/共享 Entity）
+        │
+        └── 可选：{domain}-dao / {domain}-entity
+            （仅同库同限界多模块共享表映射；依赖 framework）
 ```
 
 | 模块 | 必选 | 职责 |
 |------|------|------|
-| `{system}-common` | **必须** | 与业务无关的基础能力（上图）；业务规则禁止下沉 |
-| `{system}-gateway` | 建议有 | 仅 5.2 边缘治理；可与网关产品/独立部署形态替换，职责边界不变 |
-| `{system}-{domain}-service` | 按需 | 领域服务；自建返回体/异常/分页等基础能力视为违规 |
+| `{system}-common` | **必须** | 零配置纯基础：返回体、错误码、异常类型、分页契约、通用枚举/常量/工具/注解；**不含** MyBatis-Plus、Redis、数据源、实体等需配置组件 |
+| `{system}-framework` | **必须** | 基础设施封装：MyBatis-Plus、Redis、Swagger/OpenAPI、ID 发号与审计填充、Long 序列化、`@ConfigurationProperties` 通用配置；承载 6.4 中「需配置」的实现 |
+| `{system}-gateway` | 建议有 | 仅 5.2 边缘治理；可与网关产品/独立部署形态替换，职责边界不变；一般只依赖 `common` |
+| `{system}-{domain}-service` | 按需 | 领域服务；**本域 Entity/Mapper 只在这里**；依赖 `framework`；自建返回体/异常/分页/ORM 配置视为违规 |
+| `{system}-{domain}-api` | 按需 | 对外契约模块：DTO/VO、Feign 接口与 Fallback；**无 Entity、无 Mapper、无业务实现**；供其他服务依赖 |
+| `{system}-{domain}-dao`（可选） | 极少 | 仅当**同一库、同一限界上下文**被多个 Maven 模块共用表映射时再抽；依赖 `framework`（MP 注解）；禁止跨系统引用 |
 
-**common 边界：** 只放可复用基础；变更影响所有业务模块，须走变更流程。
-业务模块内包结构、Entity/DTO/VO/BO、调用链与 Feign 规则见 **5.5**。
+**common 边界：** 只放可复用、打开即用的纯逻辑/类型；禁止引入需要 `application*.yml` 才能启动的组件。
+**framework 边界：** 只放与业务无关的中间件/ORM/通用配置封装；业务规则禁止下沉；变更影响所有业务模块，须走变更流程。
+**实体归属与跨模块依赖：** 见 **5.6**。
 
 ### 5.5 前端结构约定
 
@@ -283,19 +348,35 @@ src/
 | 路由 meta | 含 `title` / `icon` / `hidden` / `requiresAuth`；name 用 PascalCase |
 | 权限 | 与后端权限标识一致，禁止在前端硬编码角色 |
 
-### 5.6 后端模块与包结构（多模块，common 必选）
+### 5.6 后端模块与包结构（多模块，common + framework 必选）
 
 每个 `backend/<system>/` 为 **Maven 多模块**工程，模块划分与依赖关系见 **5.4**。
 
-业务模块内包结构：
+#### 5.6.1 实体（Entity）归属
+
+| 场景 | 实体放哪 | 模块间怎么依赖 |
+|------|----------|----------------|
+| **默认（推荐）** | `{domain}-service` 内 `entity/`（或 `mapper/entity`） | 其他服务只依赖该域 `{domain}-api`（DTO/VO + Feign），**禁止**依赖 Entity |
+| 同库、同一限界上下文、多个 Maven 模块共用表 | 可选抽 `{domain}-dao` / `{domain}-entity` | 仅限本限界内模块引用；`dao` 依赖 `framework`（MP 注解） |
+| 跨服务只读展示对方数据 | **不共享 Entity** | 投影表 / 事件同步（如 `sys_user_ref`），或 Feign 查 DTO |
+
+**硬规则：**
+- Entity **只属于拥有该表的服务/限界**；随库表可独立演进，不对外作契约。
+- **禁止**把 Entity 放进 `common`（违反零配置）或 `framework`（禁止业务表模型下沉）。
+- **禁止**跨服务 import 对方 Entity / Mapper；需要对方数据时走 Feign + `{domain}-api` DTO，或本域投影。
+- `{domain}-api`：只含 DTO/VO、Feign 接口、Fallback、常量；**无** Entity、Mapper、Service 实现。
+- 只读展示偏好「薄投影」而非共享实体，避免分布式单体。
+
+#### 5.6.2 业务模块内包结构
 
 ```
 src/main/java/com.example.{system}.{module}/
 ├── controller/   # 接口层（dto 入参 / vo 出参）
 ├── service/      # 业务层（impl 实现 / bo 业务对象）
-├── mapper/       # 数据访问（entity 实体）
-├── feign/        # 对其他服务的 Feign 客户端
-├── config/       # 模块自有配置（通用配置放 common）
+├── mapper/       # 数据访问
+├── entity/       # 本域表映射实体（仅本服务/本限界，禁止外泄）
+├── feign/        # 对其他服务的 Feign 客户端（接口与 Fallback 优先来自 {domain}-api）
+├── config/       # 模块自有业务配置（ORM/Redis 等通用配置在 framework）
 ├── constants/    # 常量（禁用 constant 单数；通用常量放 common）
 ├── enums/        # 枚举（业务枚举在本模块；通用状态等在 common）
 └── util/         # 工具（通用工具放 common）
@@ -304,19 +385,19 @@ src/main/java/com.example.{system}.{module}/
 调用链：`Controller → Service → Mapper`；Service 之间可互调。
 **禁止** Controller 直接调 Mapper。
 
-| 对象 | 职责 | 边界 |
-|------|------|------|
-| `Entity` | 表映射，只含持久化字段 | 禁止暴露给 Controller / 前端 |
-| `DTO` | 接口入参 | 负责校验 |
-| `VO` | 接口出参 | 按页面需要组装 |
-| `BO` | Service 内部业务对象 | 不对外 |
+| 对象 | 职责 | 落点与边界 |
+|------|------|------------|
+| `Entity` | 表映射，只含持久化字段 | **拥有表的** `{domain}-service`（或同限界 `{domain}-dao`）；禁止暴露给 Controller / 前端 / 其他服务 |
+| `DTO` | 接口入参 | 本服务 controller/dto；跨服务契约放 `{domain}-api` |
+| `VO` | 接口出参 | 本服务 vo；跨服务契约放 `{domain}-api` |
+| `BO` | Service 内部业务对象 | 不对外；不进 `{domain}-api` |
 
 - 禁止 `Entity` 直接作接口入参/出参；转换用 MapStruct 或集中转换层，禁止在 Controller 手写逐字段赋值。
 - Service 接口 + 实现分离（`XxxService` + `XxxServiceImpl`）；业务规则只在 Service。
 - Mapper 只做数据访问。
 
-**Feign：** 统一 Feign，禁止 RestTemplate / 手写 HTTP 调其他服务；客户端放 `feign/`；
-必须有 Fallback；建议连接超时 3s、读取超时 10s。
+**Feign：** 统一 Feign，禁止 RestTemplate / 手写 HTTP 调其他服务；客户端放 `feign/`，
+接口与 Fallback 优先定义在 `{domain}-api`；必须有 Fallback；建议连接超时 3s、读取超时 10s。
 
 ---
 
@@ -349,7 +430,7 @@ src/main/java/com.example.{system}.{module}/
 
 - [ ] 编译通过，lint / type-check / 测试通过
 - [ ] 无 `console.log` / `System.out.println` 调试残留
-- [ ] 无**生产**密钥、密码、Token 泄露；测试/开发/本地密码仅出现在允许的环境文档中
+- [ ] 无**生产**密钥、密码、Token 泄露；测试/开发密码仅出现在允许的环境文档中
 - [ ] 符合本文件规范
 
 示例：
@@ -358,15 +439,22 @@ src/main/java/com.example.{system}.{module}/
 - 好：`fix(order): 修复订单状态未回滚问题`
 - 坏：`update` / `修改了一些东西` / `feat: add user, order, fix bug and docs`
 
-### 6.4 基础代码契约（落在 `{system}-common`）
+### 6.4 基础代码契约（common 管契约，framework 管需配置实现）
 
-> 本节约定「必须长成什么样」，不附完整实现。各系统脚手架时**第一批**落入 common 模块；
-> 业务模块直接复用，禁止各写一套。实现必须符合下列契约。
+> 本节约定「必须长成什么样」，不附完整实现。各系统脚手架时**第一批**落入 `common` / `framework`；
+> 业务模块直接复用，禁止各写一套。
+>
+> **落点规则：**
+> - **纯契约/类型/工具**（返回体结构、错误码、异常类型、分页字段契约）→ `{system}-common`
+> - **需要额外配置文件或中间件才能工作**（MyBatis-Plus、`MetaObjectHandler`、`@TableLogic` 装配、
+>   分页拦截器、Redis、Swagger 配置、ID 发号、Long 序列化 `ObjectMapper`）→ `{system}-framework`
+> - `common` 禁止依赖 MyBatis-Plus / Redis / 数据源；需要这些才能编译或启动的代码不得放进 `common`。
 
 #### 6.4.1 统一返回体
 
-- 所有接口统一 `{ code, msg, data }`。
-- 分页统一 `{ records, total, size, current }`（MyBatis-Plus `Page`），禁止自造分页结构。
+- 所有接口统一 `{ code, msg, data }`（结构在 `common`）。
+- 分页统一 `{ records, total, size, current }`，禁止自造分页结构（字段契约在 `common`；
+  与 MyBatis-Plus `Page` 的互转/拦截器在 `framework`）。
 - 前端 axios 拦截器统一解包，业务代码禁止逐处判断返回结构。
 
 #### 6.4.2 错误码
@@ -381,7 +469,7 @@ src/main/java/com.example.{system}.{module}/
 
 #### 6.4.3 全局异常处理
 
-- 后端 `@RestControllerAdvice` 分类处理业务 / 校验 / 系统异常。
+- 后端 `@RestControllerAdvice` 分类处理业务 / 校验 / 系统异常（异常类型在 `common`，装配可随业务模块或 `framework`）。
 - 禁止吞异常；禁止把堆栈或内部细节返回前端；系统异常返回友好提示并记日志。
 - 前端拦截器按 `code` 分流（登录失效、业务提示、通用错误）。
 
@@ -402,10 +490,9 @@ src/main/java/com.example.{system}.{module}/
 | `updateBy` | `Long` | 更新人 |
 | `deleted` | `Integer` | 逻辑删除（0 未删 / 1 已删） |
 
-- 逻辑删除用 `@TableLogic`，禁止手写 `deleted = 0`。
-- 审计字段用 `MetaObjectHandler` 自动填充，禁止业务代码手写赋值。
+- 字段清单属于契约；逻辑删除 `@TableLogic`、审计 `MetaObjectHandler` 自动填充等 **MyBatis-Plus 装配在 `framework`**，禁止业务代码手写 `deleted = 0` / 手写赋值审计字段。
 - 主键 `id`：`Long` / `BIGINT`；策略 **yyMMdd(6) + 序列号(8) = 14 位**（如 `26092100000001`）；
-  序列号由序列表按日递增；禁止数据库自增。
+  序列号由序列表按日递增；禁止数据库自增。发号实现（依赖 DB）在 `framework`。
 
 #### 6.4.6 分页入参
 
@@ -419,7 +506,7 @@ src/main/java/com.example.{system}.{module}/
 #### 6.4.7 Long 序列化
 
 - 出参中 `Long`（含 `id`）一律序列化为 `String`（防 JS 精度丢失）。
-- 后端：全局 `ObjectMapper` 统一处理，禁止字段上散落 `@JsonSerialize`。
+- 后端：全局 `ObjectMapper` 统一处理（配置在 `{system}-framework`），禁止字段上散落 `@JsonSerialize`。
 - 前端：对应字段类型为 `string`，禁止 `number`。
 - 入参：前端传字符串，后端用转换器或 `@JsonProperty` 接收。
 
@@ -446,7 +533,7 @@ src/main/java/com.example.{system}.{module}/
 - 密码 BCrypt/Argon2 单向存储；手机号/身份证等日志与出参脱敏。
 - **密钥入仓分级：**
   - **生产**密码、私钥、Token、连接串：**禁止**写入仓库任何文件（含文档、配置、Jenkinsfile）；只进 Nacos/密钥管理/Jenkins Credentials。
-  - **测试 / 开发 / 本地**账号密码：**允许**写入仓库文档与配置（如 `docs/test-env.md`、`application-test.yml`、`application-local.yml`），便于联调；须标注环境，禁止与生产混用同一账号。
+  - **测试 / 开发**账号密码：**允许**写入仓库文档与配置（如 `docs/test-env.md`、`application-test.yml`、`application-dev.yml`），便于联调；须标注环境，禁止与生产混用同一账号。
   - 生产密钥误入仓：立即改密、清理历史（需征询），并记为严重问题。
 - Token 用 JWT：Access 30 分钟，Refresh 7 天；网关与业务服务双重鉴权。
 - 登录失败限制；敏感接口（改密、支付等）二次验证；关键接口限流；CORS 仅信任域名。
@@ -454,7 +541,7 @@ src/main/java/com.example.{system}.{module}/
 ### 6.8 API 文档
 
 - 接口用 Swagger/OpenAPI 注解（`@Operation` / `@Parameter` / `@Schema`）。
-- OpenAPI/Swagger 通用配置在 `{system}-common`，业务模块只写注解，禁止各起一套文档配置。
+- OpenAPI/Swagger 通用配置在 `{system}-framework`（需配置类），业务模块只写注解，禁止各起一套文档配置。
 - 文档随代码更新，禁止另手维护一份接口文档文件。
 
 ### 6.9 性能规范
@@ -466,33 +553,59 @@ src/main/java/com.example.{system}.{module}/
 
 ### 6.10 配置规范（必须区分环境）
 
-每个后端可运行模块的配置**至少**按环境拆分：
+每个后端**可运行**模块（`*-service`、`*-gateway` 等）的配置**必须且仅有**下列三份（缺一不可；禁止只维护单一 `application.yml`）。
+`common` / `framework` 为库模块，**不**自带 `application*.yml`，所需连接配置由可运行模块注入。
 
 | 文件 | profile | 用途 |
 |------|---------|------|
-| `application.yml` | 公共 | 各环境相同项：应用名、`server`/`spring`/`mybatis-plus`/`logging` 分组等 |
-| `application-local.yml` | `local` | **本地开发**：本机中间件、调试日志；**允许**含本地/开发账号密码 |
+| `application.yml` | 公共 | 各环境相同项：应用名、`server`/`spring`/`mybatis-plus`/`logging` 分组等；**不含**具体主机/账号密码 |
+| `application-dev.yml` | `dev` | **开发环境**：本机/开发中间件、调试日志；**允许**含开发账号密码 |
 | `application-test.yml` | `test` | **测试环境**：测试中间件与测试库；**允许**含测试账号密码 |
-| `application-prod.yml` | `prod` | 生产（如需）：**禁止**任何密码/密钥；只留非敏感结构，密钥走 Nacos/密钥管理 |
 
-- 本地开发默认激活 `local`（`spring.profiles.active: local`）；联调/部署切 `test` / `prod`。
+- **组件连接信息真相源**：MySQL / Redis / Nacos / MinIO 等的 IP、端口、用户名、密码、库名/Bucket，以 **`docs/test-env.md`** 为准；`application-dev.yml` / `application-test.yml` 中的值必须与之一致，不得另写一套。
+- 本地开发默认激活 `dev`（`spring.profiles.active: dev`）；联调/部署切 `test`。
 - 配置项 `kebab-case`；用 `@ConfigurationProperties` 绑定，禁止散落 `@Value`。
-- 禁止把**生产**连接串、密钥写进任何配置或文档并提交到 Git。
-- 测试/开发/本地密码可按 6.7 分级入仓；`.env` 仅作本机可选补充。
-- 敏感项生产必须走 Nacos 或密钥管理；测试/开发/本地见 3.3 与 6.7。
-- 重大配置变更先在 `test` 验证，再动 `prod`。
+- 禁止把**生产**连接串、密钥写进任何配置或文档并提交到 Git；生产敏感项只走 Nacos/密钥管理。
+- 测试/开发密码可按 6.7 分级入仓；`.env` 仅作本机可选补充。
+- 重大配置变更先在 `test` 验证，再影响生产环境。
 - CI/CD 由 Jenkins 按环境发布；新建/修改流水线按 `docs/jenkins-pipeline-guide.md` 执行；Jenkinsfile **禁止**写生产密钥（用 Credentials）。
-- 测试/开发环境主机与账号密码见 `docs/test-env.md`（**允许**含测试/开发/本地密码）；生产密钥另册且不进本仓库。
+- 测试/开发环境主机与账号密码见 `docs/test-env.md`；生产密钥另册且不进本仓库。
 
 ### 6.11 依赖与工程
 
 - 锁定 `package-lock.json` / `pom.xml` 版本；升级先评估兼容性。
 - 定期 `npm audit` / `mvn dependency-check`，高危必修。
-- 每个服务暴露 `/actuator/health`；指标用 Micrometer；关键指标告警；
-  链路追踪：Sleuth + Zipkin。
+- 每个服务暴露 `/actuator/health`；指标用 Micrometer；关键指标告警。
+- 链路追踪与日志规范见 **6.11.1**（Micrometer Tracing；**禁止 Sleuth**）。
 - 上传：单文件 ≤ 10MB，批量 ≤ 50MB；类型白名单；OSS/MinIO；UUID 命名；逻辑删除 + 定时清理。
 - 写操作幂等（请求 ID 或业务唯一键）；关键接口带 `Idempotent-Key`。
 - 重试：指数退避最多 3 次（1s/2s/4s）；超时与 5xx 可重试，4xx 不重试；重试打日志。
+
+### 6.11.1 日志与追踪
+
+**选型：** SLF4J + Logback 记日志；**Micrometer Tracing**（Spring Boot 3）做链路；
+**禁止 Sleuth**（已停更）。TraceId / SpanId 写入 **MDC**，由日志模式输出；
+`traceparent` / B3 等传播头由 `{system}-framework` 统一配置，Feign / Gateway / 线程池 **自动透传**，
+网关注入 TraceId（见 5.2），**禁止**业务代码手工拼接 Header 或自建追踪上下文。
+
+**建议日志模式（须含 traceId）：**
+
+```text
+%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%X{spanId:-}] %logger{40} - %msg%n
+```
+
+| 约定 | 要求 |
+|------|------|
+| TraceId | 每条应用日志必须可关联 `traceId`；缺失时查 Logback 模式与 tracing 装配 |
+| 级别 | `error` 仅故障/需告警；业务失败 `warn`；关键路径 `info`；排查 `debug`；禁止滥用 error |
+| 敏感信息 | 禁止打印密码、完整 Token、身份证/银行卡；手机号脱敏；禁止整包参数对象进 SQL 日志 |
+| 调试残留 | 提交前无 `System.out` / `printStackTrace` / 临时刷屏日志 |
+| 文件与保留 | 走 Logback 按天滚动 + 保留策略；禁止业务旁路写独立日志文件 |
+| 跨线程 / MQ | 透传或记录 traceId，保证异步链路可关联 |
+| 检索 | 测试/生产按 `traceId` 从日志平台捞全链路，并与 Zipkin/OTLP span 对照 |
+
+**可观测性分工：** 健康看 `/actuator/health`；指标看 Micrometer（6.11）；排查看本节日志 + 链路。
+TraceId 贯穿 Nginx 访问日志（可选）、网关、业务服务；异常处理（6.4.3）打日志时一并带出 traceId。
 
 ### 6.12 测试规范
 
@@ -521,7 +634,7 @@ src/main/java/com.example.{system}.{module}/
 2. 不擅自修改 `openspec/` 制品定义（proposal / specs / design）；`tasks` 只允许勾选状态位。
 3. 不添加未被要求的功能、抽象或重构。
 4. 复用接口/枚举/字段前，先确认真实契约，不凭推导实现。
-5. 不把**生产**密钥、Token、生产连接串写入任何将提交的文件；测试/开发/本地密码仅可按 6.7 写入环境文档。
+5. 不把**生产**密钥、Token、生产连接串写入任何将提交的文件；测试/开发密码仅可按 6.7 写入环境文档。
 6. 文档与代码不一致时：以代码与契约为准改文档，或停下来指出冲突，禁止两边将就。
 7. 不在本文件写入服务清单、库表明细、完整实现代码或短期任务。
 
@@ -536,13 +649,16 @@ src/main/java/com.example.{system}.{module}/
 | 吞异常 / 空测试凑覆盖率 | 显式失败并修根因 |
 | 预写未提案的服务名与表结构 | 先 SDD，结构进制品/代码 |
 | 假设仓库只有一个前后端工程 | `frontend/`、`backend/` 下按系统多工程并存 |
-| 业务模块自建返回体/异常/分页 | 一律用 `{system}-common` |
-| 只有单一 `application.yml` 不分环境 | 至少 `local` + `test`（及如需的 `prod`） |
+| 业务模块自建返回体/异常/分页/ORM·Redis 配置 | 契约用 `{system}-common`，需配置组件用 `{system}-framework` |
+| 把 MyBatis-Plus、Redis、数据源等塞进 `common` | `common` 只放零配置纯基础；需配置组件一律 `framework` |
+| 把 Entity 放 `common` / `framework`，或跨服务共享 Entity | Entity 只在拥有表的 `{domain}-service`；跨服务只走 `{domain}-api` DTO/Feign |
+| 业务模块 import 其他服务 Entity/Mapper | 只依赖 `{domain}-api`，或本域投影表 |
+| 只有单一 `application.yml` 不分环境 | 必须三份：`application.yml` + `application-dev.yml` + `application-test.yml` |
 | 把细粒度授权/业务日志/业务规则塞进网关 | 网关只做 5.2 边缘治理；授权与审计在服务 |
 | 在 Nginx 写业务鉴权/业务限流规则 | Nginx 只做接入；应用策略在网关，业务规则在服务 |
 | 生产静态资源由后端或网关托管 | 静态走 Nginx；网关只反代 API |
 | 流水线跳过测试/吞错过门 | 质量门失败即失败；见 docs/jenkins-pipeline-guide.md |
-| 本文件粘贴依赖版本、端口、**生产**密钥、长代码 | 真相在构建文件 / Nacos / 代码；测试密码见 docs/test-env.md |
+| 本文件粘贴依赖版本、端口、**生产**密钥、长代码 | 稳定契约在本文件；组件 IP/端口/账密见 `docs/test-env.md`；构建版本见构建文件；生产密钥见 Nacos/密钥管理 |
 
 ---
 

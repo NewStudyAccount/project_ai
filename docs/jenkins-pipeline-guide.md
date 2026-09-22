@@ -28,10 +28,10 @@
    - 目标环境 SSH / 部署账号
    - （如需）Nacos、配置下发相关密钥
 3. **构建节点（Agent）**：
-   - 前端：Node.js 18+
+   - 前端：Node.js 24+
    - 后端：JDK 21 + Maven
    - 部署：目标主机或容器运行时（本项目默认不用 K8s，见 §8）
-4. **部署拓扑已明确**：部署到哪台/哪组机器、目录或容器名、端口、如何切换 `local`/`test`/`prod` profile。
+4. **部署拓扑已明确**：部署到哪台/哪组机器、目录或容器名、端口、如何切换 `dev`/`test` profile（见 `CLAUDE.md` §6.10；组件 IP/账密见 `docs/test-env.md`）。
 
 ---
 
@@ -96,7 +96,7 @@ deploy/jenkins/                            # 共享流水线库（可选，多�
    - Script Path：`frontend/<system>/Jenkinsfile` 或 `backend/<system>/<module>/Jenkinsfile`。
 4. **凭据**：绑定 §2 中所需 Credentials ID。
 5. **参数（CD Job）**：
-   - `DEPLOY_ENV`：`test` | `prod`（与 `application-{profile}.yml` 一致）
+   - `DEPLOY_ENV`：`test` | `prod`（Spring profile 与 `application-{profile}.yml` 一致；仓库内必备 `application.yml` / `application-dev.yml` / `application-test.yml`）
    - `MODULE`：后端 `-pl` 模块名（若一个 Job 管多模块）
    - `SKIP_TESTS`：默认 `false`；**生产建议禁止手动改成 true**
 6. **保存后先跑空跑/测试分支**，确认 Agent、JDK/Node、Maven 仓库缓存可用。
@@ -231,7 +231,7 @@ pipeline {
 | `test` | `test` | 测试环境自动/半自动发布 |
 | `prod` | `prod` | 生产，默认人工确认 |
 
-本地开发用 `local`，**不**由 Jenkins 发布。详见 `CLAUDE.md` §6.10。
+本地开发用 `dev`（`application-dev.yml`），**不**由 Jenkins 发布。后端配置三份：`application.yml` + `application-dev.yml` + `application-test.yml`。详见 `CLAUDE.md` §6.10；组件 IP/端口/账密见 `docs/test-env.md`。
 
 ---
 

@@ -2,85 +2,77 @@ package com.example.auth.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.auth.common.BizException;
-import com.example.auth.config.AuthProperties;
-import com.example.auth.entity.SysLoginLog;
-import com.example.auth.entity.SysUser;
-import com.example.auth.mapper.SysLoginLogMapper;
-import com.example.auth.mapper.SysUserMapper;
+import com.example.auth.common.ErrorCode;
+import com.example.auth.common.enums.CredentialTypeEnum;
+import com.example.auth.entity.SysCredential;
+import com.example.auth.framework.IdService;
+import com.example.auth.mapper.SysCredentialMapper;
 import java.time.LocalDateTime;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import java.util.Optional;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** 凭证校验、失败限流、登录日志。 */
+/**
+ * 凭证读写；密码仅存 secret_ref 哈希。
+ */
 @Service
 public class CredentialService {
 
-    private static final String FAIL_KEY = "auth:fail:login:";
-
-    private final SysUserMapper userMapper;
-    private final SysLoginLogMapper loginLogMapper;
-    private final PasswordEncoder passwordEncoder;
-    private final StringRedisTemplate redis;
-    private final AuthProperties properties;
+    private final SysCredentialMapper credentialMapper;
     private final IdService idService;
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    public CredentialService(
-            SysUserMapper userMapper,
-            SysLoginLogMapper loginLogMapper,
-            PasswordEncoder passwordEncoder,
-            StringRedisTemplate redis,
-            AuthProperties properties,
-            IdService idService) {
-        this.userMapper = userMapper;
-        this.loginLogMapper = loginLogMapper;
-        this.passwordEncoder = passwordEncoder;
-        this.redis = redis;
-        this.properties = properties;
+    public CredentialService(SysCredentialMapper credentialMapper, IdService idService) {
+        this.credentialMapper = credentialMapper;
         this.idService = idService;
     }
 
     @Transactional
-    public SysUser authenticate(String username, String rawPassword, String ip, String ua) {
-        String failKey = FAIL_KEY + username;
-        String fails = redis.opsForValue().get(failKey);
-        if (fails != null && Integer.parseInt(fails) >= properties.getLoginMaxFail()) {
-            throw BizException.locked();
+    public void initPasswordCredential(Long userId, String rawPassword) {
+        if (userId == null || rawPassword == null || rawPassword.isBlank()) {
+            throw new BizException(ErrorCode.VALIDATION_ERROR);
         }
-
-        SysUser user = userMapper.selectOne(new LambdaQueryWrapper<SysUser>()
-                .eq(SysUser::getUsername, username));
-        if (user == null || !passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
-            long count = redis.opsForValue().increment(failKey) == null
-                    ? 1L : Long.parseLong(redis.opsForValue().get(failKey));
-            redis.expire(failKey, java.time.Duration.ofSeconds(properties.getLoginLockSeconds()));
-            writeLog(null, username, ip, ua, 0, "用户名或密码错误");
-            throw BizException.auth("用户名或密码错误");
+        SysCredential existing = findByUserId(userId, CredentialTypeEnum.PASSWORD);
+        String hash = passwordEncoder.encode(rawPassword);
+        if (existing == null) {
+            SysCredential row = new SysCredential();
+            row.setId(idService.nextId("sys_credential"));
+            row.setUserId(userId);
+            row.setCredentialType(CredentialTypeEnum.PASSWORD.getCode());
+            row.setSecretRef(hash);
+            row.setVerified(1);
+            row.setStatus(1);
+            row.setPwdUpdateTime(LocalDateTime.now());
+            credentialMapper.insert(row);
+        } else {
+            existing.setSecretRef(hash);
+            existing.setPwdUpdateTime(LocalDateTime.now());
+            existing.setVerified(1);
+            existing.setStatus(1);
+            credentialMapper.updateById(existing);
         }
-        if (user.getStatus() == null || user.getStatus() != 1) {
-            writeLog(user.getId(), username, ip, ua, 0, "账号停用");
-            throw BizException.disabled();
-        }
-
-        redis.delete(failKey);
-        user.setLastLoginTime(LocalDateTime.now());
-        user.setLastLoginIp(ip == null ? "" : ip);
-        userMapper.updateById(user);
-        writeLog(user.getId(), username, ip, ua, 1, "");
-        return user;
     }
 
-    private void writeLog(Long userId, String username, String ip, String ua, int status, String msg) {
-        SysLoginLog log = new SysLoginLog();
-        log.setId(idService.nextId("login_log"));
-        log.setUserId(userId == null ? 0L : userId);
-        log.setUsername(username == null ? "" : username);
-        log.setLoginIp(ip == null ? "" : ip);
-        log.setUserAgent(ua == null ? "" : ua);
-        log.setStatus(status);
-        log.setMessage(msg);
-        log.setLoginTime(LocalDateTime.now());
-        loginLogMapper.insert(log);
+    @Transactional(readOnly = true)
+    public boolean matchesPassword(Long userId, String rawPassword) {
+        SysCredential row = findByUserId(userId, CredentialTypeEnum.PASSWORD);
+        if (row == null || row.getStatus() == null || row.getStatus() != 1) {
+            return false;
+        }
+        return passwordEncoder.matches(rawPassword, row.getSecretRef());
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<SysCredential> findActive(Long userId, CredentialTypeEnum type) {
+        return Optional.ofNullable(findByUserId(userId, type));
+    }
+
+    private SysCredential findByUserId(Long userId, CredentialTypeEnum type) {
+        return credentialMapper.selectOne(new LambdaQueryWrapper<SysCredential>()
+                .eq(SysCredential::getUserId, userId)
+                .eq(SysCredential::getCredentialType, type.getCode())
+                .last("LIMIT 1"));
     }
 }

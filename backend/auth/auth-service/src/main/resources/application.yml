@@ -5,7 +5,7 @@ spring:
   application:
     name: auth-service
   profiles:
-    active: local
+    active: dev
   datasource:
     url: jdbc:mysql://127.0.0.1:3306/auth_db?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: root
@@ -15,7 +15,7 @@ spring:
     redis:
       host: 127.0.0.1
       port: 6379
-      database: 0
+      database: 2
 
 mybatis-plus:
   configuration:
@@ -23,19 +23,28 @@ mybatis-plus:
   global-config:
     banner: false
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+
 auth:
-  issuer: auth-service
-  # 生产禁止写死密钥：使用环境变量 AUTH_JWT_SECRET 或 Nacos
-  jwt-secret: ${AUTH_JWT_SECRET:change-me-local-dev-secret-not-for-prod}
-  access-ttl-minutes: 30
-  refresh-ttl-days: 7
-  sid-ttl-days: 7
-  sid-cookie-name: AUTH_SID
-  cookie-domain: ""
-  login-max-fail: 5
-  login-lock-seconds: 300
-  return-url-whitelist: "http://localhost,https://localhost"
+  issuer: ${AUTH_ISSUER:http://127.0.0.1:8081}
+  session-ttl-hours: 12
+  access-token-ttl-sec: 600
+  refresh-token-ttl-sec: 604800
+
+# 用户中心契约；连接信息以 docs/test-env.md 为准
+user-center:
+  url: ${USER_CENTER_URL:http://127.0.0.1:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
 
 logging:
   level:
     com.example.auth: info
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%X{spanId:-}] %logger{40} - %msg%n"

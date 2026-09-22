@@ -37,12 +37,12 @@ frontend/
 
 backend/
   auth/                        # 已有：统一认证
-  common/platform-common/      # Result、JWT 验签等
+  common/platform-common/      # 跨系统薄契约（JWT 验签/UserHeaders）；blog 不依赖
   file/
     file-service/              # 上传/登记/删除；独占 file_db；持 OSS 凭证
   blog/
-    blog-common/
-    blog-gateway/
+    blog-common/               # 本系统基础契约（§6.4 全量）；不依赖 platform-common
+    blog-gateway/              # 仅 JWT → X-User-Id
     blog-content-service/      # post / category / tag / comment
 ```
 
@@ -50,6 +50,7 @@ backend/
 
 | 模块 | 职责 |
 |------|------|
+| blog-common | 统一返回体/分页、错误码、全局异常、审计与发号、Long 序列化、JWT 验签、权限注解、Swagger 公共配置 |
 | post | 草稿/发布/下线/置顶/封面引用 |
 | category | 扁平分类 |
 | tag + post_tag | 标签与多对多 |
@@ -57,7 +58,35 @@ backend/
 | content | MD 权威入库；发布渲 HTML 并写 OSS |
 | （对接）file | 传图、存 content.md/html、元数据 |
 
-### 2.2 文件为何独立（F2）
+### 2.2 基础模块约定（common 边界）
+
+**形态：各系统自持 `{system}-common`。** blog 的 `blog-common` 不依赖 `platform-common`；JWT 验签在 blog 内自实现，配置与 auth **同 `iss`/密钥**。跨系统只走接口；禁止 import 其他系统业务代码。
+
+`blog-common` 落地 `CLAUDE.md` §6.4 契约（禁止业务模块再自建）：
+
+| 包 | 内容 |
+|----|------|
+| `result` | `Result` `{code,msg,data}`、`PageResult` `{records,total,size,current}` |
+| `error` | 错误码枚举（1xxxx/2xxxx/3xxxx）+ `BizException` |
+| `exception` | 全局 `@RestControllerAdvice` |
+| `page` | `PageQuery`（current/size）+ `orderBy` 白名单 |
+| `audit` | `BaseEntity`、`MetaObjectHandler`、`CurrentUser`、14 位 `IdService` + `sys_sequence` |
+| `json` | Long→String 序列化 |
+| `auth` | `UserHeaders`、`JwtVerifier`、`@RequiresPermission` 切面、权限码常量 |
+| `swagger` | springdoc 公共配置 |
+
+**不进 common：** 文章/评论业务规则、OSS、数据范围引擎、具体 Controller/Service。
+
+### 2.3 前端工程结构（blog-admin / blog-portal）
+
+| 工程 | 用户 | 技术 | 本阶段范围 |
+|------|------|------|------------|
+| `blog-admin` | 登录管理 | Vue3+TS+Pinia+Element Plus | 布局壳 + RBAC 三页骨架 |
+| `blog-portal` | 匿名读者 | Vue3+TS+Pinia | 壳 + 首页占位 |
+
+统一约定（§5.5）：`src/api|views|components|stores|router|types|utils|styles`；axios 只在 `api/`；`id` 为 string；令牌策略对齐 auth-portal；登录走统一认证；权限码与 `BlogPermissions` 一致。dev 代理：`/api`→blog-gateway，`/auth`→auth-service。
+
+### 2.4 文件为何独立（F2）
 
 - OSS 密钥、类型/大小白名单、配额、GC **集中**在 file
 - 多系统复用，避免各业务抄上传
@@ -88,7 +117,7 @@ backend/
 
 | 组件 | 版本线 |
 |------|--------|
-| Node.js | 18+（推荐 20 LTS） |
+| Node.js | 24+（统一用 24） |
 | Vue | 3.5.x |
 | Vite | 5.x |
 | TypeScript | 5.6.x |
@@ -199,7 +228,7 @@ blog 公开:  /api/v1/public/posts  /api/v1/public/posts/{slug}
 ## 6. 实施顺序（对应 3 个提案）
 
 1. **add-file-service** — file 单体、file_db、OSS 适配、上传/删除/查询  
-2. **add-blog-foundation-rbac** — blog 工程骨架、网关、RBAC 表与鉴权、user_ref  
+2. **add-blog-foundation-rbac** — `blog-common` 基础契约、blog 工程骨架、网关、RBAC 表与鉴权、user_ref  
 3. **add-blog-content-modules** — post/category/tag/comment、双轨正文、发布流水线、admin/portal  
 
 ---

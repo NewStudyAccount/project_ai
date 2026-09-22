@@ -1,0 +1,11 @@
+# 本地开发：默认 local 对象存储，无需 MinIO
+file:
+  storage:
+    type: local
+    local-root: ./data/objects
+    bucket: file-bucket
+    public-base-url: http://127.0.0.1:8082/file/objects/content
+
+logging:
+  level:
+    com.example.file: debug

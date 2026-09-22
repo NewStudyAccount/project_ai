@@ -1,0 +1,10 @@
+# 测试环境：MinIO 可用测试账号（测试密钥允许写文档，禁止与生产混用）
+# 实际密钥建议用环境变量注入；下表占位见 docs/test-env.md §2.4
+file:
+  storage:
+    type: minio
+    bucket: file-bucket-test
+    endpoint: ${FILE_OSS_ENDPOINT:http://192.168.99.100:9000}
+    access-key: ${FILE_OSS_ACCESS_KEY:}
+    secret-key: ${FILE_OSS_SECRET_KEY:}
+    public-base-url: ${FILE_OSS_PUBLIC_BASE_URL:http://192.168.99.100:9000/file-bucket-test}

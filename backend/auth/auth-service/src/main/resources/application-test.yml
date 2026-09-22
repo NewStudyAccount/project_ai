@@ -1,0 +1,22 @@
+# 测试环境；连接信息与 docs/test-env.md 一致；测试密码允许写入
+spring:
+  datasource:
+    url: jdbc:mysql://192.168.99.100:3306/auth_db?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+  data:
+    redis:
+      host: 192.168.99.100
+      port: 6379
+      database: 2
+      password: 123456
+
+auth:
+  issuer: ${AUTH_ISSUER:http://192.168.99.100:8081}
+
+user-center:
+  url: ${USER_CENTER_URL:http://192.168.99.100:8080}
+
+logging:
+  level:
+    com.example.auth: info
