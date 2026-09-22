@@ -1,6 +1,14 @@
 # Default ignored files
 /shelf/
 /.idea/workspace.xml
+
+# 敏感信息与本地环境（禁止提交）
+.env
+.env.*
+!.env.example
+docs/test-env.local.md
+docs/secrets/
+**/test-env.local.md
 # Editor-based HTTP Client requests
 /httpRequests/
 # Datasource local storage ignored files

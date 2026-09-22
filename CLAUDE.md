@@ -1,28 +1,55 @@
 # 项目全局规范
 
-> 本文件是项目唯一的事实来源（Single Source of Truth），面向所有 AI 编码工具
+> 本文件是项目级**稳定契约与工程约定**的事实来源，面向所有 AI 编码工具
 > （Cursor、Claude Code、Windsurf、Codex、Trae 等）与人类协作者。
 > 所有 AI 工具在编写、修改代码前必须先读取并遵循本文件。
+>
+> **文档分工（避免双源真理）：**
+> | 文档 | 职责 | 不要放什么 |
+> |---|---|---|
+> | `CLAUDE.md`（本文件） | 稳定契约、项目边界、协作红线 | 服务清单、业务词表、实现代码、**生产**密钥 |
+> | `openspec/` | 单次变更的 proposal / specs / design / tasks | 通用编码教程 |
+> | 后端枚举 / Controller / Swagger | 字段级接口契约真相 | 在文档里复述枚举全表 |
+> | `pom.xml` / `package.json` | 依赖真相 | 在本文件复制依赖清单 |
+> | `docs/` | 流程与工具指导（如 Jenkins 流水线） | 业务契约、短期任务 |
+> | 会话 `notes.md` / issue | 未决问题、备忘 | 写入本文件当“规范” |
+
+**阶段说明：** 当前仓库为空项目，本文件只固化「项目规范 + 代码规范」。
+具体服务名、表名清单、接口实现、业务术语，待脚手架与业务变更落地后，
+写入 `openspec/` 制品或代码，**不**提前写进本文件。
 
 ---
 
 ## 1. 项目概述
 
-> 请填写以下信息，帮助 AI 工具理解项目背景
+- 项目名称：`project_ai`（仓库目录名；对外产品名**待确认**后回填）
+- 业务目标：在同一仓库内交付多个**相互独立**的后台系统（各自 Vue3 前端 + Spring Cloud 微服务后端）
+  （业务范围以已归档 openspec 变更为准）。
+- 目标用户：企业内部运营与管理人员（角色与权限以后端权限模型为准，不在前端硬编码）。
+- 项目边界（明确不做，防功能蔓延）：
+  - 不做 C 端独立 App / 小程序原生壳（若需要，另开变更）
+  - 不把本仓库做成无关工具集合或一次性脚本堆场
+  - 不在仓库内存放**生产**密钥/密码/Token、真实生产数据；测试/开发/本地环境账号密码可写入仓库文档（见 6.7）
+  - 未走 SDD（第 8 节）且未写清验收标准的功能，不直接落代码
+  - 不引入与第 2 节技术栈冲突的平行框架（如再叠一套 UI 库、ORM、网关）
+  - 空项目阶段不预先锁死服务拆分与库表清单；拆分随变更提案确定
 
-- 项目名称：（填写项目名称）
-- 业务目标：（一句话描述项目要解决的业务问题）
-- 目标用户：（描述主要用户群体）
-- 项目边界：（明确项目不做什么，避免功能蔓延）
+---
 
 ## 2. 技术栈
 
 - 前端：Vue3 + Vue Router + TypeScript + Pinia + Element Plus
 - 后端：Java 21 + Spring Boot + Spring Security + MyBatis-Plus + Spring Cloud Gateway + Nacos
+- 接入层：Nginx（静态资源、反向代理、TLS 终结、负载均衡）
 - 数据库：MySQL
 - 缓存：Redis
 - 构建：前端 Vite / 后端 Maven
 - 包管理：npm（前端）
+- CI/CD：Jenkins（自动构建与部署；流水线创建见 `docs/jenkins-pipeline-guide.md`）
+
+禁止引入与上表冲突的平行框架。确需替换技术栈时，先改本节并走变更流程。
+
+---
 
 ## 3. 环境配置与启动
 
@@ -33,711 +60,508 @@
 | JDK | 21+ | 后端运行环境 |
 | Node.js | 18+ | 前端运行环境 |
 | npm | 9+ | 前端包管理 |
+| Nginx | 1.20+ | 接入层（静态、反向代理、TLS） |
 | MySQL | 8.0+ | 数据库 |
 | Redis | 6.0+ | 缓存 |
 | Nacos | 2.2+ | 注册中心/配置中心 |
 
-### 3.2 启动命令
+### 3.2 启动与自检命令
+
+> 仓库当前尚未创建 `frontend/`、`backend/`。下列为**目标约定**；
+> 脚手架落地后必须以真实 `package.json` scripts / Maven 模块为准跑通，再允许提交业务代码。
 
 ```bash
-# 后端启动
-cd backend
-mvn clean install -DskipTests
-mvn spring-boot:run -pl <服务名>
+# 基础设施（按需：Nginx / MySQL / Redis / Nacos）
+docker-compose up -d nginx mysql redis nacos
 
-# 前端启动
-cd frontend
-npm install
-npm run dev
+# 后端：在某一系统的 backend 目录下，用 -pl 启动具体模块
+cd backend/<system> && mvn clean install -DskipTests
+cd backend/<system> && mvn spring-boot:run -pl <module>
 
-# 启动基础设施（Docker Compose）
-docker-compose up -d mysql redis nacos
+# 前端：在某一系统的 frontend 目录下
+cd frontend/<system> && npm install && npm run dev
 ```
+
+**提交前自检（按改动涉及的系统分别跑；脚手架落地后必须配置并跑通）：**
+
+```bash
+cd frontend/<system> && npm run lint && npm run type-check && npm run test
+cd backend/<system> && mvn test
+```
+
+- 缺 lint / type-check / test 命令时，先在脚手架变更中补上，不得用“跳过检查”换提交速度。
+- 端口、网关前缀、环境差异以 Nacos 与 `application-{profile}.yml` 为准，本文件不写死。
 
 ### 3.3 环境变量管理
 
-- 环境变量统一通过 `.env` 文件管理，禁止硬编码在代码中
-- `.env` 文件禁止提交到 Git（已在 `.gitignore` 中排除）
-- 敏感配置（密钥、密码）统一走 Nacos 配置中心
-- 环境变量命名：`SERVICE_NAME_ENV_KEY` 大写下划线格式
+- 环境变量统一通过 `.env` 管理，禁止把配置散落硬编码在业务逻辑中。
+- **密钥分级入仓（必须遵守）：**
+  - **禁止入仓**：生产（`prod`）密码、私钥、Token、生产连接串 → 只放 Nacos/密钥管理/Jenkins Credentials。
+  - **允许入仓**：本地（`local`）、开发、测试（`test`）环境的账号密码，可写入 `docs/test-env.md`、`application-local.yml` / `application-test.yml` 等文档与配置。
+  - 仍建议测试环境只推公司内网仓库，不同步到公开仓库。
+- `.env`：本地私密可选（gitignore）；测试/开发密码优先写入上款允许的文档或测试配置，不必强依赖 `.env`。
+- 敏感配置优先走 Nacos；**生产必须走配置中心或密钥管理，禁止明文进仓库。**
+- 环境变量命名：`SERVICE_NAME_ENV_KEY` 大写下划线格式。
 
-## 4. 目录结构
+---
 
-<!-- 前后端分仓或分目录，按实际落地后更新 -->
+## 4. 目录结构（目标）
+
+`frontend/` 与 `backend/` 是**多系统容器**，其下按系统名分目录，各系统独立、可单独构建与部署，
+**不是**全仓库只对应一对前后端工程。
 
 ```
 .
-├── frontend/           # 前端（Vue3 + TS + Pinia）
-├── backend/            # 后端（Spring Boot 微服务，含 Gateway/Nacos）
-├── docs/               # 文档
-├── openspec/           # 规范驱动开发制品（勿手改，见第 7 节）
-└── CLAUDE.md           # 本文件
+├── frontend/                    # 多系统前端容器
+│   └── <system>/                # 一个独立前端工程（Vue3 + TS + Pinia + Vite）
+│       ├── package.json
+│       └── src/
+├── backend/                     # 多系统后端容器
+│   └── <system>/                # 一个独立后端系统（Maven 多模块）
+│       ├── pom.xml              # 父 POM（聚合模块、锁依赖版本）
+│       ├── <system>-common/     # 必选：基础 common 模块（见 5.3）
+│       ├── <system>-gateway/    # 建议有：该系统网关（仅边缘治理，见 5.2）
+│       └── <system>-…-service/  # 业务模块（按域拆分，随变更增加）
+├── docs/                        # 流程指导 + 环境信息（测试/开发/本地密码可写；生产密钥禁止）
+├── deploy/                      # 部署配置（如 nginx.conf、compose、Jenkins 共享脚本；按系统可再分）
+├── openspec/                    # SDD 制品（勿改定义，见第 8 节）
+├── .claude/                     # Claude Code 命令与技能
+├── .trae/                       # Trae 等价技能
+└── CLAUDE.md                    # 本文件
 ```
 
-## 5. 项目结构设计
+**约定：**
 
-### 5.1 前端架构设计
+- 新增系统 = 新增 `frontend/<system>/` 与（如需后端）`backend/<system>/`，彼此不共享源码目录；
+  跨系统复用只允许通过接口，或极薄的、已在变更中说明的基础库，禁止直接 `import` 另一系统业务代码。
+- 系统名用小写连字符，一经确定不随意改名；新建/删除顶层或系统级目录时同步更新本节。
+- **脚手架落地顺序（每个系统内）：** `common`（返回体/错误码/异常/审计与 ID/分页/Swagger 等）→
+  网关与认证 → 前端壳（布局/路由/axios/Pinia）→ 再按 openspec 变更扩业务。
 
-#### 5.1.1 页面组件结构
+---
+
+## 5. 架构设计
+
+### 5.1 目标架构总览
+
+仓库承载**多个相互独立的系统**；每个系统一条完整链路，互不嵌套。
+
+```
+浏览器/客户端
+  ┌──────────────────────────────────────────────────────────┐
+  │                    多系统容器（同一仓库）                    │
+  │            frontend/<system> × N · backend/<system> × N    │
+  └──────────────────────────────────────────────────────────┘
+                               │
+       每个系统逻辑链路（组件可独立部署，禁止跨系统直连）：
+                               │
+┌──────────────┐   HTTPS    ┌──────────────┐   反向代理   ┌──────────────────┐
+│  前端 Vue3    │ ─────────► │    Nginx      │ ──────────► │  网关 Gateway     │
+│  （管理端）   │  静态/入口  │  接入层        │             │  边缘治理层       │
+└──────────────┘            └──────────────┘             └────────┬─────────┘
+                                                                 │ 内网调用
+                                                      ┌──────────▼───────────┐
+                                                      │  业务服务集群         │
+                                                      │  按业务域微服务拆分    │
+                                                      │  共同依赖 common      │
+                                                      └──────────┬───────────┘
+                                                                 │
+                                              ┌──────────────────┼──────────────────┐
+                                              ▼                  ▼                  ▼
+                                          MySQL（分库）        Redis              Nacos
+                                          每服务数据自治        缓存/会话等         注册与配置
+```
+
+**硬约束：**
+
+- 前端只访问**本系统对外入口（Nginx）**，由 Nginx 反代到本网关；禁止直连业务服务。
+- 禁止把 A 系统的页面/服务/库表嵌进 B 系统；跨系统只走显式接口（且须走变更）。
+- 服务按业务域拆分：单一职责、高内聚、低耦合、独立部署、数据自治。
+- 服务命名：`{domain}-service`；**具体服务列表随变更确定，不在此预定。**
+- 服务间只通过 API（Feign）通信，禁止跨服务直接读对方数据库。
+- 跨服务一致性优先最终一致（消息/补偿），禁止随意引入强一致分布式事务。
+
+### 5.2 接入层 Nginx 与网关职责边界
+
+**分层原则：** Nginx 做**接入层**（流量入口与静态），网关做**边缘治理**（应用层路由与安全策略）。
+二者不抢职责：Nginx 不写业务/鉴权规则，网关不管 TLS 与静态资源。
+
+| 能力 | Nginx（接入层） | 网关 Gateway（边缘治理） | 业务服务 |
+|------|-----------------|--------------------------|----------|
+| 静态资源 | **托管**前端构建产物、缓存与 gzip | 不处理 | 不处理 |
+| TLS / 证书 | **终结 HTTPS**、HTTP→HTTPS | 内网 HTTP 或透传 | — |
+| 负载均衡 | 对网关实例（及必要时直出静态）轮询/权重 | 对下游服务的路由与灰度 | — |
+| 反向代理 | `/api` 等路径反代到网关；可按系统/域名分流 | 路径/断言转到具体微服务 | — |
+| 路由 | 域名/前缀级分流（多系统入口） | **应用级**路由到服务 | — |
+| 鉴权 | 仅可选的粗防护（如 IP 黑名单、基础限速） | **认证**：JWT/会话、登录态粗拦截 | **授权**：RBAC/数据权限 |
+| 限流 | 连接级/基础限速（防爬、防刷外壳） | 入口 QPS/熔断/超时等应用策略 | 业务配额 |
+| 日志 | 访问日志、错误日志 | 应用访问日志、TraceId 透传 | 业务操作/领域审计 |
+| 其他 | 跨域相关响应头（若在边缘统一）、路径改写 | CORS 策略、用户身份注入/透传 | 参数校验、事务、业务规则 |
+
+**部署约定：**
+
+- 生产/测试：浏览器 → Nginx（静态 + 反代 `/api`）→ 网关 → 服务。
+- 本地开发可由 Vite 代理直打网关，**不得**因此认为生产可绕过 Nginx。
+- 多系统：优先「一域名多前缀」或「多子域名」在 Nginx 分流，再进对应网关/服务组。
+- Nginx 配置纳入版本库（如 `deploy/nginx/` 或各系统 `deploy/`），禁止只活在服务器上的野配置。
+
+**双重鉴权模型（不变）：**
+
+1. 网关：认证 + 是否登录 + 路由级放行/拒绝（边缘）。
+2. 业务服务：细粒度授权与数据权限（用 Spring Security / 方法级鉴权），**不可**只信网关。
+
+网关不得内嵌具体业务规则；Nginx 不得承载业务鉴权。规则只能写在边缘说明设计有问题，应改业务侧。
+
+### 5.3 请求链路（一次同步调用）
+
+```
+浏览器/客户端
+  → Nginx：TLS、静态资源、反代 /api → 网关、写接入访问日志
+  → 网关：认证、限流、写应用访问日志、注入/透传 TraceId 与用户身份
+  → 业务服务 Controller：参数校验（DTO + Bean Validation）
+  → Service：业务规则、事务边界、细粒度鉴权
+  → Mapper/DB 或 Feign 下游（Feign 必须在事务外）
+  → 统一 Result{code,msg,data} + 全局异常处理（common）
+  → 网关/前端：按 code 分流（401 跳转、业务提示、通用错误）
+```
+
+- 同步链路短、职责单层；耗时/可重试工作走异步（MQ/线程池），必须有重试与死信。
+- 失败语义：网络/5xx 可重试；4xx 业务/校验错误不重试；写操作幂等（见 6.11）。
+
+### 5.4 系统内部模块关系（后端）
+
+```
+        ┌──────────────────────────────────────────┐
+        │              {system}-common              │
+        │  Result/错误码/全局异常/分页/ID与审计/       │
+        │  Long序列化/通用配置/Swagger/工具与注解      │
+        └───────────────────┬──────────────────────┘
+                            │ 被依赖（编译期）
+        ┌───────────────────┼──────────────────────┐
+        │                   │                      │
+        ▼                   ▼                      ▼
+ {system}-gateway    {domain}-service        {domain}-service
+ （边缘治理）         （业务A）                （业务B）
+                          │                      │
+                          └──────── Feign ───────┘
+                          （禁止互读数据库）
+```
+
+| 模块 | 必选 | 职责 |
+|------|------|------|
+| `{system}-common` | **必须** | 与业务无关的基础能力（上图）；业务规则禁止下沉 |
+| `{system}-gateway` | 建议有 | 仅 5.2 边缘治理；可与网关产品/独立部署形态替换，职责边界不变 |
+| `{system}-{domain}-service` | 按需 | 领域服务；自建返回体/异常/分页等基础能力视为违规 |
+
+**common 边界：** 只放可复用基础；变更影响所有业务模块，须走变更流程。
+业务模块内包结构、Entity/DTO/VO/BO、调用链与 Feign 规则见 **5.5**。
+
+### 5.5 前端结构约定
 
 ```
 src/
-├── api/                # 接口请求层
-│   ├── modules/        # 按业务模块划分
-│   │   ├── user.ts     # 用户模块接口
-│   │   ├── order.ts    # 订单模块接口
-│   │   └── ...
-│   └── index.ts        # 导出统一接口
-├── views/              # 页面视图层
-│   ├── user/           # 用户模块页面
-│   │   ├── list/       # 列表页
-│   │   │   ├── index.vue
-│   │   │   └── components/
-│   │   ├── detail/     # 详情页
-│   │   └── components/ # 模块内组件
-│   ├── order/          # 订单模块页面
-│   └── ...
-├── components/         # 公共组件
-│   ├── layout/         # 布局组件
-│   ├── common/         # 通用组件
-│   └── business/       # 业务公共组件
-├── stores/             # Pinia 状态管理
-│   ├── modules/        # 按业务模块划分
-│   └── index.ts
-├── router/             # 路由配置
-│   ├── index.ts
-│   └── modules/        # 按业务模块划分
-├── types/              # TypeScript 类型定义
-│   ├── api/            # 接口返回类型
-│   ├── model/          # 业务模型类型
-│   └── common/         # 通用类型
-├── utils/              # 工具函数
-├── styles/             # 全局样式
-├── locales/            # 国际化语言包
-└── App.vue
+├── api/          # 接口请求（按业务模块分包 + 统一 axios 封装）
+├── views/        # 页面（按业务模块分包）
+├── components/   # 公共组件（layout / common / business）
+├── stores/       # Pinia（按模块）
+├── router/       # 路由（按模块）
+├── types/        # TS 类型（api / model / common）
+├── utils/        # 工具
+├── styles/       # 全局样式
+└── locales/      # i18n
 ```
-
-#### 5.1.2 组件设计原则
 
 | 原则 | 说明 |
 |------|------|
-| 单一职责 | 一个组件只做一件事，复杂组件拆分为子组件 |
-| Props 向下 | 父组件通过 props 传递数据，禁止直接修改子组件状态 |
-| Events 向上 | 子组件通过 emit 通知父组件，禁止反向引用 |
-| 插槽扩展 | 使用插槽（slot）实现组件扩展，避免 props 爆炸 |
-| 组合式优先 | 使用 `<script setup>` + Composition API，禁止 Options API |
+| 单一职责 | 一个组件只做一件事，复杂组件拆子组件 |
+| Props 向下 / Events 向上 | 禁止直接改子组件状态、禁止子组件反向引用父级 |
+| 插槽扩展 | 避免 props 爆炸 |
+| 组合式优先 | `<script setup lang="ts">`，禁止 Options API |
+| 状态 | 跨组件共享一律 Pinia，禁止全局变量/事件总线 |
+| 请求 | 业务组件不直接调 axios，只调 `src/api` |
+| UI | 统一 Element Plus，禁止自造重复轮子；样式 scoped，禁止内联堆叠 |
+| 路由 meta | 含 `title` / `icon` / `hidden` / `requiresAuth`；name 用 PascalCase |
+| 权限 | 与后端权限标识一致，禁止在前端硬编码角色 |
 
-#### 5.1.3 状态管理设计
+### 5.6 后端模块与包结构（多模块，common 必选）
 
-```
-stores/
-├── user/               # 用户模块 Store
-│   ├── index.ts        # 用户状态
-│   ├── types.ts        # 类型定义
-│   └── actions.ts      # 异步操作
-├── app/                # 应用全局 Store
-│   ├── index.ts
-│   └── types.ts
-└── index.ts            # 导出所有 Store
-```
+每个 `backend/<system>/` 为 **Maven 多模块**工程，模块划分与依赖关系见 **5.4**。
 
-**Store 设计规范：**
-- 状态：只存放需要跨组件共享的数据
-- Getters：计算属性，派生状态
-- Actions：异步操作（API 调用），同步操作直接修改 state
-- 命名：`use{Module}Store`，如 `useUserStore`
-
-#### 5.1.4 路由设计
-
-```typescript
-// router/modules/user.ts
-import type { RouteRecordRaw } from 'vue-router'
-
-const userRoutes: RouteRecordRaw[] = [
-  {
-    path: '/user',
-    name: 'User',
-    component: () => import('@/views/user/index.vue'),
-    meta: { title: '用户管理', icon: 'User' },
-    children: [
-      {
-        path: 'list',
-        name: 'UserList',
-        component: () => import('@/views/user/list/index.vue'),
-        meta: { title: '用户列表' }
-      },
-      {
-        path: 'detail/:id',
-        name: 'UserDetail',
-        component: () => import('@/views/user/detail/index.vue'),
-        meta: { title: '用户详情', hidden: true }
-      }
-    ]
-  }
-]
-
-export default userRoutes
-```
-
-**路由规范：**
-- 路由文件按模块划分，统一在 `router/modules/` 目录
-- 路由 name 使用 PascalCase，如 `UserList`、`OrderDetail`
-- 路由 meta 包含：`title`（标题）、`icon`（图标）、`hidden`（是否隐藏）、`requiresAuth`（是否需要登录）
-
-### 5.2 后端架构设计
-
-#### 5.2.1 分层架构图
+业务模块内包结构：
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      前端 (Vue3)                            │
-└─────────────────────────────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   Spring Cloud Gateway                      │
-│              （路由转发、鉴权、限流、日志）                     │
-└─────────────────────────────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                     业务服务集群                              │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
-│  │ user-service │  │order-service│  │ ... -service │         │
-│  └─────────────┘  └─────────────┘  └─────────────┘         │
-└─────────────────────────────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      数据层                                  │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
-│  │    MySQL     │  │    Redis    │  │    Nacos    │         │
-│  └─────────────┘  └─────────────┘  └─────────────┘         │
-└─────────────────────────────────────────────────────────────┘
+src/main/java/com.example.{system}.{module}/
+├── controller/   # 接口层（dto 入参 / vo 出参）
+├── service/      # 业务层（impl 实现 / bo 业务对象）
+├── mapper/       # 数据访问（entity 实体）
+├── feign/        # 对其他服务的 Feign 客户端
+├── config/       # 模块自有配置（通用配置放 common）
+├── constants/    # 常量（禁用 constant 单数；通用常量放 common）
+├── enums/        # 枚举（业务枚举在本模块；通用状态等在 common）
+└── util/         # 工具（通用工具放 common）
 ```
 
-#### 5.2.2 服务内部分层
+调用链：`Controller → Service → Mapper`；Service 之间可互调。
+**禁止** Controller 直接调 Mapper。
 
-```
-src/main/java/com/example/{module}/
-├── controller/         # 接口层
-│   ├── dto/           # 请求 DTO
-│   └── vo/            # 响应 VO
-├── service/            # 业务层
-│   ├── impl/          # 实现类
-│   └── bo/            # 业务对象
-├── mapper/             # 数据访问层
-│   └── entity/        # 实体类
-├── config/             # 配置类
-├── constant/           # 常量
-├── enums/              # 枚举
-├── exception/          # 异常定义
-└── util/               # 工具类
-```
+| 对象 | 职责 | 边界 |
+|------|------|------|
+| `Entity` | 表映射，只含持久化字段 | 禁止暴露给 Controller / 前端 |
+| `DTO` | 接口入参 | 负责校验 |
+| `VO` | 接口出参 | 按页面需要组装 |
+| `BO` | Service 内部业务对象 | 不对外 |
 
-**分层调用规则：**
-```
-Controller → Service → Mapper
-    │           │
-    │           └── Service 之间可以相互调用
-    │
-    └── 禁止 Controller 直接调用 Mapper
-```
+- 禁止 `Entity` 直接作接口入参/出参；转换用 MapStruct 或集中转换层，禁止在 Controller 手写逐字段赋值。
+- Service 接口 + 实现分离（`XxxService` + `XxxServiceImpl`）；业务规则只在 Service。
+- Mapper 只做数据访问。
 
-#### 5.2.3 微服务拆分原则
-
-| 原则 | 说明 |
-|------|------|
-| 单一职责 | 一个服务只负责一个业务领域（如用户、订单、商品） |
-| 高内聚 | 相关功能放在同一服务，不相关的拆分到不同服务 |
-| 低耦合 | 服务间通过 API 通信，禁止共享数据库 |
-| 独立部署 | 每个服务可独立部署、升级、扩缩容 |
-| 数据自治 | 每个服务拥有自己的数据库，禁止跨服务直接访问 |
-
-**服务拆分示例：**
-
-| 服务名 | 职责 | 核心表 |
-|--------|------|--------|
-| `user-service` | 用户管理、认证授权 | `sys_user`, `sys_role`, `sys_menu` |
-| `order-service` | 订单管理、支付 | `biz_order`, `biz_order_item` |
-| `product-service` | 商品管理、库存 | `biz_product`, `biz_sku` |
-| `system-service` | 系统配置、字典 | `sys_dict`, `sys_config` |
-
-#### 5.2.4 服务间调用规范
-
-```java
-// Feign 客户端定义
-@FeignClient(name = "user-service", fallbackFactory = UserClientFallbackFactory.class)
-public interface UserClient {
-    
-    @GetMapping("/api/v1/users/{id}")
-    Result<UserVO> getUserById(@PathVariable("id") Long id);
-}
-
-// 服务调用
-@Service
-@RequiredArgsConstructor
-public class OrderServiceImpl implements OrderService {
-    
-    private final UserClient userClient;
-    
-    @Override
-    public OrderVO getOrder(Long orderId) {
-        // 调用用户服务获取用户信息
-        Result<UserVO> userResult = userClient.getUserById(order.getUserId());
-        // ...
-    }
-}
-```
-
-**调用规范：**
-- 统一使用 Feign 调用，禁止使用 RestTemplate
-- Feign 客户端按服务模块划分，放在 `feign/` 包下
-- 必须配置降级（Fallback），避免服务雪崩
-- 调用超时设置合理（连接超时 3s，读取超时 10s）
-
-### 5.3 数据库设计规范
-
-#### 5.3.1 表设计原则
-
-| 原则 | 说明 |
-|------|------|
-| 原子性 | 字段不可再分，如「地址」应拆分为省、市、区、详细地址 |
-| 一致性 | 同一字段在不同表中类型、长度、命名一致 |
-| 冗余控制 | 适当冗余提升查询性能，但避免数据不一致 |
-| 命名规范 | 表名、字段名小写 + 下划线，禁止驼峰 |
-| 审计字段 | 每张表必须包含创建时间、更新时间、创建人、更新人、删除标记 |
-
-#### 5.3.2 表关系设计
-
-**一对一关系：**
-```sql
--- 用户基本信息（主表）
-CREATE TABLE sys_user (
-    id BIGINT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL,
-    ...
-);
-
--- 用户扩展信息（扩展表）
-CREATE TABLE sys_user_detail (
-    id BIGINT PRIMARY KEY,
-    user_id BIGINT NOT NULL,  -- 关联用户ID
-    avatar VARCHAR(255),
-    ...
-);
-```
-
-**一对多关系：**
-```sql
--- 订单主表
-CREATE TABLE biz_order (
-    id BIGINT PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    ...
-);
-
--- 订单明细表（多端）
-CREATE TABLE biz_order_item (
-    id BIGINT PRIMARY KEY,
-    order_id BIGINT NOT NULL,  -- 关联订单ID
-    product_id BIGINT NOT NULL,
-    ...
-);
-```
-
-**多对多关系：**
-```sql
--- 用户表
-CREATE TABLE sys_user (...);
-
--- 角色表
-CREATE TABLE sys_role (...);
-
--- 用户角色关联表
-CREATE TABLE sys_user_role (
-    id BIGINT PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    role_id BIGINT NOT NULL,
-    UNIQUE KEY uk_user_role (user_id, role_id)
-);
-```
-
-#### 5.3.3 字段设计规范
-
-| 字段类型 | 规范 | 示例 |
-|---------|------|------|
-| 主键 | `BIGINT`，日期+序列号策略 | `26092100000001` |
-| 金额 | `DECIMAL(10,2)`，禁止用 `FLOAT` | `99.99` |
-| 状态 | `TINYINT`，枚举值 | `0` 未激活 / `1` 已激活 |
-| 时间 | `DATETIME`，不用 `TIMESTAMP` | `2026-09-21 14:30:00` |
-| 文本 | `VARCHAR` 定长，禁止无脑 `TEXT` | `VARCHAR(255)` |
-| 布尔 | `TINYINT(1)`，`0`/`1` | `0` false / `1` true |
-
-#### 5.3.4 索引设计规范
-
-```sql
--- 索引命名
-CREATE INDEX idx_user_username ON sys_user(username);      -- 普通索引
-CREATE UNIQUE INDEX uk_user_email ON sys_user(email);     -- 唯一索引
-CREATE INDEX idx_order_user_time ON biz_order(user_id, create_time);  -- 组合索引
-```
-
-**索引原则：**
-- 仅为 `WHERE`、`JOIN`、`ORDER BY` 中的字段建索引
-- 选择性高的字段放前面（如 `user_id` 在前，`status` 在后）
-- 单表索引不超过 5 个
-- 禁止冗余索引（如已有 `idx_a_b`，不再建 `idx_a`）
-
-### 5.4 数据字典规范
-
-#### 5.4.1 字典表设计
-
-```sql
--- 数据字典表
-CREATE TABLE sys_dict (
-    id BIGINT PRIMARY KEY,
-    dict_type VARCHAR(100) NOT NULL COMMENT '字典类型',
-    dict_code VARCHAR(100) NOT NULL COMMENT '字典编码',
-    dict_label VARCHAR(100) NOT NULL COMMENT '字典标签',
-    dict_value VARCHAR(100) NOT NULL COMMENT '字典值',
-    sort_order INT DEFAULT 0 COMMENT '排序',
-    status TINYINT DEFAULT 1 COMMENT '状态（0禁用 1启用）',
-    UNIQUE KEY uk_dict_code (dict_type, dict_code)
-);
-```
-
-#### 5.4.2 常用字典类型
-
-| 字典类型 | 说明 | 示例值 |
-|---------|------|--------|
-| `sys_status` | 通用状态 | 0-禁用, 1-启用 |
-| `sys_gender` | 性别 | 0-未知, 1-男, 2-女 |
-| `sys_yes_no` | 是否 | 0-否, 1-是 |
-| `biz_order_status` | 订单状态 | 0-待支付, 1-已支付, 2-已完成, 3-已取消 |
+**Feign：** 统一 Feign，禁止 RestTemplate / 手写 HTTP 调其他服务；客户端放 `feign/`；
+必须有 Fallback；建议连接超时 3s、读取超时 10s。
 
 ---
 
 ## 6. 开发规范
 
-### 6.1 编码规范
+### 6.1 编码与命名
 
-- 命名：前端变量/函数 `camelCase`、组件 `PascalCase`、常量 `UPPER_SNAKE`；
-  后端类名 `PascalCase`、方法/变量 `camelCase`、常量 `UPPER_SNAKE`。
-- 格式化：前端 Prettier + ESLint；后端遵循 Spring 官方代码风格（IDE 统一格式化）。
-- 注释语言：中文（与提交语言一致）。
-- 错误处理：统一走 6.4.3 全局异常处理，前后端均禁止吞异常。
-
-### 6.1.1 前端代码规范
-
-- 组件风格：统一使用组合式 API（`<script setup lang="ts">`），禁止混用 Options API。
-- 组件命名：文件名与组件名用 `PascalCase`，单文件组件（SFC）一个文件只放一个组件。
-- 目录约定：`src/api`（接口请求）、`src/views`（页面）、`src/components`（通用组件）、`src/stores`（Pinia）、`src/utils`（工具函数）、`src/types`（TS 类型）。
-- 状态管理：跨组件共享状态一律走 Pinia，禁止用全局变量或事件总线传状态。
-- 路由：路由配置集中维护，动态路由与权限需与后端权限标识一致，不硬编码角色。
-- 样式：优先用 Element Plus 组件与 scoped 样式，禁止内联样式堆叠；统一主题变量写在全局样式文件。
-- UI 组件：统一使用 Element Plus 组件，禁止自造重复轮子；图标用 Element Plus 图标库。
-- TypeScript：页面取值处逐字段对照接口真实签名定义类型，禁止用 `any` 绕过类型检查。
-- Long 类型处理：后端返回的 `Long` 类型字段（如 `id`）在前端定义为 `string`，禁止用 `number`，避免精度丢失。
-- 请求封装：统一走 `src/api` 封装 + axios 拦截器，业务组件不直接调 axios。
-
-### 6.1.2 后端代码规范
-
-- 对象分层职责，禁止越层混用：
-  | 对象 | 职责 | 边界 |
-  |---|---|---|
-  | `Entity` | 数据库表映射，只含持久化字段 | 禁止暴露给 Controller / 前端 |
-  | `DTO` | 接口入参，接收前端请求 | 负责参数校验 |
-  | `VO` | 接口出参，返回给前端 | 按页面需要组装 |
-  | `BO` | 业务对象，Service 内部流转 | 不对外 |
-- 禁止把 `Entity` 直接作为接口入参或出参；`Entity` ↔ `DTO`/`VO` 转换统一用 MapStruct 或集中转换层，禁止在 Controller 里手写逐字段赋值。
-- Service 接口 + 实现分离（`XxxService` + `XxxServiceImpl`），业务规则只写在 Service 层，Controller 只做参数接收、调用 Service、返回结果。
-- Mapper 只写数据访问，禁止在 Mapper 里写业务逻辑。
+- 前端：变量/函数 `camelCase`，组件 `PascalCase`，常量 `UPPER_SNAKE`。
+- 后端：类 `PascalCase`，方法/变量 `camelCase`，常量 `UPPER_SNAKE`。
+- 注释与提交说明使用中文。
+- 禁止吞异常；统一走 6.4 全局异常处理。
+- 前端 Prettier + ESLint；后端遵循 Spring 官方代码风格。
 
 ### 6.2 接口与数据模型
 
-- 接口契约来源：以后端真实 Controller 签名与 API 文档为准，前端按真实字段取值。
-- 枚举/字段以什么为准：后端枚举类与数据库表结构为准，禁止前端自造枚举值。
-- RESTful 风格：URL 用小写 + 连字符（kebab-case），资源用名词复数（如 `/users`）；HTTP 方法语义正确（查询 `GET`、新增 `POST`、修改 `PUT`、删除 `DELETE`）。
-- 版本号：接口路径带版本前缀（如 `/api/v1/...`），破坏性变更才升级版本。
-- 命名：接口方法见名知义（`getXxx / listXxx / createXxx / updateXxx / deleteXxx`），禁止语义模糊的方法名。
+- 契约来源：后端真实 Controller 签名与 API 文档；前端按真实字段取值。
+- 枚举/字段以后端枚举类与数据库表结构为准，禁止前端自造枚举值。
+- RESTful：URL 小写 + 连字符；资源用名词复数；GET 查 / POST 增 / PUT 改 / DELETE 删。
+- 路径带版本前缀（`/api/v1/...`）；破坏性变更才升版本。
+- 方法名见名知义：`getXxx / listXxx / createXxx / updateXxx / deleteXxx`。
 
 ### 6.3 提交规范
 
 - 格式：`type(scope): subject`，type ∈ `feat / fix / refactor / docs / chore / test / perf / ci / style`。
-- subject 用中文祈使句、≤ 50 字符，不写句号。
-- 单人开发：直接提交到 `main`，不强制分支与 PR 评审；较大功能可自行开分支隔离。
-- 提交粒度：一个提交只做一件事，禁止混合多种变更。
-- 提交前自查清单：
-  - [ ] 代码能编译通过
-  - [ ] 测试全部通过
-  - [ ] 无 `console.log` / `System.out.println` 调试代码
-  - [ ] 无敏感信息泄露（密码、密钥、Token）
-  - [ ] 代码符合项目编码规范
-  - [ ] 提交信息格式正确
+- subject 中文祈使句、≤ 50 字符、不写句号。
+- 单人开发直接提交 `main`；较大功能可开分支隔离。
+- 一个提交只做一件事。
 
-### 6.4 基础代码规范
+提交前自查：
 
-> 本节只约定「契约」，不写具体实现。基础代码在脚手架初始化后作为第一批落地，
-> 落地实现必须符合以下契约。
+- [ ] 编译通过，lint / type-check / 测试通过
+- [ ] 无 `console.log` / `System.out.println` 调试残留
+- [ ] 无**生产**密钥、密码、Token 泄露；测试/开发/本地密码仅出现在允许的环境文档中
+- [ ] 符合本文件规范
+
+示例：
+
+- 好：`feat(user): 新增用户分页查询接口`
+- 好：`fix(order): 修复订单状态未回滚问题`
+- 坏：`update` / `修改了一些东西` / `feat: add user, order, fix bug and docs`
+
+### 6.4 基础代码契约（落在 `{system}-common`）
+
+> 本节约定「必须长成什么样」，不附完整实现。各系统脚手架时**第一批**落入 common 模块；
+> 业务模块直接复用，禁止各写一套。实现必须符合下列契约。
 
 #### 6.4.1 统一返回体
 
-- 后端所有接口统一返回结构 `{ code, msg, data }`，`code` 为业务错误码，`msg` 为提示信息，`data` 为业务数据。
-- 分页场景统一返回 `{ records, total, size, current }`（MyBatis-Plus `Page` 对象），新接口沿用既有约定。
-- 前端 axios 拦截器统一解包，禁止在业务代码里逐处判断返回结构。
+- 所有接口统一 `{ code, msg, data }`。
+- 分页统一 `{ records, total, size, current }`（MyBatis-Plus `Page`），禁止自造分页结构。
+- 前端 axios 拦截器统一解包，业务代码禁止逐处判断返回结构。
 
 #### 6.4.2 错误码
 
-- 错误码用数字分段区分类型，分段固定如下：
-  | 分段 | 含义 |
-  |---|---|
-  | `1xxxx` | 系统异常 |
-  | `2xxxx` | 业务异常 |
-  | `3xxxx` | 参数校验异常 |
-- 错误码与提示信息通过枚举/常量维护，禁止在业务代码里硬编码错误码字符串。
+| 分段 | 含义 |
+|------|------|
+| `1xxxx` | 系统异常 |
+| `2xxxx` | 业务异常 |
+| `3xxxx` | 参数校验异常 |
+
+错误码与文案用枚举/常量维护，禁止在业务代码硬编码错误码字符串。
 
 #### 6.4.3 全局异常处理
 
-- 后端用 `@RestControllerAdvice` 统一捕获异常，分类处理：业务异常、参数校验异常、系统异常。
-- 铁律：禁止吞异常；禁止把堆栈 / 内部实现细节返回给前端；系统异常统一返回友好提示并记日志。
-- 前端统一 axios 拦截器处理错误，按 `code` 分流（如登录失效跳转、业务错误弹提示、系统错误通用提示）。
+- 后端 `@RestControllerAdvice` 分类处理业务 / 校验 / 系统异常。
+- 禁止吞异常；禁止把堆栈或内部细节返回前端；系统异常返回友好提示并记日志。
+- 前端拦截器按 `code` 分流（登录失效、业务提示、通用错误）。
 
 #### 6.4.4 数据校验
 
-- 入参校验统一用 Bean Validation（`@Valid` / 校验注解），禁止在 Controller / Service 里手写重复的 if 校验。
-- 校验失败统一走全局异常处理，返回校验类错误码。
+- 入参用 Bean Validation（`@Valid` 及校验注解），禁止在 Controller/Service 手写重复 if。
+- 校验失败走全局异常处理。
 
-#### 6.4.5 实体类约定
+#### 6.4.5 实体与审计字段
 
-- 所有数据库实体类必须包含审计字段，命名与类型统一：
-  | 字段 | 类型 | 说明 |
-  |---|---|---|
-  | `createTime` | `LocalDateTime` | 创建时间 |
-  | `updateTime` | `LocalDateTime` | 更新时间 |
-  | `createBy` | `Long` | 创建人 |
-  | `updateBy` | `Long` | 更新人 |
-  | `deleted` | `Integer` | 删除标记（逻辑删除，`0` 未删 / `1` 已删） |
-- 逻辑删除用 MyBatis-Plus `@TableLogic`，查询自动过滤已删除数据，禁止手写 `deleted = 0` 条件。
-- 审计字段（创建/更新时间、人）用 MyBatis-Plus `MetaObjectHandler` 自动填充，禁止在业务代码手写赋值。
-- 主键统一 `id`，类型 `Long`（数据库 `BIGINT`），ID 策略：日期(6位 `yyMMdd`) + 序列号(8位)，共14位（如 `26092100000001`），兼顾可读性与简洁性。禁止依赖数据库自增。
-- 序列号由数据库序列表维护，按日期自动递增，支持单表每日千万级数据量。
+所有实体必须包含：
 
-#### 6.4.6 分页查询入参
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `createTime` | `LocalDateTime` | 创建时间 |
+| `updateTime` | `LocalDateTime` | 更新时间 |
+| `createBy` | `Long` | 创建人 |
+| `updateBy` | `Long` | 更新人 |
+| `deleted` | `Integer` | 逻辑删除（0 未删 / 1 已删） |
 
-- 分页查询入参类统一继承 MyBatis-Plus `Page`（或包含同等分页字段），字段名与默认值统一：
-  | 字段 | 类型 | 默认 | 说明 |
-  |---|---|---|---|
-  | `current` | `long` | `1` | 当前页（从 1 开始） |
-  | `size` | `long` | `10` | 每页条数 |
-- 可选排序字段 `orderBy` / `order` 必须做白名单校验，禁止把排序字段直接拼进 SQL。
-- 分页返回统一走 MyBatis-Plus `Page` 对象 `{ records, total, size, current }`（见 6.4.1），禁止各接口自造分页结构。
+- 逻辑删除用 `@TableLogic`，禁止手写 `deleted = 0`。
+- 审计字段用 `MetaObjectHandler` 自动填充，禁止业务代码手写赋值。
+- 主键 `id`：`Long` / `BIGINT`；策略 **yyMMdd(6) + 序列号(8) = 14 位**（如 `26092100000001`）；
+  序列号由序列表按日递增；禁止数据库自增。
 
-#### 6.4.7 Long 类型序列化
+#### 6.4.6 分页入参
 
-- 后端返回的 `Long` 类型字段（如主键 `id`）必须序列化为 `String`，避免前端 JavaScript 精度丢失（JS 安全整数最大值 `2^53-1`，16位）。
-- 后端：通过全局配置 `ObjectMapper` 统一处理，禁止在字段上添加 `@JsonSerialize` 注解。
-- 前端：接收 `Long` 类型字段的类型定义为 `string`，禁止用 `number`。
-- 请求传参：前端向后端传递 `Long` 类型参数时用 `string`，后端使用 `@JsonProperty` 或自定义转换器接收。
+| 字段 | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| `current` | `long` | `1` | 页码（从 1 起） |
+| `size` | `long` | `10` | 每页条数 |
 
-```java
-// 全局配置：Long -> String 序列化
-@Configuration
-public class JacksonConfig {
-    @Bean
-    public ObjectMapper objectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        SimpleModule module = new SimpleModule();
-        module.addSerializer(Long.class, ToStringSerializer.instance);
-        module.addSerializer(Long.TYPE, ToStringSerializer.instance);
-        mapper.registerModule(module);
-        return mapper;
-    }
-}
-```
+排序字段 `orderBy` / `order` 必须白名单校验，禁止拼进 SQL。
+
+#### 6.4.7 Long 序列化
+
+- 出参中 `Long`（含 `id`）一律序列化为 `String`（防 JS 精度丢失）。
+- 后端：全局 `ObjectMapper` 统一处理，禁止字段上散落 `@JsonSerialize`。
+- 前端：对应字段类型为 `string`，禁止 `number`。
+- 入参：前端传字符串，后端用转换器或 `@JsonProperty` 接收。
 
 ### 6.5 数据库规范
 
-- 命名：表名、字段名一律小写 + 下划线（`snake_case`），禁止驼峰；表名用业务名词单数形式。
-- 主键：统一 `id BIGINT`，策略为日期(6位 `yyMMdd`) + 序列号(8位)，共14位（与 6.4.5 一致），禁止物理外键，关联用逻辑字段。
-- 必备字段：每张业务表包含 6.4.5 定义的审计字段（`create_time / update_time / create_by / update_by / deleted`）。
-- 字段类型：金额用 `DECIMAL`、状态/标记用 `TINYINT`、时间用 `DATETIME`、文本用 `VARCHAR`（定长合理，禁止无脑 `TEXT`）。
-- 索引：命名 `idx_表名_字段`，唯一索引 `uk_表名_字段`；只为真实查询场景建索引，禁止冗余索引。
-- 查询：禁止 `SELECT *`，必须明确列出字段；大表查询必须走索引，禁止全表扫描。
-- 约定：字符串字段默认 `NOT NULL` 并给默认值，避免 `NULL` 歧义；逻辑删除字段数据库默认 `0`。
+- 表名、字段名 `snake_case`，表名用业务名词单数；禁止物理外键。
+- 每张业务表含 6.4.5 审计字段；字段落库名对应 `create_time` 等。
+- 金额 `DECIMAL`、状态/标记 `TINYINT`、时间 `DATETIME`、文本合理定长 `VARCHAR`（禁止无脑 `TEXT`）。
+- 字符串默认 `NOT NULL` + 默认值；逻辑删除默认 `0`。
+- 索引：普通 `idx_表名_字段`，唯一 `uk_表名_字段`；只为真实查询建；单表索引 ≤ 5；禁止冗余索引。
+- 查询禁止 `SELECT *`；大表必须走索引。
 
 ### 6.6 事务规范
 
-- 事务注解 `@Transactional` 只加在 Service 层（接口或实现类），禁止加在 Controller / Mapper。
-- 默认只对 `RuntimeException` 回滚，业务异常需回滚时明确声明 `rollbackFor`。
-- 禁止在事务内调用远程接口（Feign / RPC / HTTP），避免长事务；远程调用放在事务提交后或事务外。
-- 只读查询方法加 `@Transactional(readOnly = true)`（或走只读数据源），禁止无谓写事务。
+- `@Transactional` 只加在 Service，禁止加在 Controller / Mapper。
+- 默认 `RuntimeException` 回滚；业务异常需回滚时显式 `rollbackFor`。
+- **禁止在事务内调 Feign/HTTP**；远程调用放事务外或提交后。
+- 只读查询用 `@Transactional(readOnly = true)`。
 
 ### 6.7 安全规范
 
-#### 6.7.1 SQL 注入防护
+- SQL 一律参数化（`#{}`），禁止 `${}` 拼用户输入；动态表名/字段名白名单。
+- 前端渲染用户输入用 `v-text`，非明确需要禁用 `v-html`；后端必要时做 HTML 转义。
+- 密码 BCrypt/Argon2 单向存储；手机号/身份证等日志与出参脱敏。
+- **密钥入仓分级：**
+  - **生产**密码、私钥、Token、连接串：**禁止**写入仓库任何文件（含文档、配置、Jenkinsfile）；只进 Nacos/密钥管理/Jenkins Credentials。
+  - **测试 / 开发 / 本地**账号密码：**允许**写入仓库文档与配置（如 `docs/test-env.md`、`application-test.yml`、`application-local.yml`），便于联调；须标注环境，禁止与生产混用同一账号。
+  - 生产密钥误入仓：立即改密、清理历史（需征询），并记为严重问题。
+- Token 用 JWT：Access 30 分钟，Refresh 7 天；网关与业务服务双重鉴权。
+- 登录失败限制；敏感接口（改密、支付等）二次验证；关键接口限流；CORS 仅信任域名。
 
-- 所有 SQL 查询必须使用参数化查询（MyBatis `#{}`），禁止使用 `${}` 拼接用户输入。
-- 动态表名/字段名使用白名单校验，禁止直接拼接。
+### 6.8 API 文档
 
-#### 6.7.2 XSS 防护
-
-- 前端：用户输入在渲染前必须转义，使用 Vue 的 `v-text` 而非 `v-html`（除非明确需要富文本）。
-- 后端：返回给前端的数据在必要时进行 HTML 实体转义。
-
-#### 6.7.3 敏感数据处理
-
-- 密码存储：使用 BCrypt 或 Argon2 单向加密，禁止明文存储。
-- 敏感字段（手机号、身份证）在日志和接口返回中脱敏处理。
-- 敏感配置（密钥、密码）禁止写入代码或提交到 Git，统一走 Nacos 配置中心。
-
-#### 6.7.4 认证与授权
-
-- Token 统一使用 JWT，设置合理过期时间（Access Token 30分钟，Refresh Token 7天）。
-- 接口权限校验在网关层和业务服务层双重校验。
-- 登录失败次数限制，超过阈值锁定账号或增加验证码。
-
-#### 6.7.5 接口安全
-
-- 敏感接口（修改密码、支付等）需要二次验证。
-- 接口限流：关键接口配置 QPS 限制，防止暴力攻击。
-- CORS 配置：仅允许信任的域名访问。
-
-### 6.8 API 文档规范
-
-- 所有接口必须使用 Swagger/OpenAPI 注解（`@Operation`、`@Parameter`、`@Schema`）。
-- 接口文档随代码同步更新，禁止手动维护单独的文档文件。
-- 接口变更需同步更新 Swagger 注解，保持文档与代码一致。
+- 接口用 Swagger/OpenAPI 注解（`@Operation` / `@Parameter` / `@Schema`）。
+- OpenAPI/Swagger 通用配置在 `{system}-common`，业务模块只写注解，禁止各起一套文档配置。
+- 文档随代码更新，禁止另手维护一份接口文档文件。
 
 ### 6.9 性能规范
 
-#### 6.9.1 接口性能
+- 普通查询 ≤ 200ms；复杂查询/报表 ≤ 1s；慢查询优化或异步。
+- 缓存 key：`{服务名}:{模块}:{业务标识}`；必须设 TTL；更新优先「更新 DB 再删缓存」。
+- 批量用 batch insert/update，禁止循环单条；深度分页用游标或覆盖索引。
+- 耗时操作走异步（MQ/线程池），且必须有重试与死信。
 
-- 普通查询接口响应时间 ≤ 200ms。
-- 复杂查询/报表接口响应时间 ≤ 1s。
-- 慢查询（>1s）必须优化或异步处理。
+### 6.10 配置规范（必须区分环境）
 
-#### 6.9.2 缓存策略
+每个后端可运行模块的配置**至少**按环境拆分：
 
-- 频繁查询且变化不频繁的数据使用 Redis 缓存。
-- 缓存 key 规范：`{服务名}:{模块}:{业务标识}`，如 `user:info:1001`。
-- 缓存必须设置过期时间，避免内存溢出。
-- 缓存更新策略：优先使用「先更新数据库，再删除缓存」。
+| 文件 | profile | 用途 |
+|------|---------|------|
+| `application.yml` | 公共 | 各环境相同项：应用名、`server`/`spring`/`mybatis-plus`/`logging` 分组等 |
+| `application-local.yml` | `local` | **本地开发**：本机中间件、调试日志；**允许**含本地/开发账号密码 |
+| `application-test.yml` | `test` | **测试环境**：测试中间件与测试库；**允许**含测试账号密码 |
+| `application-prod.yml` | `prod` | 生产（如需）：**禁止**任何密码/密钥；只留非敏感结构，密钥走 Nacos/密钥管理 |
 
-#### 6.9.3 数据库性能
+- 本地开发默认激活 `local`（`spring.profiles.active: local`）；联调/部署切 `test` / `prod`。
+- 配置项 `kebab-case`；用 `@ConfigurationProperties` 绑定，禁止散落 `@Value`。
+- 禁止把**生产**连接串、密钥写进任何配置或文档并提交到 Git。
+- 测试/开发/本地密码可按 6.7 分级入仓；`.env` 仅作本机可选补充。
+- 敏感项生产必须走 Nacos 或密钥管理；测试/开发/本地见 3.3 与 6.7。
+- 重大配置变更先在 `test` 验证，再动 `prod`。
+- CI/CD 由 Jenkins 按环境发布；新建/修改流水线按 `docs/jenkins-pipeline-guide.md` 执行；Jenkinsfile **禁止**写生产密钥（用 Credentials）。
+- 测试/开发环境主机与账号密码见 `docs/test-env.md`（**允许**含测试/开发/本地密码）；生产密钥另册且不进本仓库。
 
-- 大表查询必须走索引，禁止全表扫描。
-- 批量操作使用 `batch insert/update`，禁止循环单条操作。
-- 分页查询避免深度分页（`LIMIT 10000, 10`），使用游标分页或覆盖索引。
+### 6.11 依赖与工程
 
-#### 6.9.4 异步处理
+- 锁定 `package-lock.json` / `pom.xml` 版本；升级先评估兼容性。
+- 定期 `npm audit` / `mvn dependency-check`，高危必修。
+- 每个服务暴露 `/actuator/health`；指标用 Micrometer；关键指标告警；
+  链路追踪：Sleuth + Zipkin。
+- 上传：单文件 ≤ 10MB，批量 ≤ 50MB；类型白名单；OSS/MinIO；UUID 命名；逻辑删除 + 定时清理。
+- 写操作幂等（请求 ID 或业务唯一键）；关键接口带 `Idempotent-Key`。
+- 重试：指数退避最多 3 次（1s/2s/4s）；超时与 5xx 可重试，4xx 不重试；重试打日志。
 
-- 耗时操作（邮件发送、文件处理、复杂计算）使用异步任务（MQ 或线程池）。
-- 异步任务必须有重试机制和死信队列处理。
+### 6.12 测试规范
 
-### 6.10 微服务规范
+- 核心 Service 必须有单测；改 bug 先补回归测试再修复。
+- 命名 `XxxTest` + 行为描述；数据自包含。
+- 接口层用 MockMvc；禁止无断言空测试。
+- 测试失败不得提交。
 
-- 服务命名：小写 + 连字符，语义清晰（如 `user-service / order-service`），注册到 Nacos 用统一命名空间与分组。
-- 服务间调用：统一走 Feign（`@FeignClient`），禁止在业务代码里手写 HTTP 调用其他服务。
-- 配置管理：环境配置（dev / test / prod）统一托管在 Nacos 配置中心，禁止硬编码环境相关地址、密钥。
-- 网关：跨服务请求统一走 Spring Cloud Gateway 路由，前端不直接调业务服务地址；鉴权在网关统一处理（见 6.7.4）。
-- 分布式一致性：跨服务业务优先用最终一致性（消息/补偿），禁止随意引入分布式事务强一致方案。
+### 6.13 枚举与常量
 
-### 6.11 依赖管理
+- 枚举实现 `BaseEnum<T>`（`code` + `desc`）；类名 `XxxEnum`。
+- 常量放 `constants` 包，类名 `XxxConstants`；禁止魔法值。
+- 库里存 `code`，界面显示 `desc`；接口只传 `code`，禁止传枚举名或整个枚举对象。
 
-- 依赖版本锁定：前端 `package-lock.json`、后端 `pom.xml` 中的版本号必须锁定。
-- 升级策略：依赖升级前需评估兼容性，重大版本升级需单独测试验证。
-- 安全漏洞：定期扫描依赖漏洞（`npm audit` / `mvn dependency-check`），高危漏洞必须及时修复。
-- 禁止引入：禁止引入与项目技术栈冲突或维护不活跃的依赖。
+### 6.14 国际化
 
-### 6.12 监控与健康检查
-
-- 健康检查：每个服务必须暴露 `/actuator/health` 端点。
-- 指标暴露：使用 Micrometer 暴露 JVM、HTTP、数据库等指标。
-- 告警配置：关键指标（CPU>80%、内存>85%、接口错误率>1%）配置告警。
-- 链路追踪：使用 Sleuth + Zipkin 实现分布式链路追踪。
-
-### 6.13 文件上传规范
-
-- 文件大小限制：单文件最大 10MB，批量上传最大 50MB。
-- 文件类型白名单：只允许上传指定类型（图片、文档等），禁止上传可执行文件。
-- 文件存储：优先使用 OSS/MinIO 对象存储，禁止存储在本地磁盘。
-- 文件命名：使用 UUID + 原文件扩展名，禁止使用中文或特殊字符。
-- 文件删除：逻辑删除 + 定时清理，禁止立即物理删除。
-
-### 6.14 错误重试与幂等性
-
-- 幂等性设计：所有写操作必须保证幂等性（通过请求ID或业务唯一键）。
-- 重试策略：网络请求使用指数退避重试（最多3次，间隔 1s/2s/4s）。
-- 重试场景：超时、5xx 错误可重试；4xx 错误（参数错误、权限不足）不重试。
-- 幂等键：关键接口（支付、下单）必须携带幂等键（`Idempotent-Key`）。
-- 重试日志：重试必须记录日志，包含重试次数、原始请求、失败原因。
-
-### 6.15 测试规范
-
-- 关键业务路径（核心 Service 逻辑）必须有单元测试；改 bug 先补回归测试再修复。
-- 测试命名：`XxxTest` + 方法名描述行为；测试数据自包含，不依赖外部环境与执行顺序。
-- 接口层用 `MockMvc` 做集成测试；禁止为凑覆盖率写无断言的空测试。
-- 提交前必须跑通本地测试与 lint，测试失败不得提交。
-
-### 6.16 枚举与常量规范
-
-- 枚举类统一继承 `BaseEnum<T>` 接口，包含 `code`（编码）和 `desc`（描述）字段。
-- 枚举类命名：`XxxEnum`，成员变量全大写下划线（`USER_TYPE_ADMIN`）。
-- 常量类统一放在 `constants` 包下，类名 `XxxConstants`，禁止在业务代码中硬编码魔法值。
-- 枚举/常量使用：数据库存储编码（`code`），前端展示描述（`desc`），禁止在接口中传递枚举名称。
-- 枚举序列化：返回前端时只传 `code`，禁止传整个枚举对象。
-
-### 6.17 配置文件规范
-
-- 配置文件结构：`application.yml` 按功能模块分组（`server`、`spring`、`mybatis-plus`、`logging` 等）。
-- 多环境配置：`application-{profile}.yml`（`dev`/`test`/`prod`），公共配置放 `application.yml`。
-- 配置项命名：`kebab-case`（如 `spring.datasource.url`），禁止驼峰。
-- 敏感配置：密码、密钥等敏感信息禁止写入配置文件，统一走 Nacos 配置中心或环境变量。
-- 配置类：使用 `@ConfigurationProperties` 绑定配置，禁止在代码中用 `@Value` 散落注入。
-- 配置变更：配置变更需评估影响范围，重大变更需在测试环境验证。
-
-### 6.18 代码审查规范
-
-- 审查维度：功能正确性、代码质量、性能、安全性、可维护性。
-- 审查清单：
-  - [ ] 是否符合项目规范（CLAUDE.md）
-  - [ ] 是否有潜在的性能问题
-  - [ ] 是否有安全漏洞（SQL注入、XSS等）
-  - [ ] 是否有重复代码可以复用
-  - [ ] 单元测试是否覆盖关键路径
-  - [ ] 文档/注释是否同步更新
-- 审查反馈：问题描述清晰，给出修改建议，不发表主观意见。
-
-### 6.19 国际化规范
-
-- 多语言支持：前端使用 `vue-i18n`，后端使用 `MessageSource`。
-- 语言包文件：`src/locales/zh-CN.json`、`src/locales/en-US.json`。
-- 硬编码文案：所有用户可见的文案必须使用 i18n key，禁止硬编码中文/英文。
-- 日期/数字格式：使用 `Intl` API 或 `dayjs` 的 `locale` 方法格式化。
-- 后端提示信息：业务异常的 `msg` 字段使用 i18n key，前端根据语言环境翻译。
-
-## 6. 协作红线（AI 工具必须遵守）
-
-1. 不可逆操作（数据库写、migration、seed、改写 git 历史、改依赖锁文件）必须先征询。
-2. 不擅自修改 `openspec/` 下的制品文件。
-3. 不添加未被要求的功能、抽象或重构。
-4. 复用接口/枚举/字段前，先确认真实契约，不凭推导实现。
-
-## 7. 规范驱动开发（SDD）
-
-本项目采用 OpenSpec（schema：`spec-driven`）驱动开发，命令入口见
-`.claude/commands/opsx/`（Trae 侧等价技能见 `.trae/skills/openspec-*`）。
-
-- 制品权威性：`proposal / specs / design / tasks` 为唯一指令源，实现必须以制品为准，禁止绕过制品直接改代码。
-- 工作流入口（四个命令，按顺序使用）：
-  - `/opsx:explore` — 探索/澄清需求，只思考不实现。
-  - `/opsx:propose <change>` — 创建 change 并生成 `proposal / design / tasks` 制品。
-  - `/opsx:apply <change>` — 按 `tasks` 逐条实现，完成后勾选任务状态位。
-  - `/opsx:archive <change>` — 变更完成并验证后归档。
-- 状态查询：`openspec list --json` / `openspec status --change "<name>" --json`。
-- 铁律：只改 `tasks` 状态位，不擅自改制品定义；未归档前，避免直接修改对应代码。
+- 前端 `vue-i18n`，后端 `MessageSource`；用户可见文案必须 i18n key。
+- 语言包：`src/locales/zh-CN.json`、`en-US.json`。
+- 日期/数字用 `Intl` 或 dayjs locale。
 
 ---
 
-> 维护约定：本文件变更需随对应代码变更一并提交；结构增删需在 PR 中说明理由。
+## 7. 协作红线（AI 工具必须遵守）
+
+1. 不可逆操作（数据库写、migration、seed、改写 git 历史、改依赖锁文件）必须先征询。
+2. 不擅自修改 `openspec/` 制品定义（proposal / specs / design）；`tasks` 只允许勾选状态位。
+3. 不添加未被要求的功能、抽象或重构。
+4. 复用接口/枚举/字段前，先确认真实契约，不凭推导实现。
+5. 不把**生产**密钥、Token、生产连接串写入任何将提交的文件；测试/开发/本地密码仅可按 6.7 写入环境文档。
+6. 文档与代码不一致时：以代码与契约为准改文档，或停下来指出冲突，禁止两边将就。
+7. 不在本文件写入服务清单、库表明细、完整实现代码或短期任务。
+
+### 7.1 常见反模式（禁止）
+
+| 反模式 | 正确做法 |
+|--------|----------|
+| 前端 `number` 接主键 `id` | 一律 `string` |
+| `Controller` 注入 `Mapper` | 只走 `Service` |
+| 事务内调 Feign | 远程调用放事务外 |
+| `${}` 拼 SQL | 只用 `#{}` |
+| 吞异常 / 空测试凑覆盖率 | 显式失败并修根因 |
+| 预写未提案的服务名与表结构 | 先 SDD，结构进制品/代码 |
+| 假设仓库只有一个前后端工程 | `frontend/`、`backend/` 下按系统多工程并存 |
+| 业务模块自建返回体/异常/分页 | 一律用 `{system}-common` |
+| 只有单一 `application.yml` 不分环境 | 至少 `local` + `test`（及如需的 `prod`） |
+| 把细粒度授权/业务日志/业务规则塞进网关 | 网关只做 5.2 边缘治理；授权与审计在服务 |
+| 在 Nginx 写业务鉴权/业务限流规则 | Nginx 只做接入；应用策略在网关，业务规则在服务 |
+| 生产静态资源由后端或网关托管 | 静态走 Nginx；网关只反代 API |
+| 流水线跳过测试/吞错过门 | 质量门失败即失败；见 docs/jenkins-pipeline-guide.md |
+| 本文件粘贴依赖版本、端口、**生产**密钥、长代码 | 真相在构建文件 / Nacos / 代码；测试密码见 docs/test-env.md |
+
+---
+
+## 8. 规范驱动开发（SDD）
+
+本项目采用 OpenSpec（schema：`spec-driven`）。入口：
+`.claude/commands/opsx/`（Trae 侧：`.trae/skills/openspec-*`）。
+
+- 制品权威性：`proposal / specs / design / tasks` 为变更指令源；实现以制品为准。
+- 工作流（按序）：
+  - `/opsx:explore` — 澄清需求，只思考不实现
+  - `/opsx:propose <change>` — 生成 proposal / design / tasks
+  - `/opsx:apply <change>` — 按 tasks 实现并勾选状态
+  - `/opsx:archive <change>` — 验证后归档
+- 状态：`openspec list --json` / `openspec status --change "<name>" --json`
+- 铁律：只改 `tasks` 状态位；未归档前避免直接改对应代码。
+- 阅读顺序：本文件 → 当前 change 的 proposal/design/tasks → 代码 → 枚举与 Controller。
+
+---
+
+> 维护约定：本文件变更随对应约定调整一并提交。
+> 只保留稳定契约；服务名、端口、依赖版本、迭代任务、完整实现一律不写入。
