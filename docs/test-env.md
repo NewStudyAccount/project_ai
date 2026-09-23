@@ -51,9 +51,6 @@
 |------|----------------|-------------|--------|-----------|------|
 | OSS/MinIO | 192.168.99.100:9000 | file-bucket-test | minio-test | minio-test-secret（测试用可写；生产密钥禁止） | file-service 用；生产密钥走 Nacos/密钥管理，禁止入仓 |
 
-> file-service 本地开发默认 `file.storage.type=local`，无需 MinIO。  
-> 测试切 `minio` 时用环境变量 `FILE_OSS_ACCESS_KEY` / `FILE_OSS_SECRET_KEY` 注入；上表仅测试联调便利。
-
 ---
 
 ## 3. 网关与域名
@@ -82,7 +79,7 @@
 2. 连接串拼装规则（测试密码可用上表；生产密码从密钥管理注入，**不写进仓库**）：
    - MySQL：`jdbc:mysql://<host>:<port>/<db>?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai`
    - Redis：`redis://<host>:<port>/<db>`
-3. 本地开发用 `application-local.yml` + `.env`（已 gitignore）；测试环境由 Jenkins/运维注入。
+3. 本地开发用 `application-local.yml`（profile `local`；个人差异见 `docs/test-env.local.md`，已 gitignore）；测试环境用 `application-test.yml`，由 Jenkins/运维注入。
 
 ---
 

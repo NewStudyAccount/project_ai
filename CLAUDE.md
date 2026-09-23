@@ -8,10 +8,12 @@
 > | 文档 | 职责 | 不要放什么 |
 > |---|---|---|
 > | `CLAUDE.md`（本文件） | 稳定契约、项目边界、协作红线 | 服务清单、业务词表、实现代码、依赖清单、**生产**密钥 |
+> | `AGENTS.md` | 指针文件，仅指向本文件 | 复制规范内容（防双源漂移） |
 > | `openspec/` | 单次变更的 proposal / specs / design / tasks | 通用编码教程 |
 > | 后端枚举 / Controller / Swagger | 字段级接口契约真相 | 在文档里复述枚举全表 |
-> | `pom.xml` / `package.json` | 依赖真相 | 在本文件复制依赖清单 |
+> | `pom.xml` / `package.json` | 依赖落地锁定（版本按 `docs/version-baseline.md` 取用） | 在本文件复制依赖清单 |
 > | `docs/` | 流程、工具与环境信息（如 Jenkins 流水线、`test-env.md`） | 业务契约、短期任务 |
+> | `docs/version-baseline.md` | 组件版本基线（固定登记、不可删除；各系统版本唯一取用处） | 业务契约、生产密钥 |
 > | `docs/template/` | 设计/库表等参考模板 | 当作契约真相；覆盖 openspec 制品 |
 > | `deploy/` | 部署配置（nginx.conf、compose、Jenkins 共享脚本等） | 业务契约、生产密钥 |
 > | 会话 `notes.md` / issue | 未决问题、备忘 | 写入本文件当“规范” |
@@ -45,9 +47,9 @@
 - 服务间调用：Spring Cloud OpenFeign（含 Fallback）
 - 接口限流：`framework` 统一 `@RateLimit`，底层 **Redisson `RRateLimiter`**（不用 Redis+Lua 自研、不用 Sentinel、不用 Gateway `RequestRateLimiter` 作主路径）
 - 写幂等：`framework` 统一 `@Idempotent`，`Idempotent-Key`（或 `X-Request-Id`）+ Redis（**禁止业务唯一键做幂等**）
-- 消息队列：MQ（异步、重试、死信；**产品选型随变更提案锁定后回填本节**，见第 9 节。选定前禁止业务绑死某一家客户端 API、禁止写消费者业务代码）
+- 消息队列：**RocketMQ**（异步、重试、死信；客户端与 starter 版本见 `docs/version-baseline.md`；收发与消费重试/死信统一 `framework` 封装，禁止业务直接绑死客户端 API）
 - 对象存储：MinIO（S3 兼容）
-- 认证令牌：JWT（实现库待选定，见第 9 节；令牌时长见 6.7）
+- 认证中心：**Spring Authorization Server**（OAuth2/OIDC 协议内核，仅认证系统引入）；认证令牌：JWT（实现库 **spring-security-oauth2-jose（Nimbus）**，随 Boot BOM）；令牌时长见 6.7
 - 监控：Spring Boot Actuator（健康、存活、指标）；不引入独立监控产品
 - 链路追踪：Micrometer Tracing（Brave / OpenTelemetry 桥）；后端 OTLP / Zipkin 兼容
 - 构建：前端 Vite / 后端 Maven；包管理 npm
@@ -58,7 +60,7 @@
 
 ### 2.1 系统基础依赖
 
-- 基础依赖的**唯一真相**是各系统父 `pom.xml` 的 `dependencyManagement` 与各模块依赖（含版本）；**不在本文件复制依赖清单与版本号**。
+- 组件版本基线的**唯一取用处**是 `docs/version-baseline.md`（固定登记、不可删除）；各系统父 `pom.xml` 的 `dependencyManagement` 按其锁定落地，禁止各系统各锁各的版本；版本号**不在本文件**复制。
 - **落点原则（与 5.4 一致）：** 需连接中间件或额外配置才能工作的依赖（ORM、Redis/Redisson、Feign、JWT、MQ/MinIO 客户端、限流/幂等等），**只**在 `{system}-framework` 封装一次；纯编译期工具（Lombok、MapStruct）可随模块引入。
 - `common` **禁止**依赖 MyBatis-Plus、Redis/Redisson、数据源、Actuator、MQ/MinIO 客户端、JWT 库、Hutool。
 - 禁止同类平行选型、禁止业务自建横切实现；反模式**唯一清单**见 **7.1**，明确不引入的组件**唯一清单**见 **2.2**。
@@ -119,7 +121,7 @@ cd backend/<system> && mvn -q compile
 - lint / type-check 命令缺失时，先在脚手架变更中补上，不得用“跳过检查”换提交速度。
 - **不锁定测试栈、不以测试命令作提交门禁**（见 2.2）；编译与静态检查必须通过。
 - 各组件接入信息一律查 `docs/test-env.md`；本文件不写死具体值。
-- 端口、网关前缀、环境差异以 `docs/test-env.md` 与 `application.yml` / `application-dev.yml` / `application-test.yml` 为准；生产敏感项以 Nacos / 密钥管理为准。
+- 端口、网关前缀、环境差异以 `docs/test-env.md` 与 `application.yml` / `application-local.yml` / `application-test.yml` 为准；生产敏感项以 Nacos / 密钥管理为准。
 
 ### 3.3 环境变量与本地配置
 
@@ -154,14 +156,17 @@ cd backend/<system> && mvn -q compile
 ├── openspec/                    # SDD 制品（见第 8 节）
 ├── .claude/                     # Claude Code 命令与技能
 ├── .trae/                       # Trae 等价技能
-└── CLAUDE.md                    # 本文件
+├── .agents/                     # 通用代理技能镜像（openspec / 迁移命令）
+├── .mimocode/                   # MimoCode 配置（instructions 注入本规范）
+├── AGENTS.md                    # 指针文件，指向 CLAUDE.md
+└── CLAUDE.md                    # 本文件（唯一事实来源）
 ```
 
 **约定：**
 
 - 新增系统 = 新增 `frontend/<system>/` 与（如需后端）`backend/<system>/`；跨系统禁止直接 `import` 业务代码，只走接口或已说明的薄基础库。
 - 系统名小写连字符；新建/删除顶层或系统级目录时同步更新本节。
-- Java 包名前缀在**首个系统脚手架**时定为真实 group（当前文档示例中的 `com.example` 为占位，落地时替换并回写本节约定；见第 9 节）。
+- Java 包名前缀：**`com.qjj`**（已裁决）；模块内包结构见 5.6.2。
 - **脚手架落地顺序（每个系统内）：** `common` → `framework` → 网关与认证 → 前端壳 → 再按 openspec 扩业务。
 - **脚手架变更必须确保存在：** `docs/test-env.md`、`docs/jenkins-pipeline-guide.md`（或明确其权威路径）。
 
@@ -225,6 +230,8 @@ cd backend/<system> && mvn -q compile
 | 日志 | 访问日志、错误日志 | 应用访问日志、TraceId 透传 | 业务操作/领域审计 |
 | 其他 | 路径改写 | **CORS 策略**（唯一归属）、用户身份注入/透传 | 参数校验、事务、业务规则 |
 
+**操作审计：** 关键写操作须记录操作审计（操作人 / 时间 / 动作 / 结果）；载体（审计表或日志）与留存要求随相关变更裁决。
+
 **跨域（CORS）：** 只在**网关**配置，具体信任域名在 `docs/test-env.md` 或变更中登记（见 6.7）；Nginx 不写跨域响应头。
 
 **身份透传 Header（契约）：**
@@ -253,6 +260,9 @@ cd backend/<system> && mvn -q compile
 **权限标识格式：** `system:resource:action`（全小写，如 `order:order:list`）；
 前端路由/按钮与后端 `@PreAuthorize` 使用同一字符串；禁止前端硬编码角色名。
 
+**权限模型（已裁决）：** 权限模型采用 **RBAC**（用户 → 角色 → 菜单/按钮权限）；
+**菜单与动态路由由后端下发，前端动态生成**；数据权限（数据范围）语义随首个权限相关变更提案锁定。
+
 ### 5.3 请求链路（一次同步调用）
 
 ```
@@ -278,7 +288,7 @@ cd backend/<system> && mvn -q compile
 | 服务端错误 | 5xx | 系统段「系统异常」 | 通用错误；不暴露堆栈 |
 
 - **业务失败与校验失败统一 HTTP 200**，语义由 `code` 表达（前端只按 `code` 分流，避免双通道）。
-- 同步链路短；耗时/可重试工作走异步（MQ/线程池），必须有重试与死信（MQ 选定前不写消费者业务）。
+- 同步链路短；耗时/可重试工作走异步（MQ/线程池），必须有重试与死信。
 - 失败语义：网络/5xx 可重试；4xx 不重试；关键写幂等（见 6.11）。
 
 ### 5.4 系统内部模块关系（后端）
@@ -348,7 +358,7 @@ src/
 | 请求 | 业务组件只调 `src/api`，不直接 axios |
 | UI | 统一 Element Plus；样式 scoped |
 | 路由 meta | `title` / `icon` / `hidden` / `requiresAuth`；name 用 PascalCase |
-| 权限 | 使用 5.2 权限标识；禁止硬编码角色 |
+| 权限 | 使用 5.2 权限标识；菜单/动态路由后端下发、前端动态生成（见 5.2）；禁止硬编码角色 |
 
 ### 5.6 后端模块与包结构
 
@@ -365,7 +375,7 @@ src/
 #### 5.6.2 业务模块内包结构
 
 ```
-src/main/java/com.example.{system}.{module}/   # com.example 为占位，脚手架时替换真实 group
+src/main/java/com.qjj.{system}.{module}/
 ├── controller/
 ├── dto/
 ├── vo/
@@ -452,6 +462,7 @@ src/main/java/com.example.{system}.{module}/   # com.example 为占位，脚手�
 | `2xxxxx` | 业务异常 | **6 位定长**：`2` + 系统号（2 位）+ 业务序号（3 位），如 `201001`；系统号必须先在 `docs/error-code-ranges.md` 分配登记；禁止跨系统同码不同义 |
 | `3xxxx` | 参数校验 | **5 位定长**；由 `common` + 全局异常统一；字段细节放 `data` |
 
+- 系统段 `1xxxx` 与校验段 `3xxxx` 的固定码值以 `docs/error-code-ranges.md` 为**唯一登记处**，各系统原样对齐。
 - `code` 类型为 `number`；错误码与文案用枚举/常量维护，禁止硬编码魔法字符串。
 - 前端只按 `code` 具体值分流，不自行解析号段含义。
 - 新增业务码先在本系统序号内分配，再进 `XxxErrorCodeEnum`。
@@ -481,7 +492,8 @@ src/main/java/com.example.{system}.{module}/   # com.example 为占位，脚手�
 
 - `@TableLogic`、`MetaObjectHandler` 等装配在 `framework`；禁止业务手写审计/逻辑删除赋值。
 - 主键 `id`：`Long` / `BIGINT`，**统一由 `framework` 发号**；禁止数据库自增、禁止业务雪花/UUID 主键（对象存储文件名可用 UUID）。
-- 发号策略（构成、并发安全、按业务日日切）由 `framework` 实现并在变更中登记，不在本文件展开。
+- 发号构成（已裁决）：**16 位定长** = 业务日期 `yyyyMMdd`（8 位，`Asia/Shanghai` 业务日）+ 当日序列（8 位，按业务日日切）。
+- 并发安全等实现细节由 `framework` 实现并在变更中登记，不在本文件展开。
 
 #### 6.4.6 分页入参
 
@@ -523,10 +535,10 @@ src/main/java/com.example.{system}.{module}/   # com.example 为占位，脚手�
 - 密码 BCrypt/Argon2；手机号/身份证等脱敏。
 - **密钥入仓分级（唯一权威）：**
   - **禁止入仓**：生产密码、私钥、Token、连接串 → 只进 Nacos / 密钥管理 / Jenkins Credentials。
-  - **允许入仓**：开发/测试账号密码 → `docs/test-env.md`、`application-dev.yml` / `application-test.yml`；须标注环境，禁止与生产同账号。
+  - **允许入仓**：开发/测试账号密码 → `docs/test-env.md`、`application-local.yml` / `application-test.yml`；须标注环境，禁止与生产同账号。
   - 生产密钥误入仓：立即改密、清理历史（需征询），并记为严重问题。
-- Token：JWT，Access 30 分钟，Refresh 7 天；网关 + 服务双重鉴权；实现库待选定（见第 9 节），选定前禁止业务自写 JWT 解析。
-- 登录失败限制；敏感接口二次验证；关键接口限流见 6.11；CORS 仅信任域名（**配置在网关**，见 5.2；具体域名在 `docs/test-env.md` 或变更中登记）。
+- Token：JWT（实现库 **spring-security-oauth2-jose / Nimbus**），Access **默认 10 分钟（5–15 分钟可配）**，Refresh 7 天（轮转）；网关 + 服务双重鉴权；签发由认证中心（Spring Authorization Server）负责，验签与解析统一 `framework` 封装，禁止业务自写 JWT 解析。
+- 登录失败限制；敏感接口二次验证（敏感操作清单与二次验证方式随相关变更裁决）；关键接口限流见 6.11；CORS 仅信任域名（**配置在网关**，见 5.2；具体域名在 `docs/test-env.md` 或变更中登记）。
 
 ### 6.8 API 文档
 
@@ -538,7 +550,7 @@ src/main/java/com.example.{system}.{module}/   # com.example 为占位，脚手�
 - 普通查询 ≤ 200ms；复杂查询/报表 ≤ 1s。
 - 缓存 key：`{服务名}:{模块}:{业务标识}`；必须 TTL；更新优先「更新 DB 再删缓存」。
 - 批量 batch；深度分页用游标或覆盖索引。
-- 耗时异步（MQ/线程池）+ 重试与死信；客户端与策略经 `framework`。
+- 耗时异步（MQ/线程池）+ 重试与死信；客户端与策略经 `framework`；**禁止业务自建线程池**（含 `Executors` 裸用），统一由 `framework` 装配。
 
 ### 6.10 配置规范
 
@@ -547,11 +559,11 @@ src/main/java/com.example.{system}.{module}/   # com.example 为占位，脚手�
 | 文件 | profile | 用途 |
 |------|---------|------|
 | `application.yml` | 公共 | 无主机/账号密码 |
-| `application-dev.yml` | `dev` | 开发环境 |
+| `application-local.yml` | `local` | 本地开发 |
 | `application-test.yml` | `test` | 测试环境 |
 
-- 连接信息真相源：`docs/test-env.md`；与 dev/test 配置一致。
-- 本地默认 `dev`；联调切 `test`。
+- 连接信息真相源：`docs/test-env.md`；与 local/test 配置一致。
+- 本地默认 `local`；联调切 `test`。
 - 配置项 `kebab-case` + `@ConfigurationProperties`，禁止散落 `@Value`。
 - 生产敏感项只走 Nacos/密钥管理。
 - Jenkins 按环境发布；Jenkinsfile 禁止生产密钥（用 Credentials）。
@@ -581,7 +593,7 @@ src/main/java/com.example.{system}.{module}/   # com.example 为占位，脚手�
 **重试：**
 
 - 指数退避最多 3 次（间隔由 `framework` 固定）；超时与 5xx 可重试，4xx 不重试；必须打日志。
-- MQ 消费重试与死信同节奏，由 `framework` 统一（MQ 选定后）。
+- MQ（RocketMQ）消费重试与死信同节奏，由 `framework` 统一。
 
 **依赖工程：**
 
@@ -660,6 +672,7 @@ TraceId/SpanId 进 MDC；传播头由 `framework` 配置；禁止业务手拼 He
 | 幂等靠前端、自写 setnx、或 `uk_` | `@Idempotent` + Redis `Idempotent-Key` |
 | 引入 2.2 明确不引入的组件，或违反第 2 节技术栈的平行选型（如 Druid、Jedis） | 遵 2.2 与第 2 节；确需引入/替换先改对应章节再落码 |
 | 自建 JWT 解析、自建 RedisTemplate | 统一 `framework` |
+| 业务自建线程池 / `Executors` 裸用 | 统一 `framework` 装配 |
 | 错误码跨系统撞号 | 按 `docs/error-code-ranges.md` 登记系统号 |
 | 业务自建雪花/UUID 主键 | 统一 `framework` 发号 |
 | 流水线跳过检查/吞错过门 | 质量门失败即失败 |
@@ -688,9 +701,6 @@ TraceId/SpanId 进 MDC；传播头由 `framework` 配置；禁止业务手拼 He
 | 事项 | 现状 | 裁决后落点 |
 |------|------|-----------|
 | 对外产品名 | 待确认 | 第 1 节 |
-| 消息队列产品选型 | 未选定；选定前禁止绑死某家客户端 API、不写消费者业务代码 | 第 2 节技术栈 |
-| JWT 实现库 | 未选定；选定前禁止业务自写解析 | 第 2 节技术栈 |
-| Java 包名真实 group | 文中 `com.example` 为占位 | 首个系统脚手架时替换并回写第 4、5.6 节 |
 
 ---
 

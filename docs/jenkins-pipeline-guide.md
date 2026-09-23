@@ -96,7 +96,7 @@ deploy/jenkins/                            # 共享流水线库（可选，多�
    - Script Path：`frontend/<system>/Jenkinsfile` 或 `backend/<system>/<module>/Jenkinsfile`。
 4. **凭据**：绑定 §2 中所需 Credentials ID。
 5. **参数（CD Job）**：
-   - `DEPLOY_ENV`：`test` | `prod`（Spring profile 与 `application-{profile}.yml` 一致；仓库内必备 `application.yml` / `application-dev.yml` / `application-test.yml`）
+   - `DEPLOY_ENV`：`test` | `prod`（Spring profile 与 `application-{profile}.yml` 一致；仓库内必备 `application.yml` / `application-local.yml` / `application-test.yml`）
    - `MODULE`：后端 `-pl` 模块名（若一个 Job 管多模块）
    - `SKIP_TESTS`：默认 `false`；**生产建议禁止手动改成 true**
 6. **保存后先跑空跑/测试分支**，确认 Agent、JDK/Node、Maven 仓库缓存可用。
@@ -231,7 +231,7 @@ pipeline {
 | `test` | `test` | 测试环境自动/半自动发布 |
 | `prod` | `prod` | 生产，默认人工确认 |
 
-本地开发用 `dev`（`application-dev.yml`），**不**由 Jenkins 发布。后端配置三份：`application.yml` + `application-dev.yml` + `application-test.yml`。详见 `CLAUDE.md` §6.10；组件 IP/端口/账密见 `docs/test-env.md`。
+本地开发用 `local`（`application-local.yml`），**不**由 Jenkins 发布。后端配置三份：`application.yml` + `application-local.yml` + `application-test.yml`。详见 `CLAUDE.md` §6.10；组件 IP/端口/账密见 `docs/test-env.md`。
 
 ---
 
