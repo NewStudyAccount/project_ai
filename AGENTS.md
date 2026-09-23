@@ -1,13 +1,13 @@
 # 项目全局规范
 
 > 本文件是项目级**稳定契约与工程约定**的事实来源，面向所有 AI 编码工具
-> （Cursor、Claude Code、Windsurf、Codex、Trae 等）与人类协作者。
+> （Cursor、Codex、Windsurf、Codex、Trae 等）与人类协作者。
 > 所有 AI 工具在编写、修改代码前必须先读取并遵循本文件。
 >
 > **文档分工（避免双源真理）：**
 > | 文档 | 职责 | 不要放什么 |
 > |---|---|---|
-> | `CLAUDE.md`（本文件） | 稳定契约、项目边界、协作红线 | 服务清单、业务词表、实现代码、依赖清单、**生产**密钥 |
+> | `AGENTS.md`（本文件） | 稳定契约、项目边界、协作红线 | 服务清单、业务词表、实现代码、依赖清单、**生产**密钥 |
 > | `openspec/` | 单次变更的 proposal / specs / design / tasks | 通用编码教程 |
 > | 后端枚举 / Controller / Swagger | 字段级接口契约真相 | 在文档里复述枚举全表 |
 > | `pom.xml` / `package.json` | 依赖真相 | 在本文件复制依赖清单 |
@@ -152,9 +152,9 @@ cd backend/<system> && mvn -q compile
 ├── docs/                        # 流程 + 环境信息（test-env.md 为组件账密真相源；无生产密钥）
 ├── deploy/                      # 部署配置（nginx.conf、compose、Jenkins 共享脚本等）
 ├── openspec/                    # SDD 制品（见第 8 节）
-├── .claude/                     # Claude Code 命令与技能
+├── .Codex/                     # Codex 命令与技能
 ├── .trae/                       # Trae 等价技能
-└── CLAUDE.md                    # 本文件
+└── AGENTS.md                    # 本文件
 ```
 
 **约定：**
@@ -670,7 +670,7 @@ TraceId/SpanId 进 MDC；传播头由 `framework` 配置；禁止业务手拼 He
 ## 8. 规范驱动开发（SDD）
 
 本项目采用 OpenSpec（schema：`spec-driven`）。
-入口：`.claude/commands/opsx/`（Trae 侧：`.trae/skills/openspec-*`）。
+入口：`.Codex/commands/opsx/`（Trae 侧：`.trae/skills/openspec-*`）。
 
 - 制品权威性：`proposal / specs / design / tasks` 为变更指令源。
 - 工作流：`/opsx:explore` → `/opsx:propose <change>` → `/opsx:apply <change>` → `/opsx:archive <change>`。
