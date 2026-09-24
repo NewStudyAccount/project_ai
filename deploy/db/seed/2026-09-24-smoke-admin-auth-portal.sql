@@ -54,13 +54,14 @@ INSERT IGNORE INTO oauth_client (
 );
 
 -- 2.3 菜单（1 目录 / 2 菜单 / 3 按钮）
+-- component 必须与 frontend/auth-admin router 的 componentByPath 键一致，否则动态路由挂不上
 INSERT IGNORE INTO sys_menu (id, parent_id, type, name, permission, path, component, icon, hidden, requires_auth, sort, status) VALUES
   (2026092400000031, 0, 1, 'ops', '', '', '', '', 0, 1, 1, 1),
-  (2026092400000032, 2026092400000031, 2, 'clients', 'auth:client:list', '/clients', '', '', 0, 1, 1, 1),
-  (2026092400000033, 2026092400000031, 2, 'grants', 'auth:grant:revoke', '/grants', '', '', 0, 1, 2, 1),
-  (2026092400000034, 2026092400000031, 2, 'audit', 'auth:audit:list', '/audit', '', '', 0, 1, 3, 1),
-  (2026092400000035, 2026092400000031, 2, 'menus', 'auth:menu:list', '/menus', '', '', 0, 1, 4, 1),
-  (2026092400000036, 2026092400000031, 2, 'roles', 'auth:role:list', '/roles', '', '', 0, 1, 5, 1),
+  (2026092400000032, 2026092400000031, 2, 'clients', 'auth:client:list', '/clients', 'views/client/ClientList.vue', '', 0, 1, 1, 1),
+  (2026092400000033, 2026092400000031, 2, 'grants', 'auth:grant:revoke', '/grants', 'views/grant/GrantList.vue', '', 0, 1, 2, 1),
+  (2026092400000034, 2026092400000031, 2, 'audit', 'auth:audit:list', '/audit', 'views/audit/AuditLogList.vue', '', 0, 1, 3, 1),
+  (2026092400000035, 2026092400000031, 2, 'menus', 'auth:menu:list', '/menus', 'views/menu/MenuList.vue', '', 0, 1, 4, 1),
+  (2026092400000036, 2026092400000031, 2, 'roles', 'auth:role:list', '/roles', 'views/role/RoleList.vue', '', 0, 1, 5, 1),
   (2026092400000037, 2026092400000031, 3, 'clientCreate', 'auth:client:create', '', '', '', 0, 1, 1, 1),
   (2026092400000038, 2026092400000031, 3, 'clientSecret', 'auth:client:secret', '', '', '', 0, 1, 2, 1),
   (2026092400000040, 2026092400000031, 3, 'grantList', 'auth:grant:list', '', '', '', 0, 1, 10, 1),
@@ -73,6 +74,13 @@ INSERT IGNORE INTO sys_menu (id, parent_id, type, name, permission, path, compon
   (2026092400000047, 2026092400000031, 3, 'roleUpdate', 'auth:role:update', '', '', '', 0, 1, 17, 1),
   (2026092400000048, 2026092400000031, 3, 'roleDelete', 'auth:role:delete', '', '', '', 0, 1, 18, 1),
   (2026092400000049, 2026092400000031, 3, 'roleAssign', 'auth:role:assign', '', '', '', 0, 1, 19, 1);
+
+-- 2.3.1 已执行过旧种子时：回填 type=2 的 component（INSERT IGNORE 不会更新旧行）
+UPDATE sys_menu SET component = 'views/client/ClientList.vue' WHERE id = 2026092400000032;
+UPDATE sys_menu SET component = 'views/grant/GrantList.vue' WHERE id = 2026092400000033;
+UPDATE sys_menu SET component = 'views/audit/AuditLogList.vue' WHERE id = 2026092400000034;
+UPDATE sys_menu SET component = 'views/menu/MenuList.vue' WHERE id = 2026092400000035;
+UPDATE sys_menu SET component = 'views/role/RoleList.vue' WHERE id = 2026092400000036;
 
 -- 2.4 角色与用户绑定
 INSERT IGNORE INTO sys_role (id, role_code, role_name, data_scope, sort, status, remark) VALUES

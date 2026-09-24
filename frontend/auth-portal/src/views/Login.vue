@@ -25,6 +25,7 @@
           登录
         </el-button>
       </el-form>
+      <el-button class="logout-link" link type="info" @click="onUnifiedLogout">退出统一登录</el-button>
     </el-card>
   </div>
 </template>
@@ -54,6 +55,12 @@ async function onSubmit() {
   }
   ElMessage.error(outcome.message || '用户名或密码错误')
 }
+
+/** 统一登出入口：经 IdP /connect/logout，禁止仅清本地。 */
+function onUnifiedLogout() {
+  const postLogout = `${window.location.origin}/`
+  window.location.assign(`/connect/logout?post_logout_redirect_uri=${encodeURIComponent(postLogout)}`)
+}
 </script>
 
 <style scoped>
@@ -81,5 +88,10 @@ async function onSubmit() {
 
 .login-btn {
   width: 100%;
+}
+
+.logout-link {
+  width: 100%;
+  margin-top: 12px;
 }
 </style>

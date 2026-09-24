@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { hasValidAccessToken, redirectForLogin } from '@/utils/oidc'
 import AppLayout from '@/components/AppLayout.vue'
 import Dashboard from '@/views/Dashboard.vue'
 import ClientList from '@/views/client/ClientList.vue'
@@ -9,10 +10,10 @@ import AuditLogList from '@/views/audit/AuditLogList.vue'
 import MenuList from '@/views/menu/MenuList.vue'
 import RoleList from '@/views/role/RoleList.vue'
 import UserRoleList from '@/views/user/UserRoleList.vue'
-import Login from '@/views/Login.vue'
+import OidcCallback from '@/views/OidcCallback.vue'
+import LoggedOut from '@/views/LoggedOut.vue'
 import NotFound from '@/views/NotFound.vue'
 
-/** 后端菜单 component 字段 → 本地视图 */
 const componentByPath: Record<string, unknown> = {
   'views/Dashboard.vue': Dashboard,
   'views/client/ClientList.vue': ClientList,
@@ -25,7 +26,8 @@ const componentByPath: Record<string, unknown> = {
 }
 
 const staticRoutes: RouteRecordRaw[] = [
-  { path: '/login', name: 'Login', component: Login },
+  { path: '/callback', name: 'OidcCallback', component: OidcCallback },
+  { path: '/logged-out', name: 'LoggedOut', component: LoggedOut },
   {
     path: '/',
     name: 'Home',
@@ -51,12 +53,17 @@ export const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  if (to.path === '/login') return true
+  if (to.path === '/callback' || to.path === '/logged-out') return true
+  if (!hasValidAccessToken()) {
+    await redirectForLogin(to.fullPath)
+    return false
+  }
   const auth = useAuthStore()
   try {
     await auth.init()
   } catch {
-    return { path: '/login', query: { redirect: to.fullPath } }
+    await redirectForLogin(to.fullPath)
+    return false
   }
   installDynamicRoutes(auth.menus)
   return true

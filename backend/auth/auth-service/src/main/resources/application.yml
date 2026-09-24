@@ -6,7 +6,7 @@ spring:
   security:
     oauth2:
       authorizationserver:
-        issuer: http://127.0.0.1:9080
+        issuer: http://localhost:9080
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
 server:
@@ -20,11 +20,21 @@ auth:
     login-max-failures: 5
     login-lock-seconds: 900
     sso-session-ttl-seconds: 43200
+    login-portal-base: http://localhost:5174
     allowed-origins:
+      - http://localhost:5173
       - http://localhost:5174
       - http://localhost:5175
+      - http://127.0.0.1:5173
       - http://127.0.0.1:5174
       - http://127.0.0.1:5175
+    post-logout-redirect-uris:
+      - http://localhost:5173/logged-out
+      - http://localhost:5175/logged-out
+      - http://localhost:5174/
+      - http://127.0.0.1:5173/logged-out
+      - http://127.0.0.1:5175/logged-out
+      - http://127.0.0.1:5174/
 mybatis-plus:
   global-config:
     db-config:

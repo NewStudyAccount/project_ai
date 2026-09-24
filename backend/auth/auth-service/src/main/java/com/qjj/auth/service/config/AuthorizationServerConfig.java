@@ -46,12 +46,31 @@ public class AuthorizationServerConfig {
 
     @Bean
     @Order(1)
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain authorizationServerSecurityFilterChain(
+            HttpSecurity http,
+            RegisteredClientRepository registeredClientRepository,
+            org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource,
+            com.qjj.auth.service.security.SsoSessionService ssoSessionService,
+            com.qjj.auth.service.service.RbacService rbacService,
+            com.qjj.auth.service.config.AuthSecurityProperties authSecurityProperties) throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+        // SPA 跨域 POST /oauth2/token 必须在本链处理 CORS，否则响应无 ACAO，浏览器拦下换票结果
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource));
+        http.csrf(csrf -> csrf.disable());
+        // 必须在 OAuth2AuthorizationEndpointFilter 之前恢复 SSO：
+        // 该 filter 在资源所有者未认证时会 chain.doFilter 穿过（源码 193 行），期望后续 EntryPoint 拦截；
+        // 若 SSO 恢复发生在它之后，会 AuthorizationFilter 放行后掉进 MVC 静态资源，表现为 10004。
+        http.addFilterAfter(new com.qjj.auth.service.security.SsoSessionAuthFilter(ssoSessionService, rbacService),
+                org.springframework.security.web.context.SecurityContextHolderFilter.class);
+        http.exceptionHandling(ex -> ex.authenticationEntryPoint(
+                new com.qjj.auth.service.config.PortalLoginAuthenticationEntryPoint(authSecurityProperties)));
         http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-                .clientAuthentication(client -> client
-                        .authenticationConverters(converters ->
-                                converters.add(0, new com.qjj.auth.service.repository.PublicClientRefreshAuthenticationConverter())))
+                .clientAuthentication(client -> {
+                    client.authenticationConverters(converters ->
+                            converters.add(0, new com.qjj.auth.service.repository.PublicClientRefreshAuthenticationConverter()));
+                    client.authenticationProvider(
+                            new com.qjj.auth.service.repository.PublicClientRefreshAuthenticationProvider(registeredClientRepository));
+                })
                 .tokenRevocationEndpoint(Customizer.withDefaults())
                 .oidc(Customizer.withDefaults());
         return http.build();

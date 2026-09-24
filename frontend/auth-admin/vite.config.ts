@@ -13,8 +13,8 @@ export default defineConfig({
     port: 5175,
     proxy: {
       '/api': { target: 'http://127.0.0.1:9080', changeOrigin: true },
-      '/login': { target: 'http://127.0.0.1:9080', changeOrigin: true },
       '/oauth2': { target: 'http://127.0.0.1:9080', changeOrigin: true },
+      '/connect': { target: 'http://127.0.0.1:9080', changeOrigin: true },
     },
   },
 })

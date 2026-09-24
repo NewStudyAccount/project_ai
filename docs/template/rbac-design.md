@@ -119,15 +119,81 @@ sys_menu 自关联（parent_id 树）
 | 动态路由/菜单下发 | `sys_menu` type 1/2 子树（含 `path/component/icon/hidden/requires_auth`，按 `sort` 排序） | 前端登录后取本系统菜单树，动态生成路由 |
 | 权限判定 | `sys_menu` type 3/4 的 `permission` 集合（经 用户-角色-菜单 联查） | 后端 `@PreAuthorize` 判定；前端按钮显隐 |
 
+**管理员全量授权（各系统必实现）：**
+
+- 操作员在**本系统**拥有启用角色 **`role_code = 'admin'`** 时，`/me/menus`、`/me/permissions` 及登录权限装载 = **本系统全部 `status=1` 菜单/权限**，**不必**依赖 `sys_role_menu` 逐条绑定。
+- 新建 `sys_menu` 后 admin 立即可见/可用；非 admin 仍走 用户-角色-菜单 联查。
+- 范围仅限**本库/本系统**；跨系统各自有一套 admin，互不影响。
+
 - 查询均为**本库本地**联查（不跨系统调用）；服务侧可加短 TTL 缓存
 - 角色分配时的"选人"可经用户中心 `user-api` 查询用户（跨系统只读契约）
-- 运行时 `user_id` 以网关注入的 `X-User-Id`（或已验签令牌 `sub`）为准
+- 运行时 `user_id` 以网关注入的 `X-User-Id`、已验签 JWT `sub` 为准（`AuthContext`/`UserContext` 需同时认 JWT，见 fixbug）
 
 ---
 
 ## 4. 各系统引入方式（通用性落地）
 
 1. **建表**：按本文件 §2 在本系统库内建同构 4 表（表名保持 `sys_menu` 等不变，各库一套）；SQL 随各系统变更提供、人工执行
-2. **管理端**：各系统管理前端提供「菜单管理」「角色管理」页（含用户-角色分配）
-3. **权限标识**：`permission` 首段写本系统名；本系统内唯一（应用层校验）
-4. **审计**：关键写操作（菜单/角色/授权变更）按 `CLAUDE.md` §5.2「操作审计」约定记录
+2. **基线数据**：按 **§5 框架基线数据** 落骨架菜单 + `admin` 角色（模板 `deploy/db/seed/rbac-framework-template.sql`）
+3. **管理端**：各系统管理前端提供「菜单管理」「角色管理」页（含用户-角色分配）
+4. **权限标识**：`permission` 首段写本系统名；本系统内唯一（应用层校验）
+5. **审计**：关键写操作（菜单/角色/授权变更）按 `CLAUDE.md` §5.2「操作审计」约定记录
+
+---
+
+## 5. 框架基线数据（可复制种子）
+
+> 目标：新系统导入后即可**自举 RBAC**（管菜单/角色/授权），再挂业务域节点。  
+> 模板：[`deploy/db/seed/rbac-framework-template.sql`](../../deploy/db/seed/rbac-framework-template.sql)  
+> 约定：固定 16 位 id（便于 `INSERT IGNORE` 重复执行）；**发号唯一域仍为本库**，运行时新建节点走 `framework` 发号。
+
+### 5.1 分层
+
+| 层 | 内容 | 是否每系统必有 |
+|----|------|----------------|
+| **L1 结构** | 4 表 DDL（§2） | 是 |
+| **L2 自举骨架** | 「系统管理」下：菜单管理、角色管理（含按钮） | 是 |
+| **L3 角色** | `role_code='admin'`（全量授权，§3） | 是 |
+| **L4 域节点** | 用户、Client、审计等业务菜单 | 按系统追加 |
+
+### 5.2 L2 骨架节点（`{sys}` = 本系统前缀）
+
+| id 段 | type | name | permission | path | component |
+|-------|------|------|------------|------|-----------|
+| …31 | 1 目录 | 系统管理 | `''` | `''` | `''` |
+| …32 | 2 菜单 | 菜单管理 | `{sys}:menu:list` | `/menus` | `views/menu/MenuList.vue` |
+| …33 | 2 菜单 | 角色管理 | `{sys}:role:list` | `/roles` | `views/role/RoleList.vue` |
+| …37 | 3 按钮 | 新建菜单 | `{sys}:menu:create` | — | — |
+| …38 | 3 按钮 | 编辑菜单 | `{sys}:menu:update` | — | — |
+| …39 | 3 按钮 | 删除菜单 | `{sys}:menu:delete` | — | — |
+| …40 | 3 按钮 | 新建角色 | `{sys}:role:create` | — | — |
+| …41 | 3 按钮 | 编辑角色 | `{sys}:role:update` | — | — |
+| …42 | 3 按钮 | 删除角色 | `{sys}:role:delete` | — | — |
+| …43 | 3 按钮 | 角色授权 | `{sys}:role:assign` | — | — |
+
+- `component` **必须**与本系统前端 `componentByPath` 键一致（见 fixbug §7）
+- type 4 接口点按需由各系统业务补，不进 L2
+
+### 5.3 L3 角色与绑定
+
+| role_code | 语义 | data_scope | 绑定 |
+|-----------|------|------------|------|
+| `admin` | 本系统管理员 | 1（全部） | 用户中心冒烟账号 `admin`（id 见 seed） |
+
+- **建议**为 admin 同步插入 `sys_role_menu` 绑全量节点（角色授权页展示、联查兜底）；运行时仍按 §3 全量，不依赖该表
+- 非 admin 角色（如 `operator` / `viewer`）由各系统按需创建并绑菜单
+
+### 5.4 id 段建议
+
+| 段 | 用途 |
+|----|------|
+| `20260925000000xx` | 框架 L2/L3 种子（模板统一） |
+| 各系统域菜单 | 自行连号或运行时发号 |
+| 运行时新建 | `framework` 16 位发号 |
+
+### 5.5 实例参考
+
+| 库 | 种子 |
+|----|------|
+| `auth_db` | `2026-09-24-smoke-admin-auth-portal.sql`（L2 已含 menus/roles + 域：client/grant/audit） |
+| `user_db` | `2026-09-25-user-db-rbac-framework.sql`（L2 + 用户域 + admin 绑定） |

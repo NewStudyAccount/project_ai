@@ -1,12 +1,14 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { hasValidAccessToken, redirectForLogin } from '@/utils/oidc'
 import AppLayout from '@/components/AppLayout.vue'
 import Dashboard from '@/views/Dashboard.vue'
 import UserList from '@/views/user/UserList.vue'
 import AuditList from '@/views/audit/AuditList.vue'
 import MenuList from '@/views/menu/MenuList.vue'
 import RoleList from '@/views/role/RoleList.vue'
-import Login from '@/views/Login.vue'
+import OidcCallback from '@/views/OidcCallback.vue'
+import LoggedOut from '@/views/LoggedOut.vue'
 import NotFound from '@/views/NotFound.vue'
 
 const componentByPath: Record<string, unknown> = {
@@ -17,7 +19,8 @@ const componentByPath: Record<string, unknown> = {
 }
 
 const staticRoutes: RouteRecordRaw[] = [
-  { path: '/login', name: 'Login', component: Login },
+  { path: '/callback', name: 'OidcCallback', component: OidcCallback },
+  { path: '/logged-out', name: 'LoggedOut', component: LoggedOut },
   {
     path: '/',
     name: 'Home',
@@ -40,22 +43,39 @@ export const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  if (to.path === '/login') return true
+  if (to.path === '/callback' || to.path === '/logged-out') return true
+  if (!hasValidAccessToken()) {
+    await redirectForLogin(to.fullPath)
+    return false
+  }
   const auth = useAuthStore()
-  await auth.init().catch(() => undefined)
+  try {
+    await auth.init()
+  } catch {
+    await redirectForLogin(to.fullPath)
+    return false
+  }
   installDynamicRoutes(auth.menus)
   return true
 })
 
-function installDynamicRoutes(menus: Array<{ id: string; type: number; path: string; component: string }>) {
-  menus.forEach((menu) => {
-    if (menu.type !== 2 || !menu.path) return
-    const path = menu.path.startsWith('/') ? menu.path.slice(1) : menu.path
-    if (router.hasRoute('Menu_' + menu.id)) return
-    router.addRoute('Home', {
-      path,
-      name: 'Menu_' + menu.id,
-      component: (componentByPath[menu.component] ?? Dashboard) as never,
+function installDynamicRoutes(menus: Array<{ id: string; type: number; path: string; component: string; children?: unknown[] }>) {
+  const walk = (nodes: typeof menus) => {
+    nodes.forEach((menu) => {
+      if (menu.type === 2 && menu.path) {
+        const path = menu.path.startsWith('/') ? menu.path.slice(1) : menu.path
+        if (!router.hasRoute('Menu_' + menu.id)) {
+          router.addRoute('Home', {
+            path,
+            name: 'Menu_' + menu.id,
+            component: (componentByPath[menu.component] ?? Dashboard) as never,
+          })
+        }
+      }
+      if (Array.isArray(menu.children) && menu.children.length) {
+        walk(menu.children as typeof menus)
+      }
     })
-  })
+  }
+  walk(menus)
 }

@@ -1,4 +1,4 @@
-﻿# 测试环境信息
+# 测试环境信息
 
 > 用途：记录**测试环境**的基础接入信息，便于开发、联调、Jenkins 发布。
 > 范围：仅测试环境。生产环境另册，且更严格。
@@ -40,7 +40,19 @@
 | auth-admin | test/local | auth-admin.example.local | 5175 | Nginx 托管运营后台；本地 Vite 代理 `/api` 到 9080 |
 | auth-service | test/local | auth.example.local | 9080 | OIDC 端点与 `/api/v1` 管理 API；信任 origin 见下方登记 |
 
-信任域名（auth-service CORS）：`http://localhost:5174`、`http://localhost:5175`、`http://127.0.0.1:5174`、`http://127.0.0.1:5175`、`https://auth-portal.example.local`、`https://auth-admin.example.local`。
+信任域名（auth-service CORS）：`http://localhost:5173`、`http://localhost:5174`、`http://localhost:5175`、`http://127.0.0.1:5173`、`http://127.0.0.1:5174`、`http://127.0.0.1:5175`、`https://user-admin.example.local`、`https://auth-portal.example.local`、`https://auth-admin.example.local`。
+
+**单点登录访问约定（强制）：** 浏览器请统一使用 **`http://localhost:5173|5174|5175`** 与 IdP **`http://localhost:9080`**。Cookie 以 host 为准（忽略端口），**禁止混用 `127.0.0.1`**——否则 SSO Cookie 不会带到 authorize，单点失效。issuer / 令牌 `iss` 为 `http://localhost:9080`。
+
+OIDC RP（unify-login-facade）：
+
+| client_id | 前端 | redirect_uri（精确白名单） | post_logout_redirect_uri |
+|-----------|------|---------------------------|--------------------------|
+| `user-admin-spa` | user-admin:5173 | `http://127.0.0.1:5173/callback`、`http://localhost:5173/callback`、`https://user-admin.example.local/callback` | 同源 `/logged-out` |
+| `auth-admin-spa` | auth-admin:5175 | `http://127.0.0.1:5175/callback`、`http://localhost:5175/callback`、`https://auth-admin.example.local/callback` | 同源 `/logged-out` |
+| `auth-portal-spa` | auth-portal:5174 | 既有种子；**portal 登录不走 code 流**（IdP Cookie） | `http://127.0.0.1:5174/` 等 |
+
+`post_logout_redirect_uri` 允许列表配置在 `auth-service`（`auth.security.post-logout-redirect-uris`），不改 `oauth_client` 表。
 
 ---
 
@@ -149,4 +161,5 @@
 | YYYY-MM-DD | 建立文档结构 | — |
 | 2026-09-24 | 登记 user_db、user-gateway/user-service 端口、Nginx 信任域名 | scaffold-user-center |
 | 2026-09-24 | 登记 auth-portal/auth-admin/auth-service 端口、测试域名与 CORS 信任域名 | unified-auth-center |
+| 2026-09-24 | 登记 OIDC RP client、redirect/post-logout 白名单与 user-admin 信任域名 | unify-login-facade |
 

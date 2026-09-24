@@ -20,7 +20,10 @@
     <el-container>
       <el-header class="header">
         <span>统一认证中心</span>
-        <span class="operator">当前操作员</span>
+        <span class="operator">
+          {{ auth.operatorName }}
+          <el-button link type="primary" @click="onLogout">退出</el-button>
+        </span>
       </el-header>
       <el-main>
         <router-view />
@@ -33,10 +36,15 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { logout } from '@/utils/oidc'
 import type { MenuVO } from '@/types'
 
 const route = useRoute()
 const auth = useAuthStore()
+
+function onLogout() {
+  logout()
+}
 
 const visibleMenus = computed(() => flattenVisible(auth.menus))
 

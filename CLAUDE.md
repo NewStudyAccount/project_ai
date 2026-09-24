@@ -48,6 +48,7 @@
 - 数据库：MySQL；连接池 **HikariCP**（Boot 默认，禁止 Druid 等平行选型）
 - 缓存与协调：Redis（Spring Data Redis + **Redisson**）
 - 服务间调用：Spring Cloud OpenFeign（含 Fallback）
+- 网关服务发现路由：`lb://{serviceId}` 时，**网关模块必须显式依赖 Spring Cloud LoadBalancer**（Gateway starter 不保证传递；缺失则注册中心有实例仍 HTTP 503）
 - 接口限流：`framework` 统一 `@RateLimit`，底层 **Redisson `RRateLimiter`**（不用 Redis+Lua 自研、不用 Sentinel、不用 Gateway `RequestRateLimiter` 作主路径）
 - 写幂等：`framework` 统一 `@Idempotent`，`Idempotent-Key`（或 `X-Request-Id`）+ Redis（**禁止业务唯一键做幂等**）
 - 消息队列：**RocketMQ**（异步、重试、死信；客户端与 starter 版本见 `docs/version-baseline.md`；收发与消费重试/死信统一 `framework` 封装，禁止业务直接绑死客户端 API）
@@ -66,6 +67,7 @@
 - 组件版本基线的**唯一取用处**是 `docs/version-baseline.md`（固定登记、不可删除）；各系统父 `pom.xml` 的 `dependencyManagement` 按其锁定落地，禁止各系统各锁各的版本；版本号**不在本文件**复制。
 - **落点原则（与 5.4 一致）：** 需连接中间件或额外配置才能工作的依赖（ORM、Redis/Redisson、Feign、JWT、MQ/MinIO 客户端、限流/幂等等），**只**在 `{system}-framework` 封装一次；纯编译期工具（Lombok、MapStruct）可随模块引入。
 - `common` **禁止**依赖 MyBatis-Plus、Redis/Redisson、数据源、Actuator、MQ/MinIO 客户端、JWT 库、Hutool。
+- **网关模块（`{system}-gateway`）凡使用 `lb://` 路由，必须显式声明 Spring Cloud LoadBalancer**，禁止依赖 Gateway starter 的偶然传递；本地联调若见网关对已注册服务仍 503，优先查该依赖（见 `docs/template/fixbug/2026-09-25-unify-login-sso-gateway.md` §5.1）。
 - 禁止同类平行选型、禁止业务自建横切实现；反模式**唯一清单**见 **7.1**，明确不引入的组件**唯一清单**见 **2.2**。
 
 ### 2.2 明确不引入（当前）
@@ -444,6 +446,8 @@ src/main/java/com.qjj.{system}.{module}/
 - [ ] 无 `console.log` / `System.out.println` 调试残留
 - [ ] 无**生产**密钥泄露；测试/开发密码仅在允许位置
 - [ ] 符合本文件规范
+- [ ] 改动范围与缺陷/已批准变更一一对应，无顺手重构或扩大范围（见 7.8）
+- [ ] 若为修 bug：已基于具体报错信息定位根因并针对性修改（见 7.9）
 
 示例：`feat(user): 新增用户分页查询接口` / `fix(order): 修复订单状态未回滚问题`
 
@@ -655,6 +659,8 @@ TraceId/SpanId 进 MDC；传播头由 `framework` 配置；禁止业务手拼 He
 5. 不把**生产**密钥写入任何将提交的文件；测试/开发密码仅按 6.7。
 6. 文档与代码不一致时：以代码与契约为准改文档，或停下来指出冲突。
 7. 不在本文件写入服务清单、库表明细、完整实现代码或短期任务。
+8. **不可随意修改代码（硬性）**：改动前必须明确目标与影响面；禁止顺手优化、无关重构、扩大改动范围、未要求的“清理/美化”。只改与当前缺陷或已批准变更直接相关的最小代码集；拿不准时停下来征询，不得擅自替业务做裁决。
+9. **修 Bug 硬性要求**：必须先取得并分析**具体报错信息**（完整堆栈/错误消息、HTTP 状态与响应 `code`/`msg`、相关日志与 traceId、复现步骤），定位到确切根因后，才做**针对性**修改。禁止未看清报错就改代码、禁止凭猜测批量“试错式”修改、禁止只掩盖表象而不修根因（见 7.1）。
 
 ### 7.1 常见反模式（禁止）
 
@@ -665,6 +671,8 @@ TraceId/SpanId 进 MDC；传播头由 `framework` 配置；禁止业务手拼 He
 | 事务内调 Feign | 远程调用放事务外 |
 | `${}` 拼 SQL | 只用 `#{}` |
 | 吞异常 / 空测试凑数 | 显式失败并修根因 |
+| 未分析具体报错就改代码 / 凭猜测批量试错修 bug | 先取得堆栈·错误消息·HTTP/`code`·日志并定位根因，再针对性修改 |
+| 修 bug 顺手重构、扩大改动或掩盖表象 | 最小范围修根因；改动与缺陷一一对应 |
 | 预写未提案的服务名与表结构 | 先 SDD |
 | 假设仓库只有一个前后端工程 | 多系统并存 |
 | 业务模块自建返回体/异常/分页/ORM·Redis 配置 | `common` 契约 + `framework` 装配 |
@@ -681,6 +689,7 @@ TraceId/SpanId 进 MDC；传播头由 `framework` 配置；禁止业务手拼 He
 | 业务自建线程池 / `Executors` 裸用 | 统一 `framework` 装配 |
 | 错误码跨系统撞号 | 按 `docs/error-code-ranges.md` 登记系统号 |
 | 业务自建雪花/UUID 主键 | 统一 `framework` 发号 |
+| 网关 `lb://` 路由未显式引 LoadBalancer（Nacos 有实例仍 503） | `pom` 显式 `spring-cloud-starter-loadbalancer`（§2 / §2.1） |
 | 流水线跳过检查/吞错过门 | 质量门失败即失败 |
 | 本文件粘贴版本号、端口、生产密钥、长代码 | 见文末维护约定 |
 

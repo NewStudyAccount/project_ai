@@ -42,13 +42,18 @@
 ## 3. 冒烟清单
 
 - `GET /.well-known/openid-configuration`
+- **唯一登录门面**：仅 `auth-portal` 有账密表单；`user-admin` / `auth-admin` 无本地表单，未登录直跳 `/oauth2/authorize`
 - 账密登录（portal）→ SSO Cookie
+- **双 RP 换票**：`user-admin-spa` / `auth-admin-spa` 各自 client_id + 精确 redirect `/callback`，PKCE S256 换票
 - 授权码 + PKCE S256 换票、`redirect_uri` 精确匹配
 - Refresh Token 刷新轮转；旧 RT 重用触发全链吊销
+- **统一登出**：任一 RP 退出 → `/connect/logout` → 另一 RP 需重新登录；非法 `post_logout_redirect_uri` 被拒
 - `GET /oauth2/jwks` 离线验签；`GET /oauth2/userinfo`
 - `POST /oauth2/revoke`；管理端 grant/用户踢下线
 - Client CRUD / secret 重置（明文仅一次）
 - 登录审计、安全审计、RBAC 菜单/权限
+
+Client 种子：`deploy/db/seed/2026-09-24-unify-login-facade-clients.sql`（`user-admin-spa`、`auth-admin-spa`；生产执行前征询）。
 
 ## 4. 回滚
 

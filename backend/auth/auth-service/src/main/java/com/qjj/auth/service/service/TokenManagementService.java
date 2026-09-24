@@ -40,6 +40,8 @@ public class TokenManagementService {
         redisTemplate.expire(grantRefreshKey(bizGrantId), ttl);
         redisTemplate.opsForSet().add(userGrantKey(userId), bizGrantId);
         redisTemplate.expire(userGrantKey(userId), Duration.ofDays(7));
+        // 反向索引：biz grant → SAS authorizationId，吊销时才能删掉 OAuth2Authorization 本体
+        redisTemplate.opsForValue().set(grantAuthzKey(bizGrantId), grantId, Duration.ofDays(7));
         upsertGrant(bizGrantId, userId, clientId);
     }
 
@@ -85,6 +87,14 @@ public class TokenManagementService {
             redisTemplate.delete(rotatedKey(hash));
         });
         redisTemplate.delete(grantRefreshKey(grantId));
+        // 删除 SAS 授权对象，否则 findByToken 仍会带着 RT 返回 authorization，刷新可继续成功
+        String authzId = redisTemplate.opsForValue().get(grantAuthzKey(grantId));
+        if (authzId != null && !authzId.isBlank()) {
+            removeAuthorization(authzId);
+            redisTemplate.delete(grantAuthzKey(grantId));
+        } else {
+            removeAuthorization(grantId);
+        }
         if (userId != null && !userId.isBlank()) {
             redisTemplate.opsForSet().remove(userGrantKey(userId), grantId);
             ssoSessionService.revoke(Long.valueOf(userId), null);
@@ -103,6 +113,10 @@ public class TokenManagementService {
 
     public void removeAuthorization(String grantId) {
         redisTemplate.delete("auth:authorization:" + grantId);
+    }
+
+    private String grantAuthzKey(String bizGrantId) {
+        return "auth:grant-authorization:" + bizGrantId;
     }
 
     private void upsertGrant(String grantId, String userId, String clientId) {

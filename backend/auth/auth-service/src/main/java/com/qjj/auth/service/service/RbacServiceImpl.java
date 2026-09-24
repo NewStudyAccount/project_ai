@@ -33,6 +33,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class RbacServiceImpl implements RbacService {
+    /** 本系统内管理员角色编码；拥有该角色则视为授权本系统全部菜单/权限（含新建节点，无需逐条绑 sys_role_menu）。 */
+    static final String ROLE_ADMIN = "admin";
+
     private final SysMenuMapper menuMapper;
     private final SysRoleMapper roleMapper;
     private final SysUserRoleMapper userRoleMapper;
@@ -157,26 +160,51 @@ public class RbacServiceImpl implements RbacService {
     @Override
     public Set<String> permissionsForUser(Long userId) {
         if (userId == null || userId == 0L) return Set.of();
-        List<Long> roleIds = userRoleMapper.selectList(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, userId))
-                .stream().map(SysUserRole::getRoleId).toList();
+        if (hasAdminRole(userId)) {
+            return permissionOf(enabledMenus());
+        }
+        List<Long> roleIds = roleIdsOf(userId);
         if (roleIds.isEmpty()) return Set.of();
         List<Long> menuIds = roleMenuMapper.selectList(new LambdaQueryWrapper<SysRoleMenu>().in(SysRoleMenu::getRoleId, roleIds))
                 .stream().map(SysRoleMenu::getMenuId).distinct().toList();
         if (menuIds.isEmpty()) return Set.of();
-        return menuMapper.selectBatchIds(menuIds).stream().map(SysMenu::getPermission)
-                .filter(p -> p != null && !p.isBlank())
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+        return permissionOf(menuMapper.selectBatchIds(menuIds));
     }
 
     private List<SysMenu> myMenuList() {
         Long userId = AuthContext.userIdOrSystem();
         if (userId == 0L) return List.of();
-        List<Long> roleIds = userRoleMapper.selectList(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, userId))
-                .stream().map(SysUserRole::getRoleId).toList();
+        if (hasAdminRole(userId)) {
+            return enabledMenus();
+        }
+        List<Long> roleIds = roleIdsOf(userId);
         if (roleIds.isEmpty()) return List.of();
         List<Long> menuIds = roleMenuMapper.selectList(new LambdaQueryWrapper<SysRoleMenu>().in(SysRoleMenu::getRoleId, roleIds))
                 .stream().map(SysRoleMenu::getMenuId).distinct().toList();
         return menuIds.isEmpty() ? List.of() : menuMapper.selectBatchIds(menuIds);
+    }
+
+    private List<Long> roleIdsOf(Long userId) {
+        return userRoleMapper.selectList(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, userId))
+                .stream().map(SysUserRole::getRoleId).toList();
+    }
+
+    /** 管理员角色（role_code=admin 且启用）则本系统全量授权。 */
+    private boolean hasAdminRole(Long userId) {
+        List<Long> roleIds = roleIdsOf(userId);
+        if (roleIds.isEmpty()) return false;
+        return roleMapper.selectBatchIds(roleIds).stream()
+                .anyMatch(r -> ROLE_ADMIN.equalsIgnoreCase(r.getRoleCode()) && r.getStatus() != null && r.getStatus() == 1);
+    }
+
+    private List<SysMenu> enabledMenus() {
+        return menuMapper.selectList(new LambdaQueryWrapper<SysMenu>().eq(SysMenu::getStatus, 1));
+    }
+
+    private Set<String> permissionOf(List<SysMenu> menus) {
+        return menus.stream().map(SysMenu::getPermission)
+                .filter(p -> p != null && !p.isBlank())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private List<MenuVO> buildTree(List<SysMenu> menus) {

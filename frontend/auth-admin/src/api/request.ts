@@ -1,20 +1,23 @@
 /**
- * 统一 Result 解包请求封装（CLAUDE.md 6.4.1 / 8.5）。
- * 业务组件只调用 src/api，不直接使用 axios。
+ * 统一 Result 解包请求封装（CLAUDE.md 6.4.1）。
+ * 业务组件只调用 src/api；携带 Bearer AT，过期走 RT 轮转刷新。
  */
 import axios, { type AxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
-import { router } from '@/router'
 import type { Result } from '@/types'
+import { clearTokens, getTokens, hasValidAccessToken, redirectForLogin, refreshTokens } from '@/utils/oidc'
 
 const instance = axios.create({
   baseURL: '/api/v1',
   timeout: 10000,
-  withCredentials: true,
 })
 
 instance.interceptors.request.use((config) => {
   config.headers.set('X-Request-Id', window.crypto.randomUUID())
+  const tokens = getTokens()
+  if (tokens?.accessToken) {
+    config.headers.set('Authorization', `Bearer ${tokens.accessToken}`)
+  }
   return config
 })
 
@@ -28,7 +31,18 @@ function dropEmpty(params?: object): object | undefined {
   return out
 }
 
+async function ensureAccessToken(): Promise<boolean> {
+  if (hasValidAccessToken()) return true
+  const refreshed = await refreshTokens()
+  return !!refreshed?.accessToken
+}
+
 export async function request<T>(config: AxiosRequestConfig): Promise<T> {
+  if (!(await ensureAccessToken())) {
+    clearTokens()
+    await redirectForLogin(window.location.pathname + window.location.search)
+    throw new Error('未认证')
+  }
   try {
     const response = await instance.request<Result<T>>({
       ...config,
@@ -39,7 +53,8 @@ export async function request<T>(config: AxiosRequestConfig): Promise<T> {
       return result.data
     }
     if (result.code === 10001) {
-      await router.push('/login')
+      clearTokens()
+      await redirectForLogin(window.location.pathname + window.location.search)
       throw new Error(result.msg || '未认证')
     }
     if (result.code === 10002) {
@@ -51,7 +66,8 @@ export async function request<T>(config: AxiosRequestConfig): Promise<T> {
   } catch (error) {
     const status = axios.isAxiosError(error) ? error.response?.status : undefined
     if (status === 401) {
-      await router.push('/login')
+      clearTokens()
+      await redirectForLogin(window.location.pathname + window.location.search)
     }
     throw error
   }

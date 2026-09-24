@@ -2,7 +2,9 @@ package com.qjj.auth.service.config;
 
 import com.qjj.auth.service.security.CredentialAuthenticationProvider;
 import com.qjj.auth.service.security.LoginAttemptService;
+import com.qjj.auth.service.security.OidcLogoutFilter;
 import com.qjj.auth.service.security.OidcRequestValidationFilter;
+import com.qjj.auth.service.security.SsoSessionAuthFilter;
 import com.qjj.auth.service.security.SsoSessionService;
 import com.qjj.auth.service.service.CredentialService;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -57,6 +59,18 @@ public class SecurityConfig {
     }
 
     @Bean
+    public FilterRegistrationBean<OidcLogoutFilter> oidcLogoutFilter(
+            SsoSessionService ssoSessionService,
+            com.qjj.auth.service.service.GrantService grantService,
+            AuthSecurityProperties authSecurityProperties) {
+        FilterRegistrationBean<OidcLogoutFilter> registration =
+                new FilterRegistrationBean<>(new OidcLogoutFilter(ssoSessionService, grantService, authSecurityProperties));
+        registration.addUrlPatterns("/connect/logout");
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
+        return registration;
+    }
+
+    @Bean
     public CorsConfigurationSource corsConfigurationSource(AuthSecurityProperties properties) {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(properties.getAllowedOrigins());
@@ -72,19 +86,31 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    AuthenticationProvider credentialAuthenticationProvider,
                                                    SsoSessionService ssoSessionService,
+                                                   com.qjj.auth.service.service.RbacService rbacService,
                                                    AuthSecurityProperties authSecurityProperties) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource(authSecurityProperties)))
                 .authenticationProvider(credentialAuthenticationProvider)
+                .addFilterAfter(new SsoSessionAuthFilter(ssoSessionService, rbacService),
+                        org.springframework.security.web.context.SecurityContextHolderFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/actuator/**", "/oauth2/**", "/.well-known/**", "/login").permitAll()
+                        .requestMatchers("/actuator/**", "/oauth2/**", "/.well-known/**",
+                                "/login", "/api/login", "/connect/logout").permitAll()
                         .requestMatchers("/internal/**").permitAll()
                         .anyRequest().authenticated())
+                // JWT 不含权限码：验签后按 sub 从 RBAC 装载 authorities，否则 @PreAuthorize 恒 10002
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt ->
+                        jwt.jwtAuthenticationConverter(new com.qjj.auth.service.security.RbacJwtAuthenticationConverter(rbacService))))
                 .formLogin(form -> form
+                        // 验密与 GET /login（跳转 portal）分离，避免与页面路由同名
+                        .loginProcessingUrl("/api/login")
                         .successHandler(loginSuccessHandler(ssoSessionService))
                         .failureHandler(loginFailureHandler())
                         .permitAll())
+                // 必须写在 formLogin 之后：否则 FormLogin 会把 EntryPoint 改回相对路径 /login，GET 9080/login → 10004
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(
+                        new PortalLoginAuthenticationEntryPoint(authSecurityProperties)))
                 .logout(logout -> logout.permitAll());
         return http.build();
     }
@@ -101,7 +127,7 @@ public class SecurityConfig {
                 super.onAuthenticationSuccess(request, response, authentication);
             }
         };
-        handler.setDefaultTargetUrl("/");
+        handler.setDefaultTargetUrl("http://localhost:5174/login");
         return handler;
     }
 

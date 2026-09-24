@@ -78,7 +78,7 @@ frontend/example-admin/                # 管理端（Vue3 + TS + Pinia + Element
 | `example-framework` | starter-web / validation / aop / actuator / data-redis + Redisson 3.52.0 + MyBatis-Plus 3.5.17（boot3 starter）+ OpenFeign + springdoc 2.9.1 + micrometer-tracing-bridge-brave + **MinIO SDK 9.0.3 封装**（上传/预签名/删除策略统一封装于此，禁止业务直绑 SDK） |
 | `example-api` | spring-cloud-starter-openfeign + Lombok |
 | `example-service` | example-common/framework/api + mysql-connector-j + MapStruct + nacos-discovery/config（SCA 2025.0.0.0） |
-| `example-gateway` | spring-cloud-starter-gateway + nacos-discovery + oauth2-resource-server（验签用 JWKS 公钥，**不引 SAS**）+ actuator |
+| `example-gateway` | spring-cloud-starter-gateway + **spring-cloud-starter-loadbalancer（`lb://` 必需，禁止只靠 gateway starter 传递）** + nacos-discovery + oauth2-resource-server（验签用 JWKS 公钥，**不引 SAS**）+ actuator |
 
 **Spring Cloud 能力映射**：注册/发现 = Nacos；配置 = Nacos + `application-local/-test.yml`；服务间调用 = OpenFeign + Fallback + 固定超时；边缘 = Gateway（路由 / JWT 验签 / `X-User-*` 注入 / CORS）；链路 = Micrometer Tracing（traceId 进 MDC）；监控 = Actuator。
 
@@ -207,7 +207,12 @@ sys_file 1 ──── * example_audit_log（target_type=FILE）
 | 文件管理 | 上传（大小/类型前端提示）、列表、预签名 URL 预览/下载、逻辑删除 |
 | 审计日志 | 分页查询（按 action/时间筛选） |
 
-- 登录：壳阶段先本地放行联调，真实 OIDC（redirect_uri / PKCE）随认证中心落地接线（同 user-center 决策 9）
+- 登录：**OIDC RP（public + PKCE S256）**，唯一登录门面在 `auth-portal`；本系统管理端**禁止**再放账密表单。接线必须遵守（来自 unify-login-facade 实测缺陷，详见 `fixbug/2026-09-25-unify-login-sso-gateway.md`）：
+  - IdP / 各 RP **同一 host**（本地一律 `localhost`，禁止与 `127.0.0.1` 混用——Cookie 按 host 隔离）
+  - **页面路由与验密接口不同名**（如 `GET /login` 仅 portal；若需 form-login 验密用 `POST /api/login`）
+  - SPA 调 `/oauth2/token` 时，**AS 安全链必须开 CORS**（只配业务默认链不够）
+  - 会话恢复 Filter 必须在 SAS authorize **之前**（挂在 `SecurityContextHolderFilter` 之后）
+  - 路由 `uri: lb://{service}` 的网关必须显式依赖 **LoadBalancer**（否则 503）
 - 请求只经 `src/api`；`id` 一律 `string`；axios 统一解包 `{code,msg,data}` 并按 `CLAUDE.md` §5.3 分流
 - 新增前端工程落地时，**先**在 `docs/version-baseline.md` 登记主框架版本（Vue3 / Vite / Element Plus / Pinia），再锁 `package-lock.json`
 
@@ -224,7 +229,7 @@ sys_file 1 ──── * example_audit_log（target_type=FILE）
 | 5 | **`example-api` 演示文件元数据契约 + ping** | 已裁决（备选「仅 ping 空壳」「查用户中心投影」否决——内容真实可跑，且不背对用户中心的依赖） |
 | 6 | **上传演示：上传 + 查 + 删 + 预签名 URL** | 已裁决（备选「仅上传+查询」「含批量上传」否决——单文件生命周期完整即可，批量留各系统按需） |
 | 7 | **幂等/限流落点**：关键写 `@Idempotent`；上传/列表/预签名 `@RateLimit` | 已裁决；参数与 TTL 由 `framework` 固定（§6.11） |
-| 8 | **登录鉴权同 user-center 决策 9**：壳阶段放行，网关 JWKS 验签随认证中心接线 | 模板交付时以接线注释标注 |
+| 8 | **登录鉴权：OIDC RP（PKCE）+ 网关 JWKS 验签**；唯一登录门面在 auth-portal | 对齐 `unify-login-facade` 实测结论：禁止各系统自带账密页；壳阶段本地放行仅限脚手架联调且不得上生产（详见 §7 与 `fixbug/2026-09-25-unify-login-sso-gateway.md`） |
 | 9 | **配置 local/test** 三份 yml；SQL 落 `deploy/db/migration/example_db/` **人工执行** | §6.10 / §2.2（不引 Flyway/Liquibase） |
 | 10 | **错误码系统号实施时登记** `docs/error-code-ranges.md`，不预占 | 当前登记表为空（2026-09-24） |
 | 11 | **`sys_file` 删除语义统一走 `deleted`，不另设 `status` 列** | 定稿确认（2026-09-24）；避免「状态删除」与逻辑删除双轨（备选「另设 status 列」否决） |
@@ -237,6 +242,7 @@ sys_file 1 ──── * example_audit_log（target_type=FILE）
 - 上传：类型白名单（应用层 + `content_type` 双校验）、单文件 ≤10MB、UUID 文件名、预签名 URL 短 TTL；逻辑删除后对象清理走运维脚本（不建定时，§2.2）
 - `permission` 标识校验（首段 = `example`）、`@PreAuthorize` 与前端按钮同一字符串；分页排序白名单；`#{}` 参数化 SQL
 - 网关 JWT 验签 + `X-User-*` 注入；服务内以注入值为准，不信可伪造客户端头（§5.2）
+- **OIDC/SSO 落地红线**（缺陷根因归纳）：Cookie host 与 issuer 一致；`GET` 登录页与 `POST` 验密路径分离；token/logout 跨域响应带 CORS；SSO 过滤器早于 authorize；统一登出须吊销 RT **且**删除授权对象；网关 `lb://` 必须带 LoadBalancer
 - 审计与日志禁密码/完整令牌；手机号脱敏工具在 `example-common`；生产密钥禁止入仓（连接信息见 `docs/test-env.md`）
 
 ---
@@ -246,7 +252,7 @@ sys_file 1 ──── * example_audit_log（target_type=FILE）
 1. 测试环境建库 `example_db`（utf8mb4），人工执行 `deploy/db/migration/example_db/` SQL（7 表；生产执行前按 §7 征询）
 2. 准备 Redis、MinIO（建桶）、Nacos；部署 `example-gateway`、`example-service`（profile=`test`），健康检查 `/actuator/health`
 3. Nginx：托管 `example-admin` 静态；反代 `/api` → `example-gateway`（信任域名登记 `docs/test-env.md`）
-4. 冒烟：菜单/角色 CRUD + 授权 → `/me/menus` 动态路由 → 上传/预签名/逻辑删除 → 幂等重复提交返回首次 Result → 限流 429（`10003`）→ 对内 Feign `ping`/`files/{id}` + Fallback 降级
+4. 冒烟：菜单/角色 CRUD + 授权 → `/me/menus` 动态路由 → 上传/预签名/逻辑删除 → 幂等重复提交返回首次 Result → 限流 429（`10003`）→ 对内 Feign `ping`/`files/{id}` + Fallback 降级；**网关 `lb://` 到 service 任一 `/api/**` 非 503**（LoadBalancer 依赖齐全）
 5. 回滚：下线服务 + 保留库与 MinIO 快照（无破坏性数据变更）
 
 ---

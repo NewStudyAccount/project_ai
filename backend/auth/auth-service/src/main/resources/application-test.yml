@@ -20,5 +20,10 @@ user:
 auth:
   security:
     allowed-origins:
+      - https://user-admin.example.local
       - https://auth-portal.example.local
       - https://auth-admin.example.local
+    post-logout-redirect-uris:
+      - https://user-admin.example.local/logged-out
+      - https://auth-admin.example.local/logged-out
+      - https://auth-portal.example.local/

@@ -45,6 +45,29 @@ public class SsoSessionService {
         if (userId != null) redisTemplate.delete(userSessionsKey(userId));
     }
 
+    /** 登出：删除会话键并使 Cookie 立即过期（Path 与登录一致，不扩 Domain）。 */
+    public void clearSession(String sessionId, HttpServletRequest request, HttpServletResponse response) {
+        if (sessionId != null && !sessionId.isBlank()) {
+            redisTemplate.delete(sessionKey(sessionId));
+        }
+        Cookie cookie = new Cookie(COOKIE_NAME, "");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(request.isSecure());
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+    }
+
+    public String resolveSessionId(HttpServletRequest request) {
+        if (request.getCookies() == null) return null;
+        for (Cookie cookie : request.getCookies()) {
+            if (COOKIE_NAME.equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        return null;
+    }
+
     private String sessionKey(String sessionId) {
         return "auth:sso-session:" + sessionId;
     }
