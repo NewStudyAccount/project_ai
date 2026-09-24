@@ -12,7 +12,9 @@
 > | `openspec/` | 单次变更的 proposal / specs / design / tasks | 通用编码教程 |
 > | 后端枚举 / Controller / Swagger | 字段级接口契约真相 | 在文档里复述枚举全表 |
 > | `pom.xml` / `package.json` | 依赖落地锁定（版本按 `docs/version-baseline.md` 取用） | 在本文件复制依赖清单 |
-> | `docs/` | 流程、工具与环境信息（如 Jenkins 流水线、`test-env.md`） | 业务契约、短期任务 |
+> | `docs/` | 流程、工具与环境信息（如 Jenkins 流水线、`test-env.md`、`port-registry.md`） | 业务契约、短期任务 |
+> | `docs/port-registry.md` | 前后端/中间件**端口**查询与规划（唯一端口登记处） | 账密、生产密钥 |
+> | `docs/test-env.md` | 测试环境组件接入与账密真相源（无生产密钥） | 业务契约、生产密钥 |
 > | `docs/version-baseline.md` | 组件版本基线（固定登记、不可删除；各系统版本唯一取用处） | 业务契约、生产密钥 |
 > | `docs/template/` | 设计/库表等参考模板 | 当作契约真相；覆盖 openspec 制品 |
 > | `deploy/` | 部署配置（nginx.conf、compose、Jenkins 共享脚本等） | 业务契约、生产密钥 |
@@ -40,7 +42,8 @@
 ## 2. 技术栈
 
 - 前端：Vue3 + Vue Router + TypeScript + Pinia + Element Plus
-- 后端：Java 21 + Spring Boot + Spring Security + MyBatis-Plus + **Spring Cloud Alibaba**（Nacos 注册/配置、OpenFeign 调用）+ Spring Cloud Gateway
+- 后端：Java 21 + Spring Boot + MyBatis-Plus + **Spring Cloud Alibaba**（Nacos 注册/配置、OpenFeign 调用）+ Spring Cloud Gateway
+- 鉴权组件：**仅网关与认证中心**使用 Spring Security（网关 JWT 资源服务器、auth-service 登录/SAS）；业务服务**不引入** Spring Security（纯网关鉴权，见 5.2）
 - 接入层：Nginx（静态资源、反向代理、TLS 终结、负载均衡）
 - 数据库：MySQL；连接池 **HikariCP**（Boot 默认，禁止 Druid 等平行选型）
 - 缓存与协调：Redis（Spring Data Redis + **Redisson**）
@@ -225,7 +228,7 @@ cd backend/<system> && mvn -q compile
 | 负载均衡 | 对网关实例轮询/权重 | 对下游路由与灰度 | — |
 | 反向代理 | `/api` 等反代到网关；可按系统/域名分流 | 路径/断言转到具体微服务 | — |
 | 路由 | 域名/前缀级分流 | **应用级**路由到服务 | — |
-| 鉴权 | 仅粗防护（IP 黑名单、基础限速） | **认证**：JWT/会话、登录态粗拦截、身份注入 | **授权**：RBAC/数据权限 |
+| 鉴权 | 仅粗防护（IP 黑名单、基础限速） | **鉴权唯一归属**：JWT/会话认证、登录态拦截、路由级放行/拒绝、身份注入 | **不做**用户鉴权/`@PreAuthorize`；只信网关注入的 `X-User-*`（`/internal/**` 靠网络隔离） |
 | 限流 | 连接级/基础限速 | **不**作限流主路径；可保留超时（熔断暂不引入，见 2.2） | **限流主路径**：`@RateLimit` + Redisson |
 | 日志 | 访问日志、错误日志 | 应用访问日志、TraceId 透传 | 业务操作/领域审计 |
 | 其他 | 路径改写 | **CORS 策略**（唯一归属）、用户身份注入/透传 | 参数校验、事务、业务规则 |
@@ -252,13 +255,15 @@ cd backend/<system> && mvn -q compile
 - 多系统：优先「一域名多前缀」或「多子域名」在 Nginx 分流。
 - Nginx 配置纳入版本库（`deploy/nginx/` 或各系统 `deploy/`）。
 
-**双重鉴权模型：**
+**纯网关鉴权模型（已裁决）：**
 
-1. 网关：认证 + 是否登录 + 路由级放行/拒绝。
-2. 业务服务：细粒度授权与数据权限（Spring Security / 方法级鉴权），**不可**只信网关。
+1. 网关：**唯一鉴权点**——认证（JWT/会话）、登录态与路由级放行/拒绝、身份注入 `X-User-*`。
+2. 业务服务：**不做**登录/验签/`@PreAuthorize` 等用户鉴权；以网关注入的 `X-User-Id` / `X-User-Name` 为身份来源（覆盖客户端同名头）。
+3. `/internal/**`：仅服务间可达，不进网关、无用户登录态，靠网络隔离与部署边界防护。
+4. **例外：认证中心 `auth-service`** 自身是登录与 OIDC 发行方（单体、无网关），保留自管登录与管理端 RBAC，不套用本条到其它业务系统。
 
 **权限标识格式：** `system:resource:action`（全小写，如 `order:order:list`）；
-前端路由/按钮与后端 `@PreAuthorize` 使用同一字符串；禁止前端硬编码角色名。
+前端路由/按钮与后端下发的 permission 使用同一字符串；**业务服务不再用 `@PreAuthorize` 拦接口**；禁止前端硬编码角色名。
 
 **权限模型（已裁决）：** 权限模型采用 **RBAC**（用户 → 角色 → 菜单/按钮权限）；
 **菜单与动态路由由后端下发，前端动态生成**；数据权限（数据范围）语义随首个权限相关变更提案锁定。
@@ -268,10 +273,10 @@ cd backend/<system> && mvn -q compile
 ```
 浏览器/客户端
   → Nginx：TLS、静态资源、反代 /api → 网关、写接入访问日志
-  → 网关：认证、写应用访问日志、注入 X-User-* 与 TraceId（限流在业务服务侧）
+  → 网关：鉴权（唯一归属）、写应用访问日志、注入 X-User-* 与 TraceId（限流在业务服务侧）
   → 业务服务：MDC 输出 traceId（见 6.11.1）
   → Controller：参数校验（DTO + Bean Validation）；关键写可 @Idempotent
-  → Service：业务规则、事务边界、细粒度鉴权；必要处 @RateLimit
+  → Service：业务规则、事务边界；必要处 @RateLimit
   → Mapper/DB 或 Feign 下游（Feign 必须在事务外）
   → 统一 Result{code,msg,data} + 全局异常处理（common）
   → 网关/前端：按 code / HTTP 状态分流
@@ -537,7 +542,7 @@ src/main/java/com.qjj.{system}.{module}/
   - **禁止入仓**：生产密码、私钥、Token、连接串 → 只进 Nacos / 密钥管理 / Jenkins Credentials。
   - **允许入仓**：开发/测试账号密码 → `docs/test-env.md`、`application-local.yml` / `application-test.yml`；须标注环境，禁止与生产同账号。
   - 生产密钥误入仓：立即改密、清理历史（需征询），并记为严重问题。
-- Token：JWT（实现库 **spring-security-oauth2-jose / Nimbus**），Access **默认 10 分钟（5–15 分钟可配）**，Refresh 7 天（轮转）；网关 + 服务双重鉴权；签发由认证中心（Spring Authorization Server）负责，验签与解析统一 `framework` 封装，禁止业务自写 JWT 解析。
+- Token：JWT（实现库 **spring-security-oauth2-jose / Nimbus**），Access **默认 10 分钟（5–15 分钟可配）**，Refresh 7 天（轮转）；**纯网关鉴权**（业务服务不重复验签/登录，见 5.2）；签发由认证中心（Spring Authorization Server）负责；网关验签与解析统一 `framework` 封装，禁止业务自写 JWT 解析。
 - 登录失败限制；敏感接口二次验证（敏感操作清单与二次验证方式随相关变更裁决）；关键接口限流见 6.11；CORS 仅信任域名（**配置在网关**，见 5.2；具体域名在 `docs/test-env.md` 或变更中登记）。
 
 ### 6.8 API 文档
@@ -667,6 +672,7 @@ TraceId/SpanId 进 MDC；传播头由 `framework` 配置；禁止业务手拼 He
 | Entity 放错模块或跨服务共享 | Entity 只在拥有表的服务 |
 | 只有单一 `application.yml` | 三份配置 |
 | 业务规则塞进网关/Nginx | 见 5.2 职责表 |
+| 业务服务自建登录/`@PreAuthorize` 用户鉴权 | 纯网关鉴权（5.2）；身份只用 `X-User-*` |
 | 生产静态由后端或网关托管 | 静态走 Nginx |
 | 网关或 Sentinel 作限流主路径 / Redis+Lua 自研限流 | `@RateLimit` + Redisson `RRateLimiter` |
 | 幂等靠前端、自写 setnx、或 `uk_` | `@Idempotent` + Redis `Idempotent-Key` |

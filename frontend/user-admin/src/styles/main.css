@@ -1,0 +1,26 @@
+:root {
+  font-family: Inter, 'Microsoft YaHei', sans-serif;
+  color: #303133;
+  background: #f5f7fa;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.page-card {
+  margin: 16px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 8px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}

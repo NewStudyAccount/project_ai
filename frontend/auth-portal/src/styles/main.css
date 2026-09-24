@@ -1,0 +1,13 @@
+:root {
+  font-family: Inter, 'Microsoft YaHei', sans-serif;
+  color: #303133;
+  background: #f0f2f5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}

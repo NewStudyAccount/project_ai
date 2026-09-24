@@ -1,0 +1,29 @@
+server:
+  port: 8173
+spring:
+  application:
+    name: user-gateway
+  profiles:
+    active: local
+  cloud:
+    gateway:
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/**
+user-gateway:
+  security:
+    local-pass-through: true
+    jwk-set-uri: ""
+    public-paths:
+      - /actuator/health
+      - /internal/**
+    trusted-origins:
+      - http://localhost:5173
+      - http://127.0.0.1:5173
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

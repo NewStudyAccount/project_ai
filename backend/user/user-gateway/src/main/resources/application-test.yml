@@ -1,0 +1,13 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.99.100:8848
+        username: nacos
+        password: nacos
+user-gateway:
+  security:
+    local-pass-through: true
+    jwk-set-uri: https://auth.example.local/oauth2/jwks
+    trusted-origins:
+      - https://user-admin.example.local

@@ -1,4 +1,4 @@
-# 测试环境信息
+﻿# 测试环境信息
 
 > 用途：记录**测试环境**的基础接入信息，便于开发、联调、Jenkins 发布。
 > 范围：仅测试环境。生产环境另册，且更严格。
@@ -9,7 +9,9 @@
 > - 必须标明环境；禁止测试与生产混用同一账号。
 > - 本文仅测试环境；建议只存放于内网仓库。
 
-最后更新：YYYY-MM-DD　|　维护人：（填写）
+最后更新：2026-09-24　|　维护人：Codex（unified-auth-center）
+
+> **端口规划与查询**见 [docs/port-registry.md](port-registry.md)（唯一端口登记处）；本文件负责组件接入与测试账密。
 
 ---
 
@@ -22,6 +24,24 @@
 | Jenkins | （填写） | （填写）           | （如有） | 8080 | CI/CD | — | 测试账号可写 §6；生产 Jenkins 禁止写入 |
 | 跳板机 | （填写） | （填写）           | （如有） | 22 | 运维入口 | （用户名） | |
 
+### 用户中心（scaffold-user-center）
+
+| 系统 | 环境 | 域名 | 应用端口 | 备注 |
+|------|------|------|----------|------|
+| user-admin | test/local | user-admin.example.local | 5173 | Nginx 托管前端并反代 /api 到 user-gateway |
+| user-gateway | test/local | — | 8173 | 网关入口（鉴权唯一归属） |
+| user-service | internal | — | 18173 | 仅服务间可达，网关不对外路由 /internal |
+
+### 统一认证中心（unified-auth-center）
+
+| 系统 | 环境 | 域名 | 应用端口 | 备注 |
+|------|------|------|----------|------|
+| auth-portal | test/local | auth-portal.example.local | 5174 | Nginx 托管登录页；本地 Vite 代理 `/api`、`/oauth2` 到 9080 |
+| auth-admin | test/local | auth-admin.example.local | 5175 | Nginx 托管运营后台；本地 Vite 代理 `/api` 到 9080 |
+| auth-service | test/local | auth.example.local | 9080 | OIDC 端点与 `/api/v1` 管理 API；信任 origin 见下方登记 |
+
+信任域名（auth-service CORS）：`http://localhost:5174`、`http://localhost:5175`、`http://127.0.0.1:5174`、`http://127.0.0.1:5175`、`https://auth-portal.example.local`、`https://auth-admin.example.local`。
+
 ---
 
 ## 2. 中间件与数据层
@@ -32,12 +52,19 @@
 |------|----------------|------|-----------|-------|----------|--------|------|
 | 测试主库 | 192.168.99.100 | 3306 | （库名） | root  | 123456   | utf8mb4 | 按系统/服务拆库时一行一个库 |
 
+| 用途 | 主机 | 端口 | 实例/库名 | 用户名 | 密码 | 字符集 | 备注 |
+|------|------|------|-----------|--------|------|--------|------|
+
+| 认证中心测试库 | 192.168.99.100 | 3306 | auth_db | root | 123456 | utf8mb4 | SQL：deploy/db/migration/auth_db/ |
+
 
 ### 2.2 Redis
 
 | 用途 | 主机             | 端口 | DB 序号 | 用户名  | 密码     | 备注 |
 |------|----------------|------|-------|------|--------|------|
 | 测试缓存 | 192.168.99.100 | 6379 | 2     | root | 123456 | |
+
+| 认证中心缓存 | 192.168.99.100 | 6379 | 3 | root | 123456 | authorization / refresh-token / sso-session |
 
 ### 2.3 Nacos
 
@@ -54,6 +81,10 @@
 ---
 
 ## 3. 网关与域名
+
+| 系统 | 测试域名 | 协议 | Nginx 服务器 | 反代目标 | 备注 |
+|------|----------|------|--------------|----------|------|
+| user-admin | user-admin.example.local | http | 192.168.99.100 | user-gateway 127.0.0.1:8173 | 信任域名：http://localhost:5173、http://127.0.0.1:5173、https://user-admin.example.local |
 
 | 系统 | 测试域名 | 协议 | Nginx 服务器 | 反代目标（网关） | 备注 |
 |------|----------|------|--------------|------------------|------|
@@ -116,3 +147,6 @@
 | 日期 | 变更 | 变更人 |
 |------|------|--------|
 | YYYY-MM-DD | 建立文档结构 | — |
+| 2026-09-24 | 登记 user_db、user-gateway/user-service 端口、Nginx 信任域名 | scaffold-user-center |
+| 2026-09-24 | 登记 auth-portal/auth-admin/auth-service 端口、测试域名与 CORS 信任域名 | unified-auth-center |
+

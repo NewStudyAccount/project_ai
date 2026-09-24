@@ -1,0 +1,68 @@
+CREATE TABLE IF NOT EXISTS sys_sequence (
+  id BIGINT NOT NULL,
+  seq_date DATETIME NOT NULL,
+  current_val BIGINT NOT NULL DEFAULT 0,
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  create_by BIGINT NOT NULL DEFAULT 0,
+  update_by BIGINT NOT NULL DEFAULT 0,
+  deleted TINYINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_sys_sequence_seq_date (seq_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS sys_user (
+  id BIGINT NOT NULL,
+  username VARCHAR(64) NOT NULL,
+  real_name VARCHAR(64) NOT NULL DEFAULT '',
+  nickname VARCHAR(64) NOT NULL DEFAULT '',
+  email VARCHAR(128) NOT NULL DEFAULT '',
+  phone VARCHAR(32) NOT NULL DEFAULT '',
+  avatar VARCHAR(255) NOT NULL DEFAULT '',
+  status TINYINT NOT NULL DEFAULT 1,
+  dept_id BIGINT NULL,
+  last_login_time DATETIME NULL,
+  remark VARCHAR(255) NOT NULL DEFAULT '',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  create_by BIGINT NOT NULL DEFAULT 0,
+  update_by BIGINT NOT NULL DEFAULT 0,
+  deleted TINYINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_sys_user_username (username),
+  KEY idx_sys_user_status (status),
+  KEY idx_sys_user_dept_id (dept_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS sys_user_profile (
+  id BIGINT NOT NULL,
+  user_id BIGINT NOT NULL,
+  gender TINYINT NOT NULL DEFAULT 0,
+  birthday DATETIME NULL,
+  address VARCHAR(255) NOT NULL DEFAULT '',
+  extra_json VARCHAR(1024) NOT NULL DEFAULT '',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  create_by BIGINT NOT NULL DEFAULT 0,
+  update_by BIGINT NOT NULL DEFAULT 0,
+  deleted TINYINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_sys_user_profile_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS user_audit_log (
+  id BIGINT NOT NULL,
+  action VARCHAR(64) NOT NULL,
+  actor_user_id BIGINT NULL,
+  target_user_id BIGINT NULL,
+  detail VARCHAR(512) NOT NULL DEFAULT '',
+  ip VARCHAR(64) NOT NULL DEFAULT '',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  create_by BIGINT NOT NULL DEFAULT 0,
+  update_by BIGINT NOT NULL DEFAULT 0,
+  deleted TINYINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  KEY idx_user_audit_log_target_user_id (target_user_id),
+  KEY idx_user_audit_log_create_time (create_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

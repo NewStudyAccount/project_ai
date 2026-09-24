@@ -23,6 +23,20 @@
 | RocketMQ | 客户端 5.3.1（SCA BOM 管理） | `rocketmq-spring-boot-starter` 2.3.6；收发与消费重试/死信统一 `framework` 封装（CLAUDE.md 6.11） |
 | HikariCP / Lombok / SLF4J+Logback / Micrometer Tracing / MySQL Connector/J / Jackson | 随 Spring Boot 3.5.16 BOM | 不单独锁；实据解析值：HikariCP 6.3.3、Lombok 1.18.46、Logback 1.5.34、SLF4J 2.0.18、micrometer-tracing 1.5.12、mysql-connector-j 9.7.0、jackson-bom 2.21.4 |
 
+**前端主框架**（新增前端工程时取用；`package-lock.json` 按其锁定）：
+
+| 组件 | 版本 | 说明 |
+|------|------|------|
+| Vue | ^3.5.x | 组合式 API（`<script setup lang="ts">`） |
+| Vite | ^6.x | 构建 |
+| TypeScript | ~5.7.x | 与 vue-tsc 配套 |
+| vue-tsc | ^2.2.x | type-check 用 |
+| vue-router | ^4.5.x | |
+| Pinia | ^2.3.x | 状态管理 |
+| Element Plus | ^2.9.x | 统一 UI 库 |
+| axios | ^1.8.x | 经 `src/api` 统一封装 |
+| ESLint 9 + typescript-eslint + eslint-plugin-vue / Prettier | 当前稳定线 | lint / format（flat config） |
+
 配套证据：Spring Cloud 2025.0.x ↔ Boot 3.5.x（SC 2025.1.3 BOM 硬钉 `spring-boot.version=4.0.8`，佐证 2025.1 列车 = Boot 4 线）；SCA `2025.0.0.0` ↔ SC 2025.0.x（版本列车命名配套）；`redisson-spring-boot-starter` 3.52.0 的 BOM 基线为 Boot 3.5.5。
 
 ## 2. 取用与升级规则
@@ -39,3 +53,4 @@
 | 2026-09-23 | 建立基线：Spring Boot 3 线组合（3.5.16 / SC 2025.0.3 / SCA 2025.0.0.0）；MQ=RocketMQ（客户端 5.3.1） | 用户裁决，Maven Central 实据核验 |
 | 2026-09-24 | JWT 库改判 spring-security-oauth2-jose（Nimbus，撤销 JJWT）；新增 Spring Authorization Server（仅 auth 引）；AT 默认 10 分钟（5–15 可配） | 用户裁决（SAS 内核同源，避免双 JOSE 栈） |
 | 2026-09-24 | 「随 BOM」行补实据解析值（mysql-connector-j 9.7.0 等）；用户中心组件清单按模块锁定 | 用户确认（Spring Cloud 方式：一域一服务 + 独立网关） |
+| 2026-09-24 | 新增前端主框架版本行（Vue3/Vite/TS/Pinia/Element Plus 等），随 `scaffold-user-center` 首个前端工程登记 | 规则：新增前端工程时登记（§2） |

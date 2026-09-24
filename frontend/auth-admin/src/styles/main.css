@@ -1,0 +1,43 @@
+:root {
+  font-family: Inter, 'Microsoft YaHei', sans-serif;
+  color: #303133;
+  background: #f5f7fa;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.page-card {
+  margin: 16px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 8px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.filter-form {
+  margin-bottom: 12px;
+}
+
+.mt12 {
+  margin-top: 12px;
+}
+
+.secret-box {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  word-break: break-all;
+  background: #f5f7fa;
+  padding: 12px;
+  border-radius: 4px;
+}
