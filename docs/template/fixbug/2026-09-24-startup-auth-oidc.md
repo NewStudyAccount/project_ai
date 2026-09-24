@@ -199,3 +199,16 @@
 4. Public 客户端在 SAS 1.2 上 **refresh 与 PKCE 认证路径不一致**，需单独转换器。
 5. `OAuth2AuthorizationService` 落 Redis 时必须给**所有 token 类型**建索引，并保证「响应里的 token」与「save 进去的 token」是**同一个实例/同一值**。
 6. 业务微服务默认**不**引 Spring Security（纯网关鉴权）；网关与认证中心除外。
+
+---
+
+## 9. 冒烟种子 SQL
+
+脚本路径：[`deploy/db/seed/2026-09-24-smoke-admin-auth-portal.sql`](../../../deploy/db/seed/2026-09-24-smoke-admin-auth-portal.sql)
+
+| 库 | 表 | 内容 |
+|----|-----|------|
+| user_db | sys_user / sys_user_profile | `admin`，id=`2026092400000001` |
+| auth_db | sys_credential | PASSWORD BCrypt（明文 `admin123` 仅注释） |
+| auth_db | oauth_client | `auth-portal-spa`（PUBLIC + PKCE，redirect 精确白名单） |
+| auth_db | sys_menu / sys_role / sys_user_role / sys_role_menu | 角色 `admin` 全量 `auth:*` 按钮权限 |

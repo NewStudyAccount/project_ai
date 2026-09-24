@@ -9,3 +9,5 @@
 | 文件 | 范围 |
 |------|------|
 | [2026-09-24-startup-auth-oidc.md](2026-09-24-startup-auth-oidc.md) | 启动配置、鉴权模型、MapperScan、OIDC/Token、权限装载 |
+
+**关联种子 SQL（冒烟）：** [`deploy/db/seed/2026-09-24-smoke-admin-auth-portal.sql`](../../../deploy/db/seed/2026-09-24-smoke-admin-auth-portal.sql)（admin/admin123、auth-portal-spa）
