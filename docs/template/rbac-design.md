@@ -92,7 +92,7 @@ id = d × 1000 + n
 | d=2 | **2000–2999** | 二级 `200x` | type=2 二级菜单 |
 | d=3 | **3000–3999** | 三级 `300x` | **仅 type=2 三级菜单** |
 | d=4 | **4000–4999** | 四级 `400x` | type=2 四级菜单（尽量避免） |
-| — | **8000–8999** | 按钮 `800x` | **type=3 按钮**（§2.0.5，不占深度段） |
+| — | **90001–99999** | 按钮 `90000x` | **type=3 按钮**（§2.0.5，不占深度段） |
 | — | **5000–5999** | 接口 `500x` | **type=4 接口点**（§2.0.5） |
 
 - **菜单深度上限 d≤4**；更深 → 业务错「菜单层级过深」，先改树结构  
@@ -104,15 +104,15 @@ id = d × 1000 + n
 parent_id=0（根，无行）
 ├── 1001  系统管理              (d=1, type=1)
 │   ├── 2001  菜单管理          (d=2, type=2)
-│   │   ├── 8001 新建菜单       (type=3, 按钮段 800x)
-│   │   ├── 8002 编辑菜单
-│   │   └── 8003 删除菜单
+│   │   ├── 90001 新建菜单      (type=3, 按钮段 90000x)
+│   │   ├── 90002 编辑菜单
+│   │   └── 90003 删除菜单
 │   └── 2002  角色管理          (d=2, type=2)
-│       ├── 8004 新建角色
+│       ├── 90004 新建角色
 │       └── …
 └── 1002  用户中心              (d=1, type=1)
     ├── 2003  用户管理          (d=2, type=2)
-    │   ├── 8008 创建用户
+    │   ├── 90008 创建用户
     │   └── …
     └── 2004  组织架构          (d=2, type=2)
         └── 3001 部门管理       (d=3, type=2 三级菜单，id=300x)
@@ -130,37 +130,37 @@ parent_id=0（根，无行）
 - 种子与运行时共用同一编码；id 在**本库**唯一（跨系统库允许相同数值）  
 - 出参仍为 String（`CLAUDE.md` §6.4.7）  
 - **type=1/2（目录/菜单）**：id **只看树深度**（100x–400x）  
-- **type=3/4（按钮/接口点）**：id **不占深度段**，用 **800x / 500x**，见 **§2.0.5**
+- **type=3/4（按钮/接口点）**：id **不占深度段**，用 **90000x / 500x**，见 **§2.0.5**
 
 #### 2.0.5 按钮 / 接口点 id（type=3/4）
 
-**动机：** 三级菜单已是 `300x`，按钮若也进 `300x` 会**与三级菜单抢号**。按钮是权限叶子，必须与「菜单深度序列」分离，用 **type 专用段**。
+**动机：** 三级菜单已是 `300x`，角色是 `9xxx`，按钮必须与菜单深度段、角色段都错开；故按钮从 **90000x** 起独立编号。
 
-| type | id 段 | 口语 | 与菜单段关系 | 挂载约束 |
+| type | id 段 | 口语 | 与其它段关系 | 挂载约束 |
 |------|-------|------|--------------|----------|
-| 3 按钮 | **8000–8999** | `800x` | 独立，不占 100x–400x | `parent_id` **必须**为 `type=2` 菜单 |
+| 3 按钮 | **90001–99999** | `90000x` | 独立；不占 100x–400x；≠ 角色 9001–9999 | `parent_id` **必须**为 `type=2` 菜单 |
 | 4 接口点 | **5000–5999** | `500x` | 独立；菜单最深 400x，不冲突 | 同上；**不**下发 `/me/menus` |
 
 **硬规则：**
 
-1. **300x 仅三级菜单（type=2）**；按钮禁止占用 300x/400x/100x/200x。  
+1. **300x 仅三级菜单（type=2）**；按钮禁止占用 100x–400x。  
 2. 按钮/接口点 **禁止**挂根或目录；父必须是菜单（目录→菜单→按钮）。  
 3. **归属看 `parent_id`**；同段内全局 `max+1`，不要求从 id 反解父。  
-4. type=1/2 **不得**占用 8000–8999 / 5000–5999。
+4. type=1/2 **不得**占用 90001–99999 / 5000–5999；角色 **不得**占 90001+（角色仍用 9001–9999）。
 
 **示例：**
 
 ```text
 1001 系统管理                    (type=1)
 └── 2001 菜单管理                (type=2, 二级菜单 200x)
-    ├── 8001 新建菜单            (type=3, 按钮 800x)
-    ├── 8002 编辑菜单
-    └── 8003 删除菜单
+    ├── 90001 新建菜单           (type=3, 按钮 90000x)
+    ├── 90002 编辑菜单
+    └── 90003 删除菜单
 
 1002 用户中心
 └── 2004 组织架构                (type=2)
     ├── 3001 部门管理            (type=2, 三级菜单 300x)  ← 与按钮段隔离
-    └── 8010 启停部门            (type=3, 按钮 800x)
+    └── 90010 启停部门           (type=3, 按钮 90000x)
 ```
 
 **分配（`createMenu`）：**
@@ -169,9 +169,9 @@ parent_id=0（根，无行）
 if type == 2 or type == 1:
   校验 depth ≤ 4；id = depth×1000 + 本层 n
 if type == 3:
-  要求 parent.type == 2；段 [8000,9000)；id = max+1
+  要求 parent.type == 2；段 [90001, 100000)；id = max+1（自 90001 起）
 if type == 4:
-  要求 parent.type == 2；段 [5000,6000)；id = max+1
+  要求 parent.type == 2；段 [5000, 6000)；id = max+1
 ```
 
 **方案取舍（按钮 id）：**
@@ -179,9 +179,10 @@ if type == 4:
 | 方案 | 结论 |
 |------|------|
 | 按钮进 300x | **否**：与三级菜单冲突 |
+| 按钮 800x（8000–8999） | **否**：与四位角色段 9001–9999 过近，易混淆 |
 | 按钮随深度 200x/300x/400x | **否**：与菜单段混用 |
 | 父号派生（每菜单 10 坑） | **否**：按钮数量不可控 |
-| **按钮 800x / 接口 500x + 父必须为菜单** | **是** |
+| **按钮 90000x（90001–99999）/ 接口 500x + 父必须为菜单** | **是** |
 
 #### 2.0.3 `sys_role` / 关联表 id
 
@@ -391,7 +392,7 @@ MenuVO {
 | type=1/2 d=2 | 2001–2999 | `2001` 菜单管理、`2002` 角色管理；`2003+` 域菜单 |
 | type=1/2 d=3 | 3001–3999 | **仅三级菜单**（非按钮） |
 | type=1/2 d=4 | 4001–4999 | 尽量避免 |
-| type=3 按钮 | **8001–8999** | menu/role CRUD 等操作钮 |
+| type=3 按钮 | **90001–99999** | menu/role CRUD 等操作钮（90000x） |
 | type=4 接口点 | **5001–5999** | 无 UI 权限点 |
 
 **框架骨架预留（各系统复制时保持不变）：**
@@ -401,8 +402,8 @@ MenuVO {
 | 1001 | 0 | 1 | 系统管理 |
 | 2001 | 1001 | 2 | 菜单管理 |
 | 2002 | 1001 | 2 | 角色管理 |
-| 8001–8003 | 2001 | 3 | 新建/编辑/删除菜单 |
-| 8004–8007 | 2002 | 3 | 新建/编辑/删除角色、角色授权 |
+| 90001–90003 | 2001 | 3 | 新建/编辑/删除菜单 |
+| 90004–90007 | 2002 | 3 | 新建/编辑/删除角色、角色授权 |
 
 **其它表短号：**
 
@@ -426,13 +427,13 @@ MenuVO {
 | **1001** | 0 | 1 目录 | 系统管理 | `''` | `''` | `''` | `setting` | 90 |
 | **2001** | 1001 | 2 菜单 | 菜单管理 | `{sys}:menu:list` | `/menus` | `views/menu/MenuList.vue` | `''` | 1 |
 | **2002** | 1001 | 2 菜单 | 角色管理 | `{sys}:role:list` | `/roles` | `views/role/RoleList.vue` | `''` | 2 |
-| **8001** | 2001 | 3 按钮 | 新建菜单 | `{sys}:menu:create` | `''` | `''` | `''` | 1 |
-| **8002** | 2001 | 3 按钮 | 编辑菜单 | `{sys}:menu:update` | `''` | `''` | `''` | 2 |
-| **8003** | 2001 | 3 按钮 | 删除菜单 | `{sys}:menu:delete` | `''` | `''` | `''` | 3 |
-| **8004** | 2002 | 3 按钮 | 新建角色 | `{sys}:role:create` | `''` | `''` | `''` | 4 |
-| **8005** | 2002 | 3 按钮 | 编辑角色 | `{sys}:role:update` | `''` | `''` | `''` | 5 |
-| **8006** | 2002 | 3 按钮 | 删除角色 | `{sys}:role:delete` | `''` | `''` | `''` | 6 |
-| **8007** | 2002 | 3 按钮 | 角色授权 | `{sys}:role:assign` | `''` | `''` | `''` | 7 |
+| **90001** | 2001 | 3 按钮 | 新建菜单 | `{sys}:menu:create` | `''` | `''` | `''` | 1 |
+| **90002** | 2001 | 3 按钮 | 编辑菜单 | `{sys}:menu:update` | `''` | `''` | `''` | 2 |
+| **90003** | 2001 | 3 按钮 | 删除菜单 | `{sys}:menu:delete` | `''` | `''` | `''` | 3 |
+| **90004** | 2002 | 3 按钮 | 新建角色 | `{sys}:role:create` | `''` | `''` | `''` | 4 |
+| **90005** | 2002 | 3 按钮 | 编辑角色 | `{sys}:role:update` | `''` | `''` | `''` | 5 |
+| **90006** | 2002 | 3 按钮 | 删除角色 | `{sys}:role:delete` | `''` | `''` | `''` | 6 |
+| **90007** | 2002 | 3 按钮 | 角色授权 | `{sys}:role:assign` | `''` | `''` | `''` | 7 |
 
 - **根**：`1001` 的 `parent_id=0`（不是 id=0）
 - 其余 `hidden=0`、`requires_auth=1`、`status=1`
@@ -459,7 +460,7 @@ MenuVO {
 | id | 按树深度用 §2.0.2（d=1 → `100x` 且不占用 `1001`；d=2 → `200x` 续号…） |
 | 目录 | 每业务域一个 type=1 目录（如「用户中心」），`parent_id=0`，id 如 `1002` |
 | 菜单 | type=2：`permission`=`{sys}:{res}:list`，path 唯一，component 填前端组件键 |
-| 按钮 | type=3：id 固定 **800x**；必须挂 type=2 菜单；action 建议 `list/create/update/delete/status/assign` |
+| 按钮 | type=3：id 固定 **90000x**（90001–99999）；必须挂 type=2 菜单；action 建议 `list/create/update/delete/status/assign` |
 | 接口点 | type=4：id 固定 **500x**；必须挂 type=2 菜单；无 UI；不下发 `/me/menus` |
 | sort | 同级有序；域目录用 1、2、3…（小于系统管理的 90） |
 
@@ -470,9 +471,9 @@ MenuVO {
 | 1002 | 0 | 1 | 用户中心 | `''` | `''` | `''` |
 | 2003 | 1002 | 2 | 用户管理 | `user:user:list` | `/users` | `views/user/UserList.vue` |
 | 2004 | 1002 | 2 | 审计日志 | `user:audit:list` | `/audits` | `views/audit/AuditList.vue` |
-| 8008 | 2003 | 3 | 创建用户 | `user:user:create` | — | — |
-| 8009 | 2003 | 3 | 更新用户 | `user:user:update` | — | — |
-| 8010 | 2003 | 3 | 启停用户 | `user:user:status` | — | — |
+| 90008 | 2003 | 3 | 创建用户 | `user:user:create` | — | — |
+| 90009 | 2003 | 3 | 更新用户 | `user:user:update` | — | — |
+| 90010 | 2003 | 3 | 启停用户 | `user:user:status` | — | — |
 
 ### 5.7 关联绑定数据
 
@@ -721,48 +722,233 @@ permissionsForUser(userId) / myMenuList()
 
 ---
 
-## 10. 前端动态路由与按钮权限
+## 10. 前端 RBAC 设计（管理端）
 
-### 10.1 登录后装载
+> 目标：每套 `{system}-admin` 具备**同构 RBAC 前端**——动态路由、侧栏菜单、按钮权限、菜单/角色管理页。  
+> 参照实现：`frontend/user-admin`、`frontend/auth-admin`；本节为可复制契约，不绑死某一业务域。
+
+### 10.1 职责与边界
+
+| 做 | 不做 |
+|----|------|
+| 登录后拉 `/me/menus` + `/me/permissions` | 不在前端解析 JWT 权限码（Claims 无权限） |
+| 按 `component` 动态 `addRoute` | 不硬编码角色名 / 不写死业务路由表 |
+| `hasPermission` 控按钮 | 不替代网关鉴权；无权限只藏 UI |
+| 菜单树 CRUD、角色 CRUD、授权 | 不管用户主数据（用户中心）；「选人」经 `user-api` |
+| OIDC RP（PKCE）接入 | 不做账密登录页（唯一门面在 auth-portal） |
+
+### 10.2 工程结构（`frontend/{system}-admin`）
 
 ```text
-OIDC/登录成功 → 持 AT 调 GET /me/menus + /me/permissions
-  → Pinia auth store 缓存 menus / permissions
-  → router.beforeEach：installDynamicRoutes(menus)
-  → 按钮 v-if / v-hasPermi：permissions.includes('sys:res:act')
+src/
+├── api/
+│   ├── request.ts          # axios：Bearer、解包 {code,msg,data}、401→登录
+│   └── rbac.ts             # 菜单/角色/授权/me
+├── stores/
+│   └── auth.ts             # menus / permissions / init() / reset()
+├── utils/
+│   ├── permission.ts       # hasPermission
+│   └── oidc.ts             # AT/RT、redirectForLogin、logout
+├── router/
+│   └── index.ts            # staticRoutes + componentByPath + installDynamicRoutes
+├── components/
+│   └── AppLayout.vue       # 侧栏（由 auth.menus 渲染）+ 顶栏
+├── views/
+│   ├── menu/MenuList.vue   # 菜单树管理
+│   ├── role/RoleList.vue   # 角色 + 授权树 +（可选）用户-角色
+│   ├── Dashboard.vue
+│   └── …
+└── types/index.ts          # MenuVO / RoleVO
 ```
 
-### 10.2 组件映射与路由 meta（RuoYi 对齐）
+- **composition API** + `<script setup lang="ts">`；请求只经 `src/api`
+- UI：Element Plus；样式 scoped（`CLAUDE.md` §5.5）
 
-- `sys_menu.component` 与前端 map **键字符串完全一致**（如 `views/menu/MenuList.vue`）
-- type=2 且 `path` 非空且 `isFrame=0` 才 `addRoute`；`isFrame=1` 走外链（`window.open` / `<a>`）
-- route meta 映射：
-
-| 菜单字段 | route meta |
-|----------|------------|
-| name | `title` |
-| icon | `icon` |
-| hidden | `hidden` |
-| requiresAuth | `requiresAuth` |
-| isCache | `noCache`（取反） |
-| query | `query` |
-| permission | `permission`（可选） |
-
-- 映射缺失时 fallback 到 Dashboard，属数据问题（§12），不是路由框架故障
-
-### 10.3 按钮权限指令（RuoYi `v-hasPermi` 语义）
+### 10.3 类型契约
 
 ```ts
-// 权限集来自 /me/permissions；admin 后端已下发全量，前端无需特判角色名
-function hasPermi(p: string) {
-  return authStore.permissions.includes(p)
+// types/index.ts（出参 id 一律 string）
+interface MenuVO {
+  id: string
+  parentId: string
+  type: 1 | 2 | 3 | 4
+  name: string
+  permission: string
+  path: string
+  component: string
+  query?: string
+  isFrame?: number
+  isCache?: number
+  icon: string
+  hidden: number
+  requiresAuth: number
+  sort: number
+  status: number
+  children: MenuVO[]
 }
-// 模板：v-if="hasPermi('user:user:create')" 或全局指令 v-hasPermi="['user:user:create']"
+
+interface RoleVO {
+  id: string
+  roleCode: string
+  roleName: string
+  dataScope: number
+  menuCheckStrictly?: number
+  sort: number
+  status: number
+  remark: string
+  menuIds: string[]
+}
 ```
 
-- **禁止**硬编码角色名判断；只认 permission 字符串
-- 权限字符串与 `XxxPermissionConstants` 同源；改动菜单 seed 后同步常量与前端
-- `/me/*` 需登录态；401 → 登录门面；业务失败 HTTP 200 + `code` 分流（`CLAUDE.md` §5.3）
+### 10.4 API 层（`api/rbac.ts`）
+
+| 方法 | HTTP | 用途 |
+|------|------|------|
+| `myMenus()` | GET `/me/menus` | 动态路由/侧栏 |
+| `myPermissions()` | GET `/me/permissions` | 按钮显隐 |
+| `menus()` | GET `/menus` | 管理页全量树 |
+| `createMenu/updateMenu/deleteMenu` | POST/PUT/DELETE `/menus...` | 树 CRUD |
+| `roles()` | GET `/roles` | 角色列表（含 menuIds） |
+| `createRole/updateRole/deleteRole` | …`/roles...` | 角色 CRUD |
+| `assignRoleMenus(id, menuIds)` | PUT `/roles/{id}/menus` | **全量覆盖**授权 |
+| `assignUserRoles / removeUserRoles` | POST/DELETE `/users/{id}/roles` | 用户-角色（可选） |
+
+- 统一 `http.get/post/...` 解包；`id` 全 `string`
+- 关键写带 `Idempotent-Key`（`request.ts` 拦截器统一附加，见 §7）
+
+### 10.5 Auth Store（`stores/auth.ts`）
+
+```ts
+state: {
+  initialized: boolean
+  operatorName: string      // 来自 id_token preferred_username
+  menus: MenuVO[]
+  permissions: string[]
+}
+actions: {
+  async init()              // 幂等：Promise.all(myMenus, myPermissions)
+  reset()                   // 登出时清空
+}
+```
+
+- **禁止**前端特判 `roleCode === 'admin'`；admin 全量由后端下发
+- `init()` 失败 → 路由守卫转登录；成功后 `installed` 路由可缓存，刷新走 `hasRoute` 防重复
+
+### 10.6 动态路由（`router/index.ts`）
+
+```text
+beforeEach:
+  无有效 AT → redirectForLogin
+  auth.init()
+  installDynamicRoutes(auth.menus)
+```
+
+**`componentByPath`（键 = `sys_menu.component`）：**
+
+```ts
+const componentByPath: Record<string, Component> = {
+  'views/menu/MenuList.vue': MenuList,
+  'views/role/RoleList.vue': RoleList,
+  // 每新增 type=2 菜单必须在此登记
+}
+```
+
+**`installDynamicRoutes` 要点：**
+
+| 规则 | 说明 |
+|------|------|
+| 仅 `type===2` 且 `path` 非空 | 目录不 `addRoute` |
+| `isFrame===1` | 不 addRoute，侧栏点开外链 |
+| `component` 查 map | 未命中 fallback `Dashboard`（属数据问题，§12） |
+| route `name` | `Menu_{id}`，防重复 `hasRoute` |
+| 挂载父级 | 统一挂 `Home`（AppLayout）下；path 去前导 `/` |
+| meta | title/icon/hidden/requiresAuth/noCache/query/permission |
+
+### 10.7 侧边栏（`AppLayout.vue`）
+
+- 数据源：`auth.menus`（type=1 目录 + type=2 菜单）
+- 过滤：`hidden!==1 && status!==0`；目录 children 只留 type=2
+- `el-menu router` 的 `index` = 规范化 path（保证前导 `/`）
+- 首页 Dashboard 可静态入口，不强制进 RBAC 树
+
+### 10.8 按钮权限
+
+**工具（`utils/permission.ts`）：**
+
+```ts
+export function hasPermission(permission: string): boolean {
+  return useAuthStore().permissions.includes(permission)
+}
+// 可选：hasAny / hasAll；可选全局指令 v-hasPermi
+```
+
+**用法：**
+
+```vue
+<el-button v-if="hasPermission('user:menu:create')" @click="openCreate">新建</el-button>
+```
+
+- 权限串与 `XxxPermissionConstants` / 菜单 `permission` **同一字符串**
+- **禁止** `v-if="isAdmin"` 一类角色判断
+- admin 已由后端下发全量 permissions，无需前端通配
+
+### 10.9 菜单管理页（`views/menu/MenuList.vue`）
+
+| 能力 | 交互 |
+|------|------|
+| 树展示 | `el-table` 树形或 `el-tree`；列：name/type/permission/path/component/sort/status |
+| 新建 | 可「新增子级」；选 type 1/2/3/4；按 type 显隐 path/component/permission |
+| 校验 | permission 首段=本系统；type=3 父必须为菜单；id 由后端分配（**不暴露 id 输入**） |
+| 编辑/删除 | 删除叶子；有子节点后端拒绝并 toast |
+| 权限钮 | create/update/delete 用 `hasPermission` |
+
+**表单字段联动：**
+
+| type | permission | path | component | isFrame |
+|------|------------|------|-----------|---------|
+| 1 目录 | 隐藏 | 可空 | 空 | — |
+| 2 菜单 | 可空（list） | 必填 | 必填 | 可选 |
+| 3 按钮 | 必填 | 空 | 空 | — |
+| 4 接口点 | 必填 | 空 | 空 | — |
+
+### 10.10 角色管理页（`views/role/RoleList.vue`）
+
+| 能力 | 交互 |
+|------|------|
+| 列表 | roleCode / roleName / dataScope / status / remark |
+| CRUD | 同菜单页权限钮模式 |
+| **分配菜单** | 树形 `el-tree` show-checkbox；回显 `role.menuIds`；`menuCheckStrictly` 控父子联动 |
+| 保存 | `PUT /roles/{id}/menus`，body `{ menuIds: string[] }`（**全量覆盖**，含勾选的父节点） |
+| 用户-角色 | 可选 Tab 或独立页：选人（`user-api`）+ 分配/回收角色 |
+
+**授权树回显：**
+
+- `checked` = `menuIds` 与树节点交集
+- `menuCheckStrictly=1` 时父勾选含子；保存前可按「全部勾选节点」提交（含父）
+- 半选父节点：可一并写入 `menuIds`，便于 `/me/menus` 祖先闭包（§9）
+
+### 10.11 与登录 / OIDC 衔接
+
+```text
+进入 SPA → hasValidAccessToken()?
+  否 → redirectForLogin(returnTo)
+  是 → auth.init() → installDynamicRoutes
+/callback → 保存 AT/RT → 回 returnTo
+/logout / 401 → auth.reset() → 登录门面
+```
+
+- 路由 `callback` / `logged-out` 白名单不装动态路由
+- 请求 401：清 token + `reset()` + 跳登录（`request.ts`）
+
+### 10.12 前端自检清单
+
+1. 登录后侧栏仅显示已授权 type=1/2  
+2. 无 `user:menu:create` 时新建按钮不显示  
+3. 菜单新建后 admin 无需重新分配即可出现在侧栏（刷新/重新 init）  
+4. `component` 写错时 fallback Dashboard，且管理页能改回  
+5. 角色授权树勾选保存后，用该角色账号登录只看到已授菜单  
+6. 登出再登录，无脏路由/脏权限  
+7. 全局搜索无硬编码角色名（`admin`/`operator` 判断）
 
 ---
 
@@ -815,7 +1001,7 @@ function hasPermi(p: string) {
 10. **角色授权用覆盖语义**时前端要回传完整 `menuIds`，避免误清空。
 11. **删除菜单先校验子节点**；只逻辑删除自身会留下孤儿树。
 12. **permission 唯一性在应用层**（目录 `''` 多行）；不要建列级唯一索引一刀切。
-13. **禁止 `id=0`**；根只用 `parent_id=0`。目录/菜单 id 按深度 `d×1000+n`（300x=三级菜单）；**按钮 800x、接口点 500x**（§2.0.5）。
+13. **禁止 `id=0`**；根只用 `parent_id=0`。目录/菜单 id 按深度 `d×1000+n`（300x=三级菜单）；**按钮 90000x、接口点 500x**（§2.0.5）。
 14. **`createMenu` 禁止客户端传 id / 自增**；服务端按段/本层 `max+1` 分配（§2.0.2 / §2.0.5）。
 15. **按钮/接口点必须挂 type=2 菜单**；禁止挂根或目录。
 
@@ -831,4 +1017,5 @@ function hasPermi(p: string) {
 | `user-center-design.md` | 用户主数据；角色分配「选人」经 `user-api` |
 | `unified-auth-center-design.md` | 认证中心例外（`@PreAuthorize` + 权限装载） |
 | `deploy/db/seed/rbac-framework-template.sql` | L2/L3 种子模板 |
+| `frontend/user-admin` / `frontend/auth-admin` | RBAC 前端参照实现（§10） |
 | `docs/template/fixbug/2026-09-25-unify-login-sso-gateway.md` | `/me/*` 空、component、网关注入等实测缺陷 |
