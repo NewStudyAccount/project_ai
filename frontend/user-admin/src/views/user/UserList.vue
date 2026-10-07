@@ -10,7 +10,7 @@
       <el-button type="primary" @click="load">查询</el-button>
       <el-button v-if="hasPermission('user:user:create')" type="primary" @click="openCreate">新建</el-button>
     </div>
-    <el-table :data="records" border>
+    <el-table v-if="records.length" :data="records" border>
       <el-table-column prop="id" label="ID" width="180" />
       <el-table-column prop="username" label="用户名" width="140" />
       <el-table-column prop="realName" label="姓名" width="120" />
@@ -26,6 +26,7 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-empty v-else description="暂无账号" />
     <el-pagination
       v-model:current-page="query.current"
       v-model:page-size="query.size"

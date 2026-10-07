@@ -70,17 +70,17 @@ function normalizePath(path: string): string {
 }
 
 .aside {
-  background: #fff;
-  border-right: 1px solid #ebeef5;
+  background: var(--bg-surface, #fff);
+  border-right: 1px solid var(--border, #ebeef5);
 }
 
 .brand {
-  height: 56px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid var(--border, #ebeef5);
 }
 
 .menu {
@@ -91,11 +91,15 @@ function normalizePath(path: string): string {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #fff;
-  border-bottom: 1px solid #ebeef5;
+  height: 60px;
+  background: var(--bg-surface, #fff);
+  border-bottom: 1px solid var(--border, #ebeef5);
 }
 
 .operator {
-  color: #909399;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-regular, #606266);
 }
 </style>

@@ -5,7 +5,7 @@
       <el-input v-model="query.actorUserId" placeholder="操作人 ID" clearable style="width: 180px" />
       <el-button type="primary" @click="load">查询</el-button>
     </div>
-    <el-table :data="records" border>
+    <el-table v-if="records.length" :data="records" border>
       <el-table-column prop="id" label="ID" width="180" />
       <el-table-column prop="action" label="动作" width="160" />
       <el-table-column prop="actorUserId" label="操作人" width="160" />
@@ -14,6 +14,7 @@
       <el-table-column prop="ip" label="IP" width="150" />
       <el-table-column prop="createTime" label="时间" width="180" />
     </el-table>
+    <el-empty v-else description="暂无审计记录" />
     <el-pagination
       v-model:current-page="query.current"
       v-model:page-size="query.size"

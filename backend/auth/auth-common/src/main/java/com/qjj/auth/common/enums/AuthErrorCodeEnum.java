@@ -19,6 +19,9 @@ public enum AuthErrorCodeEnum implements ErrorCode {
     MENU_HAS_CHILDREN(202013, "存在子节点，禁止删除"),
     ROLE_CODE_EXISTS(202014, "角色编码已存在"),
     ROLE_NOT_FOUND(202015, "角色不存在"),
+    MENU_DEPTH_EXCEEDED(202016, "菜单层级过深"),
+    MENU_ID_EXHAUSTED(202017, "本层/本段 id 已用尽"),
+    MENU_PARENT_INVALID(202018, "父节点非法（按钮/接口必须挂在菜单下）"),
     DUPLICATE_REQUEST_IN_PROGRESS(202900, "请求处理中，请勿重复提交");
 
     private final int code;

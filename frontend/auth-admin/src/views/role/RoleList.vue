@@ -3,7 +3,7 @@
     <div class="toolbar">
       <el-button v-if="hasPermission('auth:role:create')" type="primary" @click="openCreate">新建</el-button>
     </div>
-    <el-table :data="roles" border>
+    <el-table v-if="roles.length" :data="roles" border>
       <el-table-column prop="id" label="ID" width="180" />
       <el-table-column prop="roleCode" label="编码" width="140" />
       <el-table-column prop="roleName" label="名称" width="140" />
@@ -23,6 +23,7 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-empty v-else description="暂无角色" />
 
     <el-dialog v-model="dialogVisible" :title="editing ? '编辑角色' : '新建角色'" width="520px">
       <el-form :model="form" label-width="100px">

@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,12 +37,27 @@ public class RbacServiceImpl implements RbacService {
     /** 本系统内管理员角色编码；拥有该角色则视为授权本系统全部菜单/权限（含新建节点，无需逐条绑 sys_role_menu）。 */
     static final String ROLE_ADMIN = "admin";
 
+    private static final int TYPE_DIRECTORY = 1;
+    private static final int TYPE_MENU = 2;
+    private static final int TYPE_BUTTON = 3;
+    private static final int TYPE_API = 4;
+    private static final int MENU_MAX_DEPTH = 4;
+    private static final long MENU_DEPTH_SEGMENT = 1000L;
+    private static final long BUTTON_ID_MIN = 90001L;
+    private static final long BUTTON_ID_MAX_EXCLUSIVE = 100000L;
+    private static final long API_ID_MIN = 5001L;
+    private static final long API_ID_MAX_EXCLUSIVE = 6000L;
+    private static final long ROLE_ID_MIN = 9001L;
+    private static final long ROLE_ID_MAX_EXCLUSIVE = 10000L;
+
     private final SysMenuMapper menuMapper;
     private final SysRoleMapper roleMapper;
     private final SysUserRoleMapper userRoleMapper;
     private final SysRoleMenuMapper roleMenuMapper;
     private final IdGenerator idGenerator;
     private final AuditService auditService;
+    /** 菜单/角色短号分配锁：max+1 与插入原子化（rbac-design.md §2.0）。 */
+    private final Object rbacIdLock = new Object();
 
     @Override
     public List<MenuVO> menus() {
@@ -52,9 +68,12 @@ public class RbacServiceImpl implements RbacService {
     @Transactional
     public MenuVO createMenu(MenuRequest request) {
         validateMenu(request, null);
+        validateMenuParent(request);
         SysMenu menu = applyMenu(new SysMenu(), request);
-        menu.setId(idGenerator.nextId());
-        menuMapper.insert(menu);
+        synchronized (rbacIdLock) {
+            menu.setId(allocateMenuId(request));
+            menuMapper.insert(menu);
+        }
         auditService.record("MENU_CREATE", "sys_menu", String.valueOf(menu.getId()), "创建菜单");
         return toMenuVO(menu);
     }
@@ -91,8 +110,10 @@ public class RbacServiceImpl implements RbacService {
     public RoleVO createRole(RoleRequest request) {
         validateRole(request, null);
         SysRole role = applyRole(new SysRole(), request);
-        role.setId(idGenerator.nextId());
-        roleMapper.insert(role);
+        synchronized (rbacIdLock) {
+            role.setId(allocateRoleId());
+            roleMapper.insert(role);
+        }
         auditService.record("ROLE_CREATE", "sys_role", String.valueOf(role.getId()), "创建角色");
         return toRoleVO(role);
     }
@@ -148,7 +169,10 @@ public class RbacServiceImpl implements RbacService {
 
     @Override
     public List<MenuVO> myMenus() {
-        return buildTree(myMenuList().stream().filter(m -> m.getType() == 1 || m.getType() == 2).toList());
+        return buildTree(myMenuList().stream()
+                .filter(m -> m.getType() != null
+                        && (m.getType().intValue() == TYPE_DIRECTORY || m.getType().intValue() == TYPE_MENU))
+                .toList());
     }
 
     @Override
@@ -160,20 +184,17 @@ public class RbacServiceImpl implements RbacService {
     @Override
     public Set<String> permissionsForUser(Long userId) {
         if (userId == null || userId == 0L) return Set.of();
-        if (hasAdminRole(userId)) {
-            return permissionOf(enabledMenus());
-        }
-        List<Long> roleIds = roleIdsOf(userId);
-        if (roleIds.isEmpty()) return Set.of();
-        List<Long> menuIds = roleMenuMapper.selectList(new LambdaQueryWrapper<SysRoleMenu>().in(SysRoleMenu::getRoleId, roleIds))
-                .stream().map(SysRoleMenu::getMenuId).distinct().toList();
-        if (menuIds.isEmpty()) return Set.of();
-        return permissionOf(menuMapper.selectBatchIds(menuIds));
+        return permissionOf(grantedEnabledMenus(userId));
     }
 
     private List<SysMenu> myMenuList() {
         Long userId = AuthContext.userIdOrSystem();
         if (userId == 0L) return List.of();
+        return grantedEnabledMenus(userId);
+    }
+
+    /** 授权菜单（status=1）；非 admin 补祖先闭包；admin 全量启用节点。 */
+    private List<SysMenu> grantedEnabledMenus(Long userId) {
         if (hasAdminRole(userId)) {
             return enabledMenus();
         }
@@ -181,7 +202,32 @@ public class RbacServiceImpl implements RbacService {
         if (roleIds.isEmpty()) return List.of();
         List<Long> menuIds = roleMenuMapper.selectList(new LambdaQueryWrapper<SysRoleMenu>().in(SysRoleMenu::getRoleId, roleIds))
                 .stream().map(SysRoleMenu::getMenuId).distinct().toList();
-        return menuIds.isEmpty() ? List.of() : menuMapper.selectBatchIds(menuIds);
+        if (menuIds.isEmpty()) return List.of();
+        List<SysMenu> granted = menuMapper.selectBatchIds(menuIds).stream()
+                .filter(menu -> menu.getStatus() != null && menu.getStatus() == 1)
+                .toList();
+        return expandAncestors(granted);
+    }
+
+    /** 补全祖先链（仅 status=1），避免 /me/menus 断树（rbac-design.md §9）。 */
+    private List<SysMenu> expandAncestors(List<SysMenu> granted) {
+        Map<Long, SysMenu> collected = new HashMap<>();
+        for (SysMenu menu : granted) {
+            collected.put(menu.getId(), menu);
+        }
+        for (SysMenu menu : granted) {
+            Long parentId = menu.getParentId();
+            int guard = 0;
+            while (parentId != null && parentId != 0L && !collected.containsKey(parentId) && guard++ < 16) {
+                SysMenu parent = menuMapper.selectById(parentId);
+                if (parent == null || parent.getStatus() == null || parent.getStatus() != 1) {
+                    break;
+                }
+                collected.put(parent.getId(), parent);
+                parentId = parent.getParentId();
+            }
+        }
+        return List.copyOf(collected.values());
     }
 
     private List<Long> roleIdsOf(Long userId) {
@@ -226,6 +272,99 @@ public class RbacServiceImpl implements RbacService {
                     .ne(currentId != null, SysMenu::getId, currentId));
             if (count != null && count > 0) throw new BizException(AuthErrorCodeEnum.MENU_PERMISSION_DUPLICATE);
         }
+    }
+
+    private void validateMenuParent(MenuRequest request) {
+        long parentId = request.getParentId() == null ? 0L : request.getParentId();
+        Integer type = request.getType();
+        int typeCode = type == null ? -1 : type.intValue();
+        if (typeCode == TYPE_BUTTON || typeCode == TYPE_API) {
+            if (parentId == 0L) {
+                throw new BizException(AuthErrorCodeEnum.MENU_PARENT_INVALID);
+            }
+            SysMenu parent = menuMapper.selectById(parentId);
+            if (parent == null) {
+                throw new BizException(AuthErrorCodeEnum.MENU_NODE_NOT_FOUND);
+            }
+            if (parent.getType() == null || parent.getType().intValue() != TYPE_MENU) {
+                throw new BizException(AuthErrorCodeEnum.MENU_PARENT_INVALID);
+            }
+            return;
+        }
+        if (parentId != 0L && menuMapper.selectById(parentId) == null) {
+            throw new BizException(AuthErrorCodeEnum.MENU_NODE_NOT_FOUND);
+        }
+        if (resolveNewDepth(parentId) > MENU_MAX_DEPTH) {
+            throw new BizException(AuthErrorCodeEnum.MENU_DEPTH_EXCEEDED);
+        }
+    }
+
+    private int resolveNewDepth(long parentId) {
+        if (parentId == 0L) {
+            return 1;
+        }
+        int depth = 2;
+        Long cur = parentId;
+        int guard = 0;
+        while (cur != null && cur != 0L && guard++ < 16) {
+            SysMenu parent = menuMapper.selectById(cur);
+            if (parent == null) {
+                throw new BizException(AuthErrorCodeEnum.MENU_NODE_NOT_FOUND);
+            }
+            if (parent.getParentId() == null || parent.getParentId() == 0L) {
+                return depth;
+            }
+            depth++;
+            cur = parent.getParentId();
+        }
+        return depth;
+    }
+
+    private long allocateMenuId(MenuRequest request) {
+        Integer type = request.getType();
+        long parentId = request.getParentId() == null ? 0L : request.getParentId();
+        int typeCode = type == null ? -1 : type.intValue();
+        if (typeCode == TYPE_DIRECTORY || typeCode == TYPE_MENU) {
+            int depth = resolveNewDepth(parentId);
+            if (depth > MENU_MAX_DEPTH) {
+                throw new BizException(AuthErrorCodeEnum.MENU_DEPTH_EXCEEDED);
+            }
+            long base = depth * MENU_DEPTH_SEGMENT;
+            return nextMenuIdInSegment(base, base + MENU_DEPTH_SEGMENT, base + 1);
+        }
+        if (typeCode == TYPE_BUTTON) {
+            return nextMenuIdInSegment(BUTTON_ID_MIN, BUTTON_ID_MAX_EXCLUSIVE, BUTTON_ID_MIN);
+        }
+        if (typeCode == TYPE_API) {
+            return nextMenuIdInSegment(API_ID_MIN, API_ID_MAX_EXCLUSIVE, API_ID_MIN);
+        }
+        throw new BizException(AuthErrorCodeEnum.MENU_PERMISSION_INVALID);
+    }
+
+    private long allocateRoleId() {
+        List<SysRole> rows = roleMapper.selectList(new LambdaQueryWrapper<SysRole>()
+                .ge(SysRole::getId, ROLE_ID_MIN)
+                .lt(SysRole::getId, ROLE_ID_MAX_EXCLUSIVE)
+                .select(SysRole::getId));
+        long max = rows.stream().mapToLong(SysRole::getId).max().orElse(ROLE_ID_MIN - 1);
+        long next = Math.max(max + 1, ROLE_ID_MIN);
+        if (next >= ROLE_ID_MAX_EXCLUSIVE) {
+            throw new BizException(AuthErrorCodeEnum.MENU_ID_EXHAUSTED);
+        }
+        return next;
+    }
+
+    private long nextMenuIdInSegment(long minInclusive, long maxExclusive, long minStart) {
+        List<SysMenu> rows = menuMapper.selectList(new LambdaQueryWrapper<SysMenu>()
+                .ge(SysMenu::getId, minInclusive)
+                .lt(SysMenu::getId, maxExclusive)
+                .select(SysMenu::getId));
+        long max = rows.stream().mapToLong(SysMenu::getId).max().orElse(minStart - 1);
+        long next = Math.max(max + 1, minStart);
+        if (next >= maxExclusive) {
+            throw new BizException(AuthErrorCodeEnum.MENU_ID_EXHAUSTED);
+        }
+        return next;
     }
 
     private void validateRole(RoleRequest request, Long currentId) {

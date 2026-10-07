@@ -502,6 +502,7 @@ src/main/java/com.qjj.{system}.{module}/
 - `@TableLogic`、`MetaObjectHandler` 等装配在 `framework`；禁止业务手写审计/逻辑删除赋值。
 - 主键 `id`：`Long` / `BIGINT`，**统一由 `framework` 发号**；禁止数据库自增、禁止业务雪花/UUID 主键（对象存储文件名可用 UUID）。
 - 发号构成（已裁决）：**16 位定长** = 业务日期 `yyyyMMdd`（8 位，`Asia/Shanghai` 业务日）+ 当日序列（8 位，按业务日日切）。
+- **例外（仅 RBAC 四表）**：`sys_menu` / `sys_role` / `sys_user_role` / `sys_role_menu` 的主键**不用** 16 位发号，按 `docs/template/rbac-design.md` **§2.0**（菜单层级短号 / 段内短号）执行；与本条冲突时以该节为准。其余实体一律本条。
 - 并发安全等实现细节由 `framework` 实现并在变更中登记，不在本文件展开。
 
 #### 6.4.6 分页入参

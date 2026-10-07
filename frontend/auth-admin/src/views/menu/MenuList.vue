@@ -3,7 +3,7 @@
     <div class="toolbar">
       <el-button v-if="hasPermission('auth:menu:create')" type="primary" @click="openCreate()">新建</el-button>
     </div>
-    <el-table :data="menus" row-key="id" default-expand-all border>
+    <el-table v-if="menus.length" :data="menus" row-key="id" default-expand-all border>
       <el-table-column prop="name" label="名称" min-width="160" />
       <el-table-column prop="type" label="类型" width="90">
         <template #default="{ row }">{{ typeLabel(row.type) }}</template>
@@ -23,6 +23,7 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-empty v-else description="暂无菜单" />
 
     <el-dialog v-model="dialogVisible" :title="editing ? '编辑菜单' : '新建菜单'" width="640px">
       <el-form :model="form" label-width="120px">
@@ -34,27 +35,28 @@
             <el-option label="目录" :value="1" />
             <el-option label="菜单" :value="2" />
             <el-option label="按钮" :value="3" />
+            <el-option label="接口" :value="4" />
           </el-select>
         </el-form-item>
         <el-form-item label="名称" required>
           <el-input v-model="form.name" />
         </el-form-item>
-        <el-form-item label="权限标识">
+        <el-form-item v-if="showPermission" label="权限标识">
           <el-input v-model="form.permission" placeholder="auth:resource:action" />
         </el-form-item>
-        <el-form-item label="路由">
+        <el-form-item v-if="isMenuType" label="路由">
           <el-input v-model="form.path" />
         </el-form-item>
-        <el-form-item label="组件">
+        <el-form-item v-if="isMenuType" label="组件">
           <el-input v-model="form.component" placeholder="views/xxx/Xxx.vue" />
         </el-form-item>
-        <el-form-item label="图标">
+        <el-form-item v-if="isMenuType" label="图标">
           <el-input v-model="form.icon" />
         </el-form-item>
-        <el-form-item label="隐藏">
+        <el-form-item v-if="isMenuType" label="隐藏">
           <el-switch v-model="form.hidden" :active-value="1" :inactive-value="0" />
         </el-form-item>
-        <el-form-item label="需要鉴权">
+        <el-form-item v-if="isMenuType" label="需要鉴权">
           <el-switch v-model="form.requiresAuth" :active-value="1" :inactive-value="0" />
         </el-form-item>
         <el-form-item label="排序">
@@ -73,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { rbacApi } from '@/api/rbac'
 import { hasPermission } from '@/utils/permission'
@@ -99,11 +101,14 @@ const emptyForm = (): MenuRequest => ({
 })
 
 const form = ref<MenuRequest>(emptyForm())
+const isMenuType = computed(() => form.value.type === 1 || form.value.type === 2)
+const showPermission = computed(() => form.value.type !== 1)
 
 function typeLabel(type: number): string {
   if (type === 1) return '目录'
   if (type === 2) return '菜单'
   if (type === 3) return '按钮'
+  if (type === 4) return '接口'
   return '其他'
 }
 
@@ -138,10 +143,19 @@ function openEdit(row: MenuVO) {
 }
 
 async function save() {
+  const payload: MenuRequest = {
+    ...form.value,
+    permission: showPermission.value ? form.value.permission : '',
+    path: isMenuType.value ? form.value.path : '',
+    component: isMenuType.value ? form.value.component : '',
+    icon: isMenuType.value ? form.value.icon : '',
+    hidden: isMenuType.value ? form.value.hidden : 0,
+    requiresAuth: isMenuType.value ? form.value.requiresAuth : 1,
+  }
   if (editing.value) {
-    await rbacApi.updateMenu(editingId.value, form.value)
+    await rbacApi.updateMenu(editingId.value, payload)
   } else {
-    await rbacApi.createMenu(form.value)
+    await rbacApi.createMenu(payload)
   }
   dialogVisible.value = false
   await load()

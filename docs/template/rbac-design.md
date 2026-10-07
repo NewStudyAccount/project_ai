@@ -58,7 +58,7 @@
 
 **全局列约定**：主键 `id` 类型 `BIGINT`，出参 String；全表含审计 5 字段（`create_time` / `update_time` / `create_by` / `update_by` / `deleted`）；字符串 `NOT NULL` + 默认值；禁止物理外键；索引命名 `uk_/idx_表名_字段`，单表 ≤ 5。
 
-**id 规范（RBAC 专用，已重设计）：** 见 **§2.0**。`sys_menu` 用**层级短号**（非 16 位发号）；角色/关联表用**独立短号段**。与 `CLAUDE.md` §6.4.5 通用 16 位发号的差异以本节为准（仅限 RBAC 四表）。
+**id 规范（RBAC 专用，已重设计）：** 见 **§2.0**。`sys_menu` 用**层级短号**（非 16 位发号）；`sys_role` 用**段内短号**；两张关联表种子用短号、运行时可 framework 发号。与 `CLAUDE.md` §6.4.5 通用 16 位发号的差异：**`CLAUDE.md` 已指向本节，本节为 RBAC 四表 id 的唯一口径**。
 
 ### 2.0 id 规范（RBAC 四表）
 
@@ -93,7 +93,7 @@ id = d × 1000 + n
 | d=3 | **3000–3999** | 三级 `300x` | **仅 type=2 三级菜单** |
 | d=4 | **4000–4999** | 四级 `400x` | type=2 四级菜单（尽量避免） |
 | — | **90001–99999** | 按钮 `90000x` | **type=3 按钮**（§2.0.5，不占深度段） |
-| — | **5000–5999** | 接口 `500x` | **type=4 接口点**（§2.0.5） |
+| — | **5001–5999** | 接口 `500x` | **type=4 接口点**（§2.0.5） |
 
 - **菜单深度上限 d≤4**；更深 → 业务错「菜单层级过深」，先改树结构  
 - **300x 只给三级菜单**，按钮禁止占用（避免与三级菜单冲突）
@@ -139,14 +139,14 @@ parent_id=0（根，无行）
 | type | id 段 | 口语 | 与其它段关系 | 挂载约束 |
 |------|-------|------|--------------|----------|
 | 3 按钮 | **90001–99999** | `90000x` | 独立；不占 100x–400x；≠ 角色 9001–9999 | `parent_id` **必须**为 `type=2` 菜单 |
-| 4 接口点 | **5000–5999** | `500x` | 独立；菜单最深 400x，不冲突 | 同上；**不**下发 `/me/menus` |
+| 4 接口点 | **5001–5999** | `500x` | 独立；菜单最深 400x，不冲突 | 同上；**不**下发 `/me/menus` |
 
 **硬规则：**
 
 1. **300x 仅三级菜单（type=2）**；按钮禁止占用 100x–400x。  
 2. 按钮/接口点 **禁止**挂根或目录；父必须是菜单（目录→菜单→按钮）。  
 3. **归属看 `parent_id`**；同段内全局 `max+1`，不要求从 id 反解父。  
-4. type=1/2 **不得**占用 90001–99999 / 5000–5999；角色 **不得**占 90001+（角色仍用 9001–9999）。
+4. type=1/2 **不得**占用 90001–99999 / 5001–5999；角色 **不得**占 90001+（角色仍用 9001–9999）。
 
 **示例：**
 
@@ -166,13 +166,27 @@ parent_id=0（根，无行）
 **分配（`createMenu`）：**
 
 ```text
-if type == 2 or type == 1:
-  校验 depth ≤ 4；id = depth×1000 + 本层 n
+-- 前置：禁止客户端传 id；禁止 DB 自增；禁止改历史行 id
+-- parent_id=0 表示挂根；否则 parent 必须已存在
+if type == 1 or type == 2:
+  depth = 深度(parent_id) + 1   -- parent_id=0 → depth=1
+  reject if depth > 4          -- 业务错「菜单层级过深」
+  base = depth × 1000
+  n = max(id ∈ [base, base+1000)) + 1 - base   -- 本层全局 max+1，空层从 base+1
+  reject if n > 999            -- 业务错「本层 id 已用尽」
+  id = base + n
 if type == 3:
-  要求 parent.type == 2；段 [90001, 100000)；id = max+1（自 90001 起）
+  require parent.type == 2     -- 否则「父节点非法」
+  id = max(id ∈ [90001, 100000)) + 1   -- 空段从 90001
+  reject if id >= 100000       -- 「本段 id 已用尽」
 if type == 4:
-  要求 parent.type == 2；段 [5000, 6000)；id = max+1
+  require parent.type == 2
+  id = max(id ∈ [5001, 6000)) + 1      -- 空段从 5001
+  reject if id >= 6000
 ```
+
+- 本层/本段 `max+1` 与插入须**原子**（同库串行或等价锁）；出参仍 String
+- type=3/4 的 `parent_id` 必须是 type=2 的行 id，禁止挂根（`parent_id=0`）或目录
 
 **方案取舍（按钮 id）：**
 
@@ -193,15 +207,19 @@ if type == 4:
 | `sys_role_menu.id` | **6001–6999** | 代理键；唯一业务键仍是 `(role_id, menu_id)` |
 
 - 关联表插入优先用**业务唯一键**判重；代理 id 仅主键占位  
-- 运行时新建角色/关联：在本段取 `max+1`（或关联表仍可走 framework 发号，但种子必须落在上表段内以便对照）  
+- **id 策略（裁决，消除歧义）：**  
+  - `sys_menu`：**必须**层级短号（§2.0.2 / §2.0.5），`createMenu` 应用层分配，**禁止** framework 16 位  
+  - `sys_role`：**必须**段内短号 `9001–9999`（`max+1`）  
+  - `sys_user_role` / `sys_role_menu`：种子用段内短号；**运行时可走 framework 16 位发号**（代理键无语义，不参与对照）；业务唯一键仍 `(user_id, role_id)` / `(role_id, menu_id)`  
 - **`user_id` 不在本规范内**：继续用户中心 16 位发号
 
 #### 2.0.4 与通用发号的关系
 
 | 对象 | id 来源 |
 |------|---------|
-| `sys_menu` | **层级编码**（§2.0.2），应用层分配 |
-| `sys_role` / 两关联表 | **段内短号**（§2.0.3） |
+| `sys_menu` | **层级编码**（§2.0.2 / §2.0.5），应用层分配；**禁止** framework 16 位 |
+| `sys_role` | **段内短号** 9001–9999（§2.0.3） |
+| `sys_user_role` / `sys_role_menu` | 种子用段内短号；运行时可 `framework` 16 位（代理键） |
 | 用户 `sys_user.id` 等其它实体 | 仍 `framework` 16 位（`CLAUDE.md` §6.4.5） |
 
 ### 2.1 `sys_menu` — 菜单/权限资源树
@@ -725,7 +743,8 @@ permissionsForUser(userId) / myMenuList()
 ## 10. 前端 RBAC 设计（管理端）
 
 > 目标：每套 `{system}-admin` 具备**同构 RBAC 前端**——动态路由、侧栏菜单、按钮权限、菜单/角色管理页。  
-> 参照实现：`frontend/user-admin`、`frontend/auth-admin`；本节为可复制契约，不绑死某一业务域。
+> 参照实现：`frontend/user-admin`、`frontend/auth-admin`；本节为可复制契约，不绑死某一业务域。  
+> **视觉与页面布局**（色板、App Shell、P-List/P-Tree/弹窗骨架）见 [`admin-ui-design.md`](admin-ui-design.md)；本节只规定交互与工程契约。
 
 ### 10.1 职责与边界
 
@@ -1018,4 +1037,5 @@ export function hasPermission(permission: string): boolean {
 | `unified-auth-center-design.md` | 认证中心例外（`@PreAuthorize` + 权限装载） |
 | `deploy/db/seed/rbac-framework-template.sql` | L2/L3 种子模板 |
 | `frontend/user-admin` / `frontend/auth-admin` | RBAC 前端参照实现（§10） |
+| `docs/template/admin-ui-design.md` | 管理端视觉基线与页面布局骨架 |
 | `docs/template/fixbug/2026-09-25-unify-login-sso-gateway.md` | `/me/*` 空、component、网关注入等实测缺陷 |

@@ -1,7 +1,16 @@
 :root {
+  --bg-page: #f5f7fa;
+  --bg-surface: #ffffff;
+  --text-primary: #303133;
+  --text-regular: #606266;
+  --text-secondary: #909399;
+  --border: #ebeef5;
+  --page-radius: 8px;
+  --space-page: 16px;
+  --space-toolbar: 8px;
   font-family: Inter, 'Microsoft YaHei', sans-serif;
-  color: #303133;
-  background: #f5f7fa;
+  color: var(--text-primary);
+  background: var(--bg-page);
 }
 
 * {
@@ -13,16 +22,16 @@ body {
 }
 
 .page-card {
-  margin: 16px;
-  padding: 16px;
-  background: #fff;
-  border-radius: 8px;
+  margin: var(--space-page);
+  padding: var(--space-page);
+  background: var(--bg-surface);
+  border-radius: var(--page-radius);
 }
 
 .toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-toolbar);
   margin-bottom: 12px;
 }
 

@@ -16,6 +16,9 @@ public enum UserErrorCodeEnum implements ErrorCode {
     MENU_PERMISSION_DUPLICATE(201011, "权限标识已存在"),
     MENU_NODE_NOT_FOUND(201012, "菜单不存在"),
     MENU_HAS_CHILDREN(201013, "存在子节点，禁止删除"),
+    MENU_DEPTH_EXCEEDED(201014, "菜单层级过深"),
+    MENU_ID_EXHAUSTED(201015, "本层/本段 id 已用尽"),
+    MENU_PARENT_INVALID(201016, "父节点非法（按钮/接口必须挂在菜单下）"),
     ROLE_CODE_EXISTS(201020, "角色编码已存在"),
     ROLE_NOT_FOUND(201021, "角色不存在"),
     DUPLICATE_REQUEST_IN_PROGRESS(201900, "请求处理中，请勿重复提交");
