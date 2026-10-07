@@ -12,6 +12,9 @@ spring:
           uri: lb://user-service
           predicates:
             - Path=/api/**
+          metadata:
+            nacos:
+              group: USER_GROUP
 user-gateway:
   security:
     local-pass-through: true

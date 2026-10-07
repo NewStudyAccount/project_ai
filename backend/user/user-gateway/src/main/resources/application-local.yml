@@ -5,6 +5,8 @@ spring:
         server-addr: 192.168.99.100:8848
         username: nacos
         password: nacos
+        namespace: local
+        group: GATEWAY_GROUP
 user-gateway:
   security:
     local-pass-through: true
