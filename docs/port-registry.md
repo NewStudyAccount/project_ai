@@ -72,3 +72,5 @@
 | 日期 | 变更 | 说明 |
 |------|------|------|
 | 2026-09-24 | 建立端口登记表 | 基线：admin 5173 / gw 8173 / user 18173 / portal 5174 / auth-admin 5175 / auth 9080 |
+| blog-gateway | **9100** | http | blog 系统边缘网关 |
+| blog-service | **9101** | http | blog 业务服务 |

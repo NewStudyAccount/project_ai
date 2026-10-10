@@ -1,0 +1,15 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.99.100:8848
+        username: nacos
+        password: nacos
+        namespace: local
+        group: GATEWAY_GROUP
+blog-gateway:
+  security:
+    local-pass-through: true
+    trusted-origins:
+      - http://localhost:5173
+      - http://127.0.0.1:5173

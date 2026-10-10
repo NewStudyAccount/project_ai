@@ -1,0 +1,36 @@
+:root {
+  --bg-page: #f5f7fa;
+  --bg-surface: #ffffff;
+  --text-primary: #303133;
+  --text-regular: #606266;
+  --text-secondary: #909399;
+  --border: #ebeef5;
+  --page-radius: 8px;
+  --space-page: 16px;
+  --space-toolbar: 8px;
+  font-family: Inter, 'Microsoft YaHei', sans-serif;
+  color: var(--text-primary);
+  background: var(--bg-page);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.page-card {
+  margin: var(--space-page);
+  padding: var(--space-page);
+  background: var(--bg-surface);
+  border-radius: var(--page-radius);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-toolbar);
+  margin-bottom: 12px;
+}

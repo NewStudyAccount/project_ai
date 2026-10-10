@@ -1,0 +1,69 @@
+﻿-- RBAC 4 表（rbac-design.md §2 同构，无 system_code）
+USE blog_db;
+
+CREATE TABLE IF NOT EXISTS sys_menu (
+  id BIGINT NOT NULL COMMENT '层级短号（rbac-design.md §2.0）',
+  parent_id BIGINT NOT NULL DEFAULT 0,
+  type TINYINT NOT NULL DEFAULT 2 COMMENT '1目录 2菜单 3按钮 4接口',
+  name VARCHAR(64) NOT NULL DEFAULT '',
+  permission VARCHAR(128) NOT NULL DEFAULT '' COMMENT 'blog:resource:action',
+  path VARCHAR(255) NOT NULL DEFAULT '',
+  component VARCHAR(255) NOT NULL DEFAULT '',
+  icon VARCHAR(64) NOT NULL DEFAULT '',
+  hidden TINYINT NOT NULL DEFAULT 0,
+  requires_auth TINYINT NOT NULL DEFAULT 1,
+  sort INT NOT NULL DEFAULT 0,
+  status TINYINT NOT NULL DEFAULT 1,
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  create_by BIGINT NOT NULL DEFAULT 0,
+  update_by BIGINT NOT NULL DEFAULT 0,
+  deleted TINYINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  KEY idx_sys_menu_parent_id (parent_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='菜单/权限资源树';
+
+CREATE TABLE IF NOT EXISTS sys_role (
+  id BIGINT NOT NULL COMMENT '段内短号',
+  role_code VARCHAR(64) NOT NULL,
+  role_name VARCHAR(64) NOT NULL DEFAULT '',
+  data_scope TINYINT NOT NULL DEFAULT 1 COMMENT '1全部 2本部门 3仅本人',
+  sort INT NOT NULL DEFAULT 0,
+  status TINYINT NOT NULL DEFAULT 1,
+  remark VARCHAR(255) NOT NULL DEFAULT '',
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  create_by BIGINT NOT NULL DEFAULT 0,
+  update_by BIGINT NOT NULL DEFAULT 0,
+  deleted TINYINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_sys_role_role_code (role_code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色';
+
+CREATE TABLE IF NOT EXISTS sys_user_role (
+  id BIGINT NOT NULL,
+  user_id BIGINT NOT NULL COMMENT '用户中心 sys_user.id 逻辑引用',
+  role_id BIGINT NOT NULL,
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  create_by BIGINT NOT NULL DEFAULT 0,
+  update_by BIGINT NOT NULL DEFAULT 0,
+  deleted TINYINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_sys_user_role_user_role (user_id, role_id),
+  KEY idx_sys_user_role_role_id (role_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户-角色';
+
+CREATE TABLE IF NOT EXISTS sys_role_menu (
+  id BIGINT NOT NULL,
+  role_id BIGINT NOT NULL,
+  menu_id BIGINT NOT NULL,
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  create_by BIGINT NOT NULL DEFAULT 0,
+  update_by BIGINT NOT NULL DEFAULT 0,
+  deleted TINYINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_sys_role_menu_role_menu (role_id, menu_id),
+  KEY idx_sys_role_menu_menu_id (menu_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色-菜单';

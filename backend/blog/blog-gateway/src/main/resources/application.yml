@@ -1,0 +1,32 @@
+server:
+  port: 8173
+spring:
+  application:
+    name: blog-gateway
+  profiles:
+    active: local
+  cloud:
+    gateway:
+      routes:
+        - id: blog-service
+          uri: lb://blog-service
+          predicates:
+            - Path=/api/**
+          metadata:
+            nacos:
+              group: USER_GROUP
+blog-gateway:
+  security:
+    local-pass-through: true
+    jwk-set-uri: ""
+    public-paths:
+      - /actuator/health
+      - /internal/**
+    trusted-origins:
+      - http://localhost:5173
+      - http://127.0.0.1:5173
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

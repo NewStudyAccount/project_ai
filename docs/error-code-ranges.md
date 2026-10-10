@@ -39,4 +39,5 @@
 |--------|--------|----------|------|
 | 01 | user（用户中心） | 2026-09-24 | scaffold-user-center；业务码 201xxx，枚举 UserErrorCodeEnum |
 | 02 | auth（统一认证中心） | 2026-09-24 | unified-auth-center；业务码 202xxx，枚举 AuthErrorCodeEnum |
+| 03 | blog（blog 系统） | 2026-10-10 | scaffold-blog-system；业务码 203xxx，枚举 BlogErrorCodeEnum |
 
