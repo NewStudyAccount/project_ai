@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" font-family="-apple-system,'PingFang SC','Microsoft YaHei',sans-serif">
+  <rect width="960" height="620" fill="#F1F5F9"/>
+  <rect width="200" height="620" fill="#0F172A"/>
+  <rect x="200" y="0" width="760" height="56" fill="#FFFFFF"/>
+  <line x1="200" y1="56" x2="960" y2="56" stroke="#E2E8F0"/>
+  <text x="16" y="32" font-size="14" font-weight="600" fill="#F8FAFC">示例管理端</text>
+  <text x="16" y="88" font-size="13" fill="#94A3B8">首页</text>
+  <text x="16" y="128" font-size="13" fill="#E2E8F0">系统管理</text>
+  <text x="28" y="166" font-size="13" fill="#94A3B8">菜单管理</text>
+  <rect x="0" y="182" width="3" height="36" fill="#38BDF8"/>
+  <rect x="8" y="182" width="184" height="36" rx="6" fill="rgba(56,189,248,0.12)"/>
+  <text x="28" y="205" font-size="13" fill="#E2E8F0">角色管理</text>
+  <text x="220" y="34" font-size="14" font-weight="600" fill="#0F172A">示例管理端</text>
+  <text x="820" y="34" font-size="12" fill="#64748B">操作员</text>
+  <text x="880" y="34" font-size="12" fill="#3B82F6">退出</text>
+
+  <rect x="220" y="76" width="720" height="524" rx="8" fill="#FFFFFF" stroke="#E2E8F0"/>
+  <text x="240" y="110" font-size="16" font-weight="600" fill="#0F172A">角色管理</text>
+  <rect x="240" y="126" width="88" height="32" rx="6" fill="#3B82F6"/>
+  <text x="262" y="147" font-size="13" fill="#FFFFFF">新建</text>
+  <rect x="348" y="126" width="120" height="32" rx="4" fill="#FFFFFF" stroke="#E2E8F0"/>
+  <text x="362" y="147" font-size="12" fill="#94A3B8">名称关键字</text>
+  <rect x="480" y="126" width="96" height="32" rx="4" fill="#FFFFFF" stroke="#E2E8F0"/>
+  <text x="500" y="147" font-size="12" fill="#94A3B8">全部状态</text>
+  <rect x="588" y="126" width="64" height="32" rx="4" fill="#3B82F6"/>
+  <text x="606" y="147" font-size="12" fill="#FFFFFF">查询</text>
+
+  <rect x="240" y="176" width="680" height="36" fill="#F8FAFC"/>
+  <text x="252" y="198" font-size="12" fill="#94A3B8">角色编码</text>
+  <text x="360" y="198" font-size="12" fill="#94A3B8">角色名称</text>
+  <text x="480" y="198" font-size="12" fill="#94A3B8">数据范围</text>
+  <text x="600" y="198" font-size="12" fill="#94A3B8">状态</text>
+  <text x="680" y="198" font-size="12" fill="#94A3B8">备注</text>
+  <text x="820" y="198" font-size="12" fill="#94A3B8">操作</text>
+
+  <text x="252" y="236" font-size="13" fill="#334155">admin</text>
+  <text x="360" y="236" font-size="13" fill="#334155">管理员</text>
+  <text x="480" y="236" font-size="12" fill="#64748B">全部</text>
+  <rect x="600" y="222" width="36" height="18" rx="9" fill="#DCFCE7"/><text x="608" y="235" font-size="10" fill="#166534">启用</text>
+  <text x="680" y="236" font-size="12" fill="#94A3B8">内置全量</text>
+  <text x="808" y="236" font-size="11" fill="#3B82F6">授权</text>
+  <text x="848" y="236" font-size="11" fill="#3B82F6">分配用户</text>
+  <text x="900" y="236" font-size="11" fill="#94A3B8">删</text>
+  <line x1="240" y1="252" x2="920" y2="252" stroke="#E2E8F0"/>
+
+  <text x="252" y="280" font-size="13" fill="#334155">operator</text>
+  <text x="360" y="280" font-size="13" fill="#334155">运营</text>
+  <text x="480" y="280" font-size="12" fill="#64748B">仅本人</text>
+  <rect x="600" y="266" width="36" height="18" rx="9" fill="#DCFCE7"/><text x="608" y="279" font-size="10" fill="#166534">启用</text>
+  <text x="680" y="280" font-size="12" fill="#94A3B8">—</text>
+  <text x="808" y="280" font-size="11" fill="#3B82F6">编辑</text>
+  <text x="848" y="280" font-size="11" fill="#3B82F6">授权</text>
+  <text x="888" y="280" font-size="11" fill="#EF4444">删除</text>
+  <line x1="240" y1="296" x2="920" y2="296" stroke="#E2E8F0"/>
+
+  <text x="252" y="324" font-size="13" fill="#334155">viewer</text>
+  <text x="360" y="324" font-size="13" fill="#334155">只读</text>
+  <text x="480" y="324" font-size="12" fill="#64748B">仅本人</text>
+  <rect x="600" y="310" width="36" height="18" rx="9" fill="#FEF3C7"/><text x="608" y="323" font-size="10" fill="#92400E">停用</text>
+  <text x="680" y="324" font-size="12" fill="#94A3B8">只读角色</text>
+  <text x="808" y="324" font-size="11" fill="#3B82F6">编辑</text>
+  <text x="848" y="324" font-size="11" fill="#3B82F6">授权</text>
+  <text x="888" y="324" font-size="11" fill="#EF4444">删除</text>
+
+  <text x="252" y="560" font-size="11" fill="#94A3B8">删除角色将级联回收用户绑定与菜单授权 · admin 内置不可删 · 授权为全量覆盖（PUT /roles/{id}/menus）</text>
+</svg>

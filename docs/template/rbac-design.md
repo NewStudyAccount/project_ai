@@ -1,8 +1,8 @@
 # RBAC 权限模型 · 通用设计
 
 > 状态：已确认（2026-09-24）；续写基础框架/基础数据，并吸收 RuoYi RBAC 可复用模式（§1.3、授权树、路由元）
-> 定位：**通用表结构、模型、基础数据与 RBAC 框架契约**。各子系统在**自己的数据库**内建一套同构 4 表、**自己管理自己的**菜单/角色/授权（非中心化 RBAC 服务）。
-> 配套：`CLAUDE.md`（§5.2 权限标识与菜单下发、§6.4.5 审计与发号、§6.5 库表规范）；各系统设计文档**引用本文件**，不复制字段定义。
+> 定位：**通用表结构、模型、基础数据、RBAC 框架契约** + **各菜单页内容与业务逻辑明细**。各子系统在**自己的数据库**内建一套同构 4 表、**自己管理自己的**菜单/角色/授权（非中心化 RBAC 服务）。
+> 配套：`CLAUDE.md`（§5.2 权限标识与菜单下发、§6.4.5 审计与发号、§6.5 库表规范）；各系统设计文档**引用本文件**，不复制字段定义。视觉/壳布局见 `admin-ui-design.md`。
 > **设计参考：** [RuoYi（若依）](https://github.com/yangzongzhuan/RuoYi) / RuoYi-Vue 的菜单-角色-用户授权模型与动态路由下发（见 §1.3 对照取舍）。
 
 ---
@@ -440,6 +440,8 @@ MenuVO {
 
 ### 5.4 L2 自举骨架（`{sys}` = 本系统前缀，全小写）
 
+**菜单树内容（页 = type=2，钮 = type=3；id 固定见下表）：**
+
 | id | parent_id | type | name | permission | path | component | icon | sort |
 |---:|----------:|:----:|------|------------|------|-----------|------|-----:|
 | **1001** | 0 | 1 目录 | 系统管理 | `''` | `''` | `''` | `setting` | 90 |
@@ -448,16 +450,27 @@ MenuVO {
 | **90001** | 2001 | 3 按钮 | 新建菜单 | `{sys}:menu:create` | `''` | `''` | `''` | 1 |
 | **90002** | 2001 | 3 按钮 | 编辑菜单 | `{sys}:menu:update` | `''` | `''` | `''` | 2 |
 | **90003** | 2001 | 3 按钮 | 删除菜单 | `{sys}:menu:delete` | `''` | `''` | `''` | 3 |
-| **90004** | 2002 | 3 按钮 | 新建角色 | `{sys}:role:create` | `''` | `''` | `''` | 4 |
-| **90005** | 2002 | 3 按钮 | 编辑角色 | `{sys}:role:update` | `''` | `''` | `''` | 5 |
-| **90006** | 2002 | 3 按钮 | 删除角色 | `{sys}:role:delete` | `''` | `''` | `''` | 6 |
-| **90007** | 2002 | 3 按钮 | 角色授权 | `{sys}:role:assign` | `''` | `''` | `''` | 7 |
+| **90004** | 2002 | 3 按钮 | 新建角色 | `{sys}:role:create` | `''` | `''` | `''` | 1 |
+| **90005** | 2002 | 3 按钮 | 编辑角色 | `{sys}:role:update` | `''` | `''` | `''` | 2 |
+| **90006** | 2002 | 3 按钮 | 删除角色 | `{sys}:role:delete` | `''` | `''` | `''` | 3 |
+| **90007** | 2002 | 3 按钮 | 角色授权 | `{sys}:role:assign` | `''` | `''` | `''` | 4 |
+| **90008** | 2002 | 3 按钮 | 分配用户 | `{sys}:role:user-assign` | `''` | `''` | `''` | 5 |
 
 - **根**：`1001` 的 `parent_id=0`（不是 id=0）
 - 其余 `hidden=0`、`requires_auth=1`、`status=1`
 - **component** 必须与本系统前端 `componentByPath` 键一致（见 fixbug §7）；type 3 按钮不填 path/component
 - type 4 接口点按需由各系统业务补，**不进 L2**；id 用 **500x**（§2.0.5），挂在 type=2 菜单下
 - 目录 `sort=90`：「系统管理」沉底，业务域目录用更小 sort 靠前
+- 首页 Dashboard **不进** RBAC 树（静态路由）；登录后默认进 Dashboard
+
+**各菜单页面内容一览（详细交互与业务逻辑见 §10.9–§10.11）：**
+
+| 菜单 | 页面内容 | 核心业务逻辑 |
+|------|----------|----------------|
+| 首页 | 系统名 + 一句话说明 | 无写操作；`auth.init` 后进入 |
+| 菜单管理 | 树表 + 新建/编辑/删除 + 类型联动表单 | 树 CRUD、id 分配、叶子删除、权限唯一 |
+| 角色管理 | 角色列表 + 角色表单 + 授权树 + 用户分配 | 角色 CRUD、覆盖授权、级联删、用户-角色 |
+| 用户-角色 | 选人 → 勾角色 → 保存（可挂在角色管理内） | 增量/覆盖分配与回收 |
 
 ### 5.5 L3 / L3b 角色基线
 
@@ -692,11 +705,11 @@ permissionsForUser(userId) / myMenuList()
 | 方法 | 语义 |
 |------|------|
 | `listMenuTree()` | 管理页全量树 |
-| `createMenu` / `updateMenu` / `deleteMenu` | 树 CRUD + 校验（§9）；新建 id 按 **§2.0.2** 层级 `max+1` 分配 |
-| `listRoles` / `createRole` / `updateRole` / `deleteRole` | 角色 CRUD + 级联 |
-| `assignRoleMenus(roleId, menuIds)` | **先删后插**全量覆盖 |
-| `assignUserRoles` / `removeUserRoles` | 分配/回收（可合并为覆盖语义，二选一并写清） |
-| `myMenus` / `myPermissions` | 按当前操作员（admin 全量或联查） |
+| `createMenu` / `updateMenu` / `deleteMenu` | 树 CRUD + 校验（§9）；步骤见 §10.9；新建 id 按 **§2.0.2** 层级 `max+1` 分配 |
+| `listRoles` / `createRole` / `updateRole` / `deleteRole` | 角色 CRUD + 级联；步骤见 §10.10 |
+| `assignRoleMenus(roleId, menuIds)` | **先删后插**全量覆盖 + 祖先链归一化（§10.10） |
+| `assignUserRoles` / `removeUserRoles` | 分配/回收（步骤见 §10.10b） |
+| `myMenus` / `myPermissions` | 按当前操作员（admin 全量或联查）；组树见 §6.4 |
 | `permissionsForUser(userId)` | 供 auth-service 装载 authorities（业务系统可不暴露） |
 | `hasPermission(perm)` | 可选软校验（不替代网关鉴权）；语义 ≈ RuoYi `PermissionService.hasPermi` |
 
@@ -744,7 +757,9 @@ permissionsForUser(userId) / myMenuList()
 
 > 目标：每套 `{system}-admin` 具备**同构 RBAC 前端**——动态路由、侧栏菜单、按钮权限、菜单/角色管理页。  
 > 参照实现：`frontend/user-admin`、`frontend/auth-admin`；本节为可复制契约，不绑死某一业务域。  
-> **视觉与页面布局**（色板、App Shell、P-List/P-Tree/弹窗骨架）见 [`admin-ui-design.md`](admin-ui-design.md)；本节只规定交互与工程契约。
+> **视觉与页面布局**（色板、App Shell、P-List/P-Tree/弹窗骨架）见 [`admin-ui-design.md`](admin-ui-design.md)；本节只规定交互与工程契约。  
+> **交互与布局原型（可运行）：** [`assets/rbac-admin-proto.html`](assets/rbac-admin-proto.html)（本地可 `python -m http.server` 打开）；静态示意 `assets/rbac-proto-*.svg`。  
+> **效力顺序：** 本文件（契约/业务规则） > `admin-ui-design.md`（视觉基线） > 原型 HTML/SVG（交互与布局**参照**）。原型**不得**覆盖表结构、API、id 段、校验规则；与本文冲突时以本文为准，并改原型对齐。
 
 ### 10.1 职责与边界
 
@@ -753,8 +768,11 @@ permissionsForUser(userId) / myMenuList()
 | 登录后拉 `/me/menus` + `/me/permissions` | 不在前端解析 JWT 权限码（Claims 无权限） |
 | 按 `component` 动态 `addRoute` | 不硬编码角色名 / 不写死业务路由表 |
 | `hasPermission` 控按钮 | 不替代网关鉴权；无权限只藏 UI |
-| 菜单树 CRUD、角色 CRUD、授权 | 不管用户主数据（用户中心）；「选人」经 `user-api` |
+| 菜单树 CRUD、角色 CRUD、授权、用户-角色 | 不管用户主数据（用户中心）；「选人」经 `user-api` |
 | OIDC RP（PKCE）接入 | 不做账密登录页（唯一门面在 auth-portal） |
+
+**本节菜单明细：** 首页 / 菜单管理（§10.9）/ 角色管理（§10.10）/ 用户-角色（§10.10b）/ L4 域（§10.10c）；验收见 §10.13。  
+**实现 UI 时按原型对齐：** 侧栏一级（首页与目录同级、可折叠）、菜单树展开/折叠、P-List/P-Tree/弹窗骨架；交互细节以 §10.9–§10.10 文字契约为准。
 
 ### 10.2 工程结构（`frontend/{system}-admin`）
 
@@ -911,40 +929,167 @@ export function hasPermission(permission: string): boolean {
 - **禁止** `v-if="isAdmin"` 一类角色判断
 - admin 已由后端下发全量 permissions，无需前端通配
 
-### 10.9 菜单管理页（`views/menu/MenuList.vue`）
+### 10.9 菜单管理（`views/menu/MenuList.vue`）内容与业务逻辑
 
-| 能力 | 交互 |
+**页面内容（布局 P-Tree + D-Form，见 `admin-ui-design.md` §3.2/§3.3）：**
+
+| 区 | 内容 |
+|----|------|
+| 标题 | 「菜单管理」 |
+| 工具栏 | 「新建」（`{sys}:menu:create`，默认建根级 `parentId=0`）；可选「展开/折叠」 |
+| 树表列 | 名称 `name`（min 180，缩进）/ 类型 `type`（tag：目录·菜单·按钮·接口）/ 权限 `permission` / 路由 `path` / 组件 `component`（截断+title）/ 排序 `sort` / 状态 `status` / 操作 |
+| 行操作 | 「新增子级」（可选）/「编辑」`menu:update` /「删除」`menu:delete`（叶子） |
+| 空态 | `el-empty` + 「新建」入口 |
+
+**表单弹窗（D-Form）字段：**
+
+| 字段 | 控件 | 说明 |
+|------|------|------|
+| 上级节点 | 树选择（只含 type=1/2） | 新建子级时锁定为父；根级=根 |
+| 节点类型 | radio 1/2/3/4 | 创建后**禁止**改 type（避免 id 段错位） |
+| 菜单名称 | input 必填 ≤64 | 同级建议不重名（不强制库唯一） |
+| 权限标识 | input ≤128 | 按 type 显隐；非空校验首段=`{sys}` 且库内唯一 |
+| 路由地址 | input ≤255 | type=2 必填；type=1 可空；3/4 隐藏并置空 |
+| 组件标识 | input ≤255 | type=2 必填（如 `views/menu/MenuList.vue`）；3/4 隐藏 |
+| 图标 | input/选择 | type=1/2 可选 |
+| 是否外链 | switch | 仅 type=2；`is_frame=1` 时 path=绝对 URL，component 可空 |
+| 路由参数 query | input 可选 | 仅 type=2 |
+| 是否缓存 | switch `is_cache` | 仅 type=2 |
+| 是否隐藏 | switch `hidden` | 隐藏仍可被授权/直连 |
+| 需要认证 | switch `requires_auth` | 默认 1 |
+| 排序 | number | 同级排序 |
+| 状态 | switch | 1 启用 / 0 停用（停用不进 `/me/menus`） |
+| 备注 | textarea ≤255 | 可选 |
+
+**type 字段联动（提交前前端校验，服务端再验）：**
+
+| type | permission | path | component | isFrame | 父节点 |
+|------|------------|------|-----------|---------|--------|
+| 1 目录 | 隐藏→`''` | 可空 | `''` | — | 根或目录 |
+| 2 菜单 | 可空（建议 `{sys}:{res}:list`） | 必填 | 必填 | 可选 | 目录/菜单 |
+| 3 按钮 | 必填 | 强制 `''` | 强制 `''` | — | **必须菜单** |
+| 4 接口点 | 必填 | 强制 `''` | 强制 `''` | — | **必须菜单** |
+
+**业务逻辑（Service 步骤）：**
+
+**新建 `createMenu`**
+
+1. 校验 Bean Validation + type/parent 约束（§9）：type=3/4 的 parent 必须为 type=2；深度 ≤4；`permission` 首段与唯一；`is_frame=1` 时 path 为合法 URL  
+2. 校验 parent 存在且 `status` 任意（允许挂停用目录，但新建子级建议父启用）  
+3. **分配 id**：禁止客户端传 id；按 §2.0.2 本层/本段 `max+1`（按钮 90000x、接口 500x）  
+4. 落库（审计字段 + `deleted=0`）  
+5. 记审计 `MENU_CREATE`  
+6. 返回新 `id`（String）
+
+**更新 `updateMenu`**
+
+1. 按 id 查存在且未删；**禁止**改 `type` / `id` / `parent_id`（移树另议，首期不提供）  
+2. 校验同 §9；`permission` 唯一时排除自身 id  
+3. 更新允许字段（name/path/component/icon/query/isFrame/isCache/hidden/requiresAuth/sort/status/remark）  
+4. 记审计 `MENU_UPDATE`
+
+**删除 `deleteMenu`**
+
+1. 存在且为**叶子**（无 `parent_id=id` 且 `deleted=0` 的子节点），否则业务错「存在子节点，不可删除」  
+2. 删除自身（逻辑删 `deleted=1` 或物理删随系统；逻辑删时查询须带过滤）  
+3. **级联**删 `sys_role_menu.menu_id = id`  
+4. 记审计 `MENU_DELETE`
+
+**前端加载**
+
+1. `GET /menus` 拉全量树（含停用，便于管理）  
+2. 树按 `sort`、`id` 稳定排序；操作钮 `hasPermission`  
+3. 删除前 `ElMessageBox.confirm`；成功 toast 并刷新树  
+
+### 10.10 角色管理（`views/role/RoleList.vue`）内容与业务逻辑
+
+**页面内容（P-List + D-Form + D-Panel）：**
+
+| 区 | 内容 |
+|----|------|
+| 标题 | 「角色管理」 |
+| 工具栏 | 「新建」`role:create`；筛选：名称关键字、状态 |
+| 列表列 | 角色编码 `roleCode` / 名称 `roleName` / 数据范围 `dataScope`（1 全部·2 本部门·3 仅本人）/ 状态 / 备注 / 操作 |
+| 行操作 | 「编辑」/「分配菜单」`role:assign` /「分配用户」`role:user-assign` /「删除」 |
+| 分页 | `el-pagination`；`orderBy` 白名单 `createTime\|updateTime\|sort\|id` |
+
+**角色表单：**
+
+| 字段 | 约束 |
 |------|------|
-| 树展示 | `el-table` 树形或 `el-tree`；列：name/type/permission/path/component/sort/status |
-| 新建 | 可「新增子级」；选 type 1/2/3/4；按 type 显隐 path/component/permission |
-| 校验 | permission 首段=本系统；type=3 父必须为菜单；id 由后端分配（**不暴露 id 输入**） |
-| 编辑/删除 | 删除叶子；有子节点后端拒绝并 toast |
-| 权限钮 | create/update/delete 用 `hasPermission` |
+| 角色编码 | 必填 ≤64，`^[a-z][a-z0-9_]*$`，系统内唯一；`admin` 保留 |
+| 角色名称 | 必填 ≤64 |
+| 数据范围 | radio 1/2/3，默认 1 |
+| 父子联动 | switch `menu_check_strictly`，默认 1 |
+| 排序 / 状态 / 备注 | 同通用约定 |
 
-**表单字段联动：**
+**分配菜单（D-Panel）内容：**
 
-| type | permission | path | component | isFrame |
-|------|------------|------|-----------|---------|
-| 1 目录 | 隐藏 | 可空 | 空 | — |
-| 2 菜单 | 可空（list） | 必填 | 必填 | 可选 |
-| 3 按钮 | 必填 | 空 | 空 | — |
-| 4 接口点 | 必填 | 空 | 空 | — |
+- 标题「角色菜单授权」；树 `el-tree` show-checkbox、`node-key=id`、默认展开  
+- 节点 label=`name`，可附 type 小标签；勾选含 type=3/4（权限点）  
+- 底栏「取消」「保存」（保存 `role:assign`）  
+- 回显：`role.menuIds` → checked；半选父节点按 §9  
 
-### 10.10 角色管理页（`views/role/RoleList.vue`）
+**业务逻辑：**
 
-| 能力 | 交互 |
-|------|------|
-| 列表 | roleCode / roleName / dataScope / status / remark |
-| CRUD | 同菜单页权限钮模式 |
-| **分配菜单** | 树形 `el-tree` show-checkbox；回显 `role.menuIds`；`menuCheckStrictly` 控父子联动 |
-| 保存 | `PUT /roles/{id}/menus`，body `{ menuIds: string[] }`（**全量覆盖**，含勾选的父节点） |
-| 用户-角色 | 可选 Tab 或独立页：选人（`user-api`）+ 分配/回收角色 |
+**新建/更新角色**
 
-**授权树回显：**
+1. 校验 `roleCode` 格式与唯一、`dataScope ∈ {1,2,3}`  
+2. 新建 id：角色段 9xxx `max+1`（§2.0）  
+3. 禁止把 `role_code` 改成/从 `admin` 改出（业务错或需显式确认）  
+4. 审计 `ROLE_CREATE` / `ROLE_UPDATE`
 
-- `checked` = `menuIds` 与树节点交集
-- `menuCheckStrictly=1` 时父勾选含子；保存前可按「全部勾选节点」提交（含父）
-- 半选父节点：可一并写入 `menuIds`，便于 `/me/menus` 祖先闭包（§9）
+**删除角色 `deleteRole`**
+
+1. `role_code='admin'`：默认**拒绝**删除（业务错「内置角色不可删除」）  
+2. 级联删 `sys_user_role.role_id` + `sys_role_menu.role_id`  
+3. 审计 `ROLE_DELETE`  
+4. 前端 confirm 文案写明「将回收所有用户该角色权限」
+
+**分配菜单 `assignRoleMenus`（全量覆盖）**
+
+1. `role_id` 存在  
+2. 入参 `menuIds`：去重、均为存在菜单 id  
+3. **联动归一化**（`menu_check_strictly=1`）：对每个勾选节点补全**祖先链**；若提交含父且要求子全选，按前端「全选子节点」提交的集合为准；服务端保证「任一子在集合中 ⇒ 其父在集合中」（否则业务错「授权树不完整」）  
+4. 事务内：**先删**该 `role_id` 全部 `sys_role_menu`，**再插**归一化后的集合  
+5. 审计 `ROLE_MENU`（detail 可记节点个数，禁全量敏感）  
+6. 可选：失效该角色相关用户权限缓存（§11.2）
+
+**前端保存授权**
+
+1. `getCheckedNodes` + half-checked（若需要）合并为 `menuIds: string[]`  
+2. **必须回传完整勾选集合（含父）**，避免覆盖后断树  
+3. 成功 toast「授权已保存」；失败展示 `msg` 不关窗
+
+### 10.10b 用户-角色分配内容与业务逻辑
+
+**入口：** 角色列表行「分配用户」，或角色 Tab/抽屉；标题「分配用户」。
+
+| 区 | 内容 |
+|----|------|
+| 已选列表 | 当前角色下用户（来自 `user-api` 反查或本系统关联列表）：姓名、账号、移除 |
+| 选人 | 搜索（关键字）→ 分页选人（`GET` 用户中心 `user-api`）；禁止本系统建用户表 |
+| 操作 | 「添加用户」/「移除」/「保存」（增量）或直接即时写（二选一，系统内统一） |
+
+**业务逻辑 `assignUserRoles` / `removeUserRoles`**
+
+1. userId 必须存在（经用户中心或仅校验非空 + 依赖外键逻辑，禁止物理外键）  
+2. roleId 存在且 `status=1`  
+3. 增量：插入 `sys_user_role`，靠 `uk_sys_user_role_user_role` + `INSERT` 冲突忽略或友好报错「已分配」  
+4. 回收：删该行；审计 `ROLE_ASSIGN`（action 区分 assign/remove）  
+5. 分配后对方登录刷新 `/me/*` 生效（短缓存则失效 userId 键）  
+6. **禁止**前端把角色写进 token 或 localStorage 当准
+
+### 10.10c 首页与 L4 域菜单
+
+| 菜单 | 内容 | 业务逻辑 |
+|------|------|----------|
+| **首页 Dashboard** | `{系统名}` + 一句话说明；可选后续统计卡（单列 page-card） | 只读；无 RBAC 权限码；静态路由 |
+| **L4 业务列表**（模板） | 工具栏主操作 + 筛选 + 表格 + 分页；列随域定义 | 列表查询 + `@RateLimit`；写操作 `@Idempotent` + 审计；按钮 `{sys}:{res}:{action}` |
+| **L4 详情/弹窗** | D-Form / D-Panel | 校验在 Service；id 出入参 String |
+| **L4 审计日志** | 筛选 action/时间 + 分页只读 | 无写按钮；`{sys}:audit:list` |
+
+**L4 菜单登记步骤：** seed/管理页建 type=2 + type=3 按钮 → `componentByPath` 注册 Vue 组件 → 权限常量与 `permission` 字符串对齐（§5.9）。
 
 ### 10.11 与登录 / OIDC 衔接
 
@@ -967,7 +1112,20 @@ export function hasPermission(permission: string): boolean {
 4. `component` 写错时 fallback Dashboard，且管理页能改回  
 5. 角色授权树勾选保存后，用该角色账号登录只看到已授菜单  
 6. 登出再登录，无脏路由/脏权限  
-7. 全局搜索无硬编码角色名（`admin`/`operator` 判断）
+7. 全局搜索无硬编码角色名（`admin`/`operator` 判断）  
+8. 菜单表单 type 切换时 path/component/permission 显隐与清空符合 §10.9 联动表  
+9. 删除有子菜单的节点时后端拒绝且 toast 与文案一致  
+10. 角色「分配用户」走 `user-api`，本系统无用户 CRUD 页  
+
+### 10.13 菜单内容与业务逻辑验收（实现后勾选）
+
+- [ ] 菜单管理：新建根/子级、按 type 联动、编辑、删叶子、有子拒绝  
+- [ ] 新建按钮 id 落在 90000x，接口点落在 500x，菜单 id 落在深度段  
+- [ ] `permission` 非法首段/重复被拒  
+- [ ] 角色：CRUD、`admin` 不可删、授权覆盖保存、回显半选  
+- [ ] 分配用户：添加/移除、重复分配友好提示  
+- [ ] 非 admin 角色登录只含授权菜单；admin 新建菜单立即可见  
+- [ ] 关键写均有审计 action（§8.3）
 
 ---
 
@@ -1038,4 +1196,6 @@ export function hasPermission(permission: string): boolean {
 | `deploy/db/seed/rbac-framework-template.sql` | L2/L3 种子模板 |
 | `frontend/user-admin` / `frontend/auth-admin` | RBAC 前端参照实现（§10） |
 | `docs/template/admin-ui-design.md` | 管理端视觉基线与页面布局骨架 |
+| `docs/template/assets/rbac-admin-proto.html` | **可运行交互原型**（布局/展开折叠/弹窗参照，效力低于本文件） |
+| `docs/template/assets/rbac-proto-*.svg` | 页面静态示意（菜单管理/角色/表单/授权） |
 | `docs/template/fixbug/2026-09-25-unify-login-sso-gateway.md` | `/me/*` 空、component、网关注入等实测缺陷 |
