@@ -324,6 +324,134 @@ ALTER TABLE sys_role
   ADD COLUMN menu_check_strictly TINYINT NOT NULL DEFAULT 1 COMMENT '1父子联动 0独立';
 ```
 
+### 2.7 基础 SQL 交付（强制）
+
+**凡引入本 RBAC 框架的系统，必须随变更/脚手架交付下列基础 SQL**（禁止只写文档不落文件；禁止各系统各写一套字段）：
+
+| 交付物 | 内容 | 存放 | 必选 |
+|--------|------|------|------|
+| **L1 DDL** | 四表建表 + 索引/唯一键（§2.7.1） | `deploy/db/migration/{db}/` | ✅ |
+| **L2/L3 Seed** | 自举骨架菜单 + `admin` 角色（§5.4/§5.5/§2.7.2） | `deploy/db/seed/` | ✅ |
+| **L4/L5 Seed** | 本系统域菜单、角色-菜单、冒烟用户绑定 | 同 seed 目录 | 按需 |
+| **模板** | 通用可复制 SQL | `deploy/db/seed/rbac-framework-template.sql` | 仓库级 |
+
+规则对齐 **§5.8**（文件名、`INSERT IGNORE`、生产征询、`execution-record.md`）；库表字段以 **§2.1–§2.4** 为准，SQL 不得擅自增删关键列。
+
+#### 2.7.1 L1 建表 DDL（同构四表，utf8mb4 / InnoDB / 禁物理外键）
+
+```sql
+-- 适用：{db} = 本系统库；表名固定，各库一套
+CREATE TABLE IF NOT EXISTS sys_menu (
+  id            BIGINT       NOT NULL COMMENT '主键：层级编码（非16位发号）',
+  parent_id     BIGINT       NOT NULL DEFAULT 0 COMMENT '父节点，0=根',
+  type          TINYINT      NOT NULL COMMENT '1目录 2菜单 3按钮 4接口点',
+  name          VARCHAR(64)  NOT NULL DEFAULT '' COMMENT '显示名',
+  permission    VARCHAR(128) NOT NULL DEFAULT '' COMMENT '权限标识 system:resource:action',
+  path          VARCHAR(255) NOT NULL DEFAULT '' COMMENT '路由 path 或外链 URL',
+  component     VARCHAR(255) NOT NULL DEFAULT '' COMMENT '前端组件键',
+  query         VARCHAR(255) NOT NULL DEFAULT '' COMMENT '路由 query',
+  is_frame      TINYINT      NOT NULL DEFAULT 0 COMMENT '0否 1外链',
+  is_cache      TINYINT      NOT NULL DEFAULT 0 COMMENT '0不缓存 1keep-alive',
+  icon          VARCHAR(64)  NOT NULL DEFAULT '' COMMENT '图标',
+  hidden        TINYINT      NOT NULL DEFAULT 0 COMMENT '0显示 1隐藏',
+  requires_auth TINYINT      NOT NULL DEFAULT 1 COMMENT '路由 requiresAuth',
+  sort          INT          NOT NULL DEFAULT 0 COMMENT '同级排序',
+  status        TINYINT      NOT NULL DEFAULT 1 COMMENT '1启用 0停用',
+  remark        VARCHAR(255) NOT NULL DEFAULT '' COMMENT '备注',
+  create_time   DATETIME     NOT NULL COMMENT '创建时间',
+  update_time   DATETIME     NOT NULL COMMENT '更新时间',
+  create_by     BIGINT       NOT NULL DEFAULT 0 COMMENT '创建人',
+  update_by     BIGINT       NOT NULL DEFAULT 0 COMMENT '更新人',
+  deleted       TINYINT      NOT NULL DEFAULT 0 COMMENT '0未删 1已删',
+  PRIMARY KEY (id),
+  KEY idx_sys_menu_parent_id (parent_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='菜单/权限资源树';
+
+CREATE TABLE IF NOT EXISTS sys_role (
+  id                 BIGINT       NOT NULL COMMENT '主键：9001-9999',
+  role_code          VARCHAR(64)  NOT NULL COMMENT '角色编码，本系统唯一',
+  role_name          VARCHAR(64)  NOT NULL DEFAULT '' COMMENT '角色名称',
+  data_scope         TINYINT      NOT NULL DEFAULT 1 COMMENT '1全部 2本部门(预留) 3仅本人',
+  menu_check_strictly TINYINT     NOT NULL DEFAULT 1 COMMENT '1父子联动 0独立',
+  sort               INT          NOT NULL DEFAULT 0 COMMENT '排序',
+  status             TINYINT      NOT NULL DEFAULT 1 COMMENT '1启用 0停用',
+  remark             VARCHAR(255) NOT NULL DEFAULT '' COMMENT '备注',
+  create_time        DATETIME     NOT NULL,
+  update_time        DATETIME     NOT NULL,
+  create_by          BIGINT       NOT NULL DEFAULT 0,
+  update_by          BIGINT       NOT NULL DEFAULT 0,
+  deleted            TINYINT      NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_sys_role_role_code (role_code),
+  KEY idx_sys_role_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色';
+
+CREATE TABLE IF NOT EXISTS sys_user_role (
+  id          BIGINT   NOT NULL COMMENT '主键',
+  user_id     BIGINT   NOT NULL COMMENT '用户中心 sys_user.id（逻辑引用，无FK）',
+  role_id     BIGINT   NOT NULL COMMENT '本库 sys_role.id',
+  create_time DATETIME NOT NULL,
+  update_time DATETIME NOT NULL,
+  create_by   BIGINT   NOT NULL DEFAULT 0,
+  update_by   BIGINT   NOT NULL DEFAULT 0,
+  deleted     TINYINT  NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_sys_user_role_user_role (user_id, role_id),
+  KEY idx_sys_user_role_role_id (role_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户-角色';
+
+CREATE TABLE IF NOT EXISTS sys_role_menu (
+  id          BIGINT   NOT NULL COMMENT '主键',
+  role_id     BIGINT   NOT NULL COMMENT '本库 sys_role.id',
+  menu_id     BIGINT   NOT NULL COMMENT '本库 sys_menu.id',
+  create_time DATETIME NOT NULL,
+  update_time DATETIME NOT NULL,
+  create_by   BIGINT   NOT NULL DEFAULT 0,
+  update_by   BIGINT   NOT NULL DEFAULT 0,
+  deleted     TINYINT  NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_sys_role_menu_role_menu (role_id, menu_id),
+  KEY idx_sys_role_menu_menu_id (menu_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色-菜单授权';
+```
+
+#### 2.7.2 L2/L3 基础 Seed（可重复执行骨架示例）
+
+> `INSERT IGNORE` 保证幂等；`permission` 中 `{sys}` 替换为本系统小写前缀；时间用执行日或固定基线。  
+> 完整十节点与按钮见 **§5.4**；生产一般只导 L1+L2+L3（§5.8）。
+
+```sql
+-- 目录 + 菜单（L2）
+INSERT IGNORE INTO sys_menu
+  (id, parent_id, type, name, permission, path, component, icon, sort, status, hidden, requires_auth, create_time, update_time, create_by, update_by, deleted)
+VALUES
+  (1001, 0, 1, '系统管理', '', '', '', 'setting', 90, 1, 0, 1, NOW(), NOW(), 0, 0, 0),
+  (2001, 1001, 2, '菜单管理', '{sys}:menu:list', '/menus', 'views/menu/MenuList.vue', '', 1, 1, 0, 1, NOW(), NOW(), 0, 0, 0),
+  (2002, 1001, 2, '角色管理', '{sys}:role:list', '/roles', 'views/role/RoleList.vue', '', 2, 1, 0, 1, NOW(), NOW(), 0, 0, 0);
+
+-- 按钮（L2，id 90000x）
+INSERT IGNORE INTO sys_menu
+  (id, parent_id, type, name, permission, path, component, sort, status, hidden, requires_auth, create_time, update_time, create_by, update_by, deleted)
+VALUES
+  (90001, 2001, 3, '新建菜单', '{sys}:menu:create', '', '', 1, 1, 0, 1, NOW(), NOW(), 0, 0, 0),
+  (90002, 2001, 3, '编辑菜单', '{sys}:menu:update', '', '', 2, 1, 0, 1, NOW(), NOW(), 0, 0, 0),
+  (90003, 2001, 3, '删除菜单', '{sys}:menu:delete', '', '', 3, 1, 0, 1, NOW(), NOW(), 0, 0, 0),
+  (90004, 2002, 3, '新建角色', '{sys}:role:create', '', '', 1, 1, 0, 1, NOW(), NOW(), 0, 0, 0),
+  (90005, 2002, 3, '编辑角色', '{sys}:role:update', '', '', 2, 1, 0, 1, NOW(), NOW(), 0, 0, 0),
+  (90006, 2002, 3, '删除角色', '{sys}:role:delete', '', '', 3, 1, 0, 1, NOW(), NOW(), 0, 0, 0),
+  (90007, 2002, 3, '角色授权', '{sys}:role:assign', '', '', 4, 1, 0, 1, NOW(), NOW(), 0, 0, 0),
+  (90008, 2002, 3, '分配用户', '{sys}:role:user-assign', '', '', 5, 1, 0, 1, NOW(), NOW(), 0, 0, 0);
+
+-- 内置角色 admin（L3）
+INSERT IGNORE INTO sys_role
+  (id, role_code, role_name, data_scope, menu_check_strictly, sort, status, remark, create_time, update_time, create_by, update_by, deleted)
+VALUES
+  (9001, 'admin', '管理员', 1, 1, 1, 1, '内置全量', NOW(), NOW(), 0, 0, 0);
+```
+
+**验收（导库后）：** 见 **§5.10** 自举验收清单。  
+**联调：** 本地可 `mysql < migration/*.sql && mysql < seed/*.sql`；生产执行前按 `CLAUDE.md` §7 征询。
+
 ---
 
 ## 3. 运行时行为
@@ -362,8 +490,8 @@ MenuVO {
 
 ## 4. 各系统引入方式（通用性落地）
 
-1. **建表**：按本文件 §2 在本系统库内建同构 4 表（表名保持 `sys_menu` 等不变，各库一套）；SQL 随各系统变更提供、人工执行
-2. **基线数据**：按 **§5 基础数据设计** 落 L2 骨架 + L3 `admin`（及可选 L3b）+ L4 域节点（模板 `deploy/db/seed/rbac-framework-template.sql`）
+1. **建表**：按本文件 §2 在本系统库内建同构 4 表（表名保持 `sys_menu` 等不变，各库一套）；**必须交付基础 SQL**（§2.7 L1 DDL + L2/L3 Seed），随各系统变更提供、人工执行
+2. **基线数据**：按 **§5 基础数据设计** 落 L2 骨架 + L3 `admin`（及可选 L3b）+ L4 域节点（模板 `deploy/db/seed/rbac-framework-template.sql`，示例见 §2.7.2）
 3. **管理端**：各系统管理前端提供「菜单管理」「角色管理」页（含用户-角色分配）
 4. **权限标识**：`permission` 首段写本系统名；本系统内唯一（应用层校验）
 5. **审计**：关键写操作（菜单/角色/授权变更）按 `CLAUDE.md` §5.2「操作审计」约定记录
