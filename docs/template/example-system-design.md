@@ -3,7 +3,7 @@
 > 状态：**设计已确认**（2026-09-24，逐项确认稿汇总；后续补配置契约、权限码接口表、横切默认值与自检/验收清单）
 > 定位：**基础模板系统**——不承载真实业务，只作为多系统容器下一套业务系统的标准落地参照（工程骨架 + 横切能力示范）；后续新建系统以本文件与本系统代码为模板裁剪
 > 范围：完整标准链路（common/framework/api/gateway/service + 管理端前端）、本系统自持 RBAC、幂等/限流/审计、对内 Feign 契约、MinIO 上传、接口权限码与配置契约、部署自检；**不带示例业务表**
-> 配套：`rbac-design.md`（RBAC 通用 4 表，本库同构一套）、`gateway-design.md`（**`example-gateway` 设计唯一裁剪源**）、`user-center-design.md` / `unified-auth-center-design.md`（用户与认证权威，本系统只作接线参照）、`docs/version-baseline.md`（组件版本基线）
+> 配套：`rbac-design.md`（RBAC 通用 4 表，本库同构一套）、`gateway-design.md`（**`example-gateway` 设计唯一裁剪源**）、`object-storage-design.md`（**对象存储/MinIO 通用设计唯一裁剪源**：封装落点、上传/预签名/逻辑删除、元数据与配置键）、`user-center-design.md` / `unified-auth-center-design.md`（用户与认证权威，本系统只作接线参照）、`docs/version-baseline.md`（组件版本基线）
 > 约束：`CLAUDE.md`（全链路对齐，无偏差豁免）；确认项汇总见 §8；网关能力/依赖/检查清单以 `gateway-design.md` 为准，本文只写 example 接线差异；**版本号只写在 `docs/version-baseline.md`**
 
 ---
@@ -39,7 +39,7 @@
 - **CORS** 归网关唯一归属（信任域名登记 `docs/test-env.md`）
 - **服务间调用**：OpenFeign + Fallback + 固定超时（对内契约见 §5.1）；禁止事务内 Feign
 - **Redis/Redisson**：`@RateLimit`（RRateLimiter）+ `@Idempotent` + 缓存（键命名 §6.9，全部带 TTL）
-- **MinIO**：文件存储，客户端与上传策略统一经 `example-framework` 封装（版本取 `docs/version-baseline.md`）
+- **MinIO**：文件存储，按 **`object-storage-design.md` 裁剪**——客户端与上传/预签名/删除策略统一经 `example-framework` 封装（版本取 `docs/version-baseline.md`）；本文只登记 example 桶名、白名单与 API 取值，通用策略不在此重复
 
 ```text
 浏览器（example-admin SPA）
@@ -76,7 +76,7 @@ frontend/example-admin/                # 管理端（Vue3 + TS + Pinia + Element
 | 模块 | 组件（版本**只**取 `docs/version-baseline.md`，先改表再改 pom；**禁止在本文复制版本号**） |
 |------|------|
 | `example-common` | Lombok + 注解类（jakarta.validation / jackson-annotations）；⛔ 禁 MP/Redis/数据源/Actuator/MQ/MinIO/JWT 库/Hutool |
-| `example-framework` | starter-web / validation / aop / actuator / data-redis + **Redisson** + **MyBatis-Plus（boot3 starter）** + OpenFeign + **springdoc** + **micrometer-tracing** + **MinIO SDK 封装**（上传/预签名/删除策略统一封装于此，禁止业务直绑 SDK）；具体坐标与版本见基线 |
+| `example-framework` | starter-web / validation / aop / actuator / data-redis + **Redisson** + **MyBatis-Plus（boot3 starter）** + OpenFeign + **springdoc** + **micrometer-tracing** + **MinIO SDK 封装**（上传/预签名/删除策略统一封装于此，禁止业务直绑 SDK；契约按 `object-storage-design.md` §3）；具体坐标与版本见基线 |
 | `example-api` | spring-cloud-starter-openfeign + Lombok |
 | `example-service` | example-common/framework/api + mysql-connector-j + MapStruct + nacos-discovery/config（SCA，版本见基线） |
 | `example-gateway` | **按 `gateway-design.md` §3.2 依赖清单**：spring-cloud-starter-gateway + **spring-cloud-starter-loadbalancer（`lb://` 必需）** + nacos-discovery + oauth2-resource-server（JWKS，**不引 SAS**）+ actuator + Micrometer Tracing；只依赖 `example-common`，**不依赖** `example-framework` |
@@ -106,7 +106,7 @@ frontend/example-admin/                # 管理端（Vue3 + TS + Pinia + Element
 | 分页互转 | MyBatis-Plus `Page` ↔ `{records,total,size,current}` | `current≥1`，`size` 上限 `200` |
 | `@RateLimit` | Redisson `RRateLimiter` | 上传 `10/min/用户`；列表/预签名 `60/min/用户`（示例，随变更可调） |
 | `@Idempotent` | Redis `SET NX` + 首次 `Result` 回放 | TTL `24h`；键 = `Idempotent-Key` 或 `X-Request-Id` |
-| 上传策略 | MinIO 封装 | 单文件 ≤10MB；MIME 白名单：`image/png,image/jpeg,image/gif,application/pdf`；预签名 TTL `10min` |
+| 上传策略 | MinIO 封装（`object-storage-design.md`） | 单文件 ≤10MB；MIME 白名单：`image/png,image/jpeg,image/gif,application/pdf`；预签名 TTL `10min` |
 | Feign | 连接/读取超时 + Fallback | 连接 `1s` / 读取 `3s`（示例） |
 | 日志 | Logback + MDC `traceId`/`spanId` | 模式对齐 `CLAUDE.md` §6.11.1 |
 
@@ -122,7 +122,7 @@ frontend/example-admin/                # 管理端（Vue3 + TS + Pinia + Element
 | **写幂等** | RBAC 管理、文件删除等关键写接口 `@Idempotent`（`Idempotent-Key`，缺省 `X-Request-Id`）；重复请求返回**首次 `Result`**；TTL 见 §3 横切表 / §5.3 |
 | **接口限流** | 文件上传、查询列表 `@RateLimit`（RRateLimiter）；超限 HTTP 429 + 系统码 `10003`；维度/阈值见 §3 / §5.3 |
 | **操作审计** | `example_audit_log`：RBAC 与文件关键写记录操作人/时间/动作/结果（载体 = 审计表） |
-| **上传** | MinIO：单文件 ≤10MB、类型白名单、UUID 文件名、元数据落库、预签名 URL、逻辑删除（`CLAUDE.md` §6.11） |
+| **上传** | MinIO：单文件 ≤10MB、类型白名单、UUID 文件名、元数据落库、预签名 URL、逻辑删除（`CLAUDE.md` §6.11 / `object-storage-design.md` §4） |
 | **对内契约** | `example-api`：文件元数据查询 + ping 探针，Feign + Fallback + 固定超时（见 §5.1） |
 | **发号** | 16 位定长（`yyyyMMdd` + 8 位日序列，`Asia/Shanghai` 日切），`sys_sequence` 段式发号 |
 | **基础契约** | 统一 `{code,msg,data}`、错误码枚举、全局异常、分页 `{records,total,size,current}`、Long→String、MapStruct 转换 |
@@ -302,8 +302,48 @@ sys_file 1 ──── * example_audit_log（target_type=FILE）
 | 布局壳 | 登录后取 `/me/menus` **动态生成路由**（禁硬编码角色）；`/me/permissions` 控制按钮显隐 |
 | 菜单管理 | 树 CRUD（type 1/2/3/4 全类型），示范复杂表单与树组件 |
 | 角色管理 | 分页列表 + 角色-菜单授权 + 用户-角色分配 |
-| 文件管理 | 上传（大小/类型前端提示）、列表、预签名 URL 预览/下载、逻辑删除 |
+| 文件管理 | 详见 **§7.1**（上传 / 列表 / 预签名预览下载 / 逻辑删除；对象存储按 `object-storage-design.md`） |
 | 审计日志 | 分页查询（按 action/时间筛选） |
+
+交互原型：[`assets/rbac-admin-proto.html`](assets/rbac-admin-proto.html)（含文件管理页可点交互；效力低于本文件）。
+
+### 7.1 文件管理页（`views/file/FileList.vue`）
+
+对齐 `object-storage-design.md` 与管理 API（§5.2 `example:file:*`）。页面目标：完整演示**单文件生命周期**，不承载业务表。
+
+**布局（自上而下）：**
+
+1. **页头**：标题「文件管理」+ 操作按钮（`example:file:upload` 显示「上传」）
+2. **筛选栏**：原始文件名关键字、Content-Type（下拉：全部 / 图片 / PDF 等白名单子集）、上传时间范围；「查询 / 重置」
+3. **列表**（分页，`current`/`size`）：
+
+| 列 | 说明 |
+|----|------|
+| 文件名 | `originalName`；悬浮可显示 `objectKey`（UUID） |
+| 类型 | `contentType` 标签（png/jpeg/gif/pdf 等） |
+| 大小 | `sizeBytes` 友好展示（KB/MB） |
+| 上传人 / 时间 | `createBy` 显示名 + `createTime` |
+| 操作 | 预览 / 下载（预签名）、删除（`example:file:delete`） |
+
+4. **分页条**：总数、页码、每页条数（默认 10，上限对齐后端 200）
+
+**上传交互：**
+
+- 点「上传」打开对话框（或页内拖拽区）：选择单文件；**前端即时校验**大小 ≤10MB、MIME ∈ 白名单，并展示约定文案（与后端一致，后端仍强校验）
+- 提交 `POST /api/v1/files`（multipart），建议带 `Idempotent-Key`；成功刷新列表并 toast；失败展示 `msg`（超限/类型非法/429 限流）
+- 上传中展示进度；禁止多文件队列（批量不在首期）
+
+**预览 / 下载：**
+
+- 「预览 / 下载」→ `GET /api/v1/files/{id}/url` 取 `{url, expireAt}`，新窗口打开或触发下载
+- 过期后重新签发；不在前端缓存长期 URL；完整预签名 URL 不进前端日志
+
+**删除：**
+
+- 确认框文案强调**逻辑删除**（记录删除、对象延后清理）；`DELETE /api/v1/files/{id}` + `@Idempotent`
+- 删除成功行消失（列表默认不含 `deleted=1`）；不做批量删除
+
+**空态 / 错误：** 无数据居中提示；接口失败可重试；401/403 按 `CLAUDE.md` §5.3 分流。
 
 - 登录：**正式 OIDC RP（public + PKCE S256）**，唯一登录门面在 `auth-portal`；本系统管理端**禁止**再放账密表单。  
   **首期可不做完整 OIDC 接线**（见 §11），壳阶段仅允许脚手架联调用 `local-pass-through`（不得上生产）。**一旦接 OIDC，必须遵守**（来自 unify-login-facade 实测缺陷，详见 `fixbug/2026-09-25-unify-login-sso-gateway.md`）：
@@ -331,6 +371,7 @@ sys_file 1 ──── * example_audit_log（target_type=FILE）
 | 7 | **幂等/限流落点**：关键写 `@Idempotent`；上传/列表/预签名 `@RateLimit` | 已裁决；参数与 TTL 由 `framework` 固定（§6.11） |
 | 8 | **登录鉴权：OIDC RP（PKCE）+ 网关 JWKS 验签**；唯一登录门面在 auth-portal | 对齐 `unify-login-facade` 实测结论：禁止各系统自带账密页；壳阶段本地放行仅限脚手架联调且不得上生产（详见 §7 与 `fixbug/2026-09-25-unify-login-sso-gateway.md`） |
 | 8b | **`example-gateway` 设计裁剪源 = `gateway-design.md`** | 引入通用网关模板（验签/iss/aud/JWKS/身份注入/CORS/错误体/检查清单）；本文只写 example 路由与配置取值，不重复通用约定；纯网关鉴权，不用 `@PreAuthorize` 拦接口（对齐 `CLAUDE.md` §5.2） |
+| 8c | **对象存储设计裁剪源 = `object-storage-design.md`** | MinIO 封装落点、上传/预签名/逻辑删除、`sys_file` 形态、配置键与安全红线以该文为准；本文只写 example 取值（桶、白名单、TTL、文件 API），文件管理页交互见 §7.1 |
 | 12b | **横切默认值仅作「形态示范」**（发号段长、限流/幂等 TTL、MIME 白名单、预签名 TTL 等） | 落地可按变更调整；**结构与键名**须与 §3/§5.3 一致；版本号不进本文 |
 | 9 | **配置 local/test** 三份 yml；SQL 落 `deploy/db/migration/example_db/` **人工执行** | §6.10 / §2.2（不引 Flyway/Liquibase） |
 | 10 | **错误码系统号实施时登记** `docs/error-code-ranges.md`，不预占 | 当前登记表为空（2026-09-24） |
@@ -341,7 +382,7 @@ sys_file 1 ──── * example_audit_log（target_type=FILE）
 
 ## 9. 安全约定
 
-- 上传：类型白名单（应用层 + `content_type` 双校验）、单文件 ≤10MB、UUID 文件名、预签名 URL 短 TTL；逻辑删除后对象清理走运维脚本（不建定时，§2.2）
+- 上传：类型白名单（应用层 + `content_type` 双校验）、单文件 ≤10MB、UUID 文件名、预签名 URL 短 TTL；逻辑删除后对象清理走运维脚本（不建定时，§2.2）；**通用策略与红线以 `object-storage-design.md` §7 为准**
 - `permission` 标识（首段 = `example`）与前端按钮同一字符串，仅作**软校验/按钮显隐**；**接口硬拦截只保证网关登录态**（纯网关鉴权，`gateway-design.md` / `CLAUDE.md` §5.2）；分页排序白名单；`#{}` 参数化 SQL
 - 网关 JWT 验签 + `X-User-*` 注入；服务内以注入值为准，不信可伪造客户端头；**禁止**未验签手拆 JWT（`gateway-design.md` §4.2.5）
 - 网关错误体、访问日志脱敏、`local-pass-through`、`public-paths`、`iss`/`aud`、JWKS 缓存均按 `gateway-design.md` 执行
@@ -399,8 +440,10 @@ cd backend/example && mvn -q compile
 |------|------|
 | `CLAUDE.md` | 项目全局契约（本系统无偏差豁免） |
 | `gateway-design.md` | **通用网关设计**（`example-gateway` 唯一裁剪源：路由/JWKS/`X-User-*`/CORS/错误体/清单） |
+| `object-storage-design.md` | **对象存储通用设计**（MinIO 封装、上传/预签名/逻辑删除、元数据表、配置键；文件能力唯一裁剪源） |
 | `rbac-design.md` | RBAC 通用 4 表与模型约定 |
 | `admin-ui-design.md` | 管理端 UI/布局约定（`example-admin` 可参照） |
+| `assets/rbac-admin-proto.html` | 管理端交互原型（含文件管理页；效力低于设计正文） |
 | `user-center-design.md` | 用户中心（账号权威；角色分配"选人"可经其 `user-api`） |
 | `unified-auth-center-design.md` | 认证中心（网关 JWKS 验签指向方） |
 | `docs/template/fixbug/2026-09-25-unify-login-sso-gateway.md` | 网关/SSO 实测缺陷与避坑 |

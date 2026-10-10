@@ -481,6 +481,182 @@
     border-bottom-color: var(--primary);
     font-weight: 500;
   }
+  /* ===== 文件管理页 ===== */
+  .stat-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .stat-card {
+    flex: 1;
+    min-width: 140px;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .stat-card .stat-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+  .stat-card .stat-value {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .stat-card .stat-sub {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+  .file-name-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-width: 220px;
+  }
+  .file-name-cell .name {
+    font-weight: 500;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .file-name-cell .key {
+    font-size: 11px;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tag-mime {
+    background: #e0f2fe;
+    color: #075985;
+  }
+  .tag-mime-pdf { background: #fee2e2; color: #991b1b; }
+  .tag-mime-img { background: #dcfce7; color: #166534; }
+  .dropzone {
+    border: 1.5px dashed var(--border);
+    border-radius: 8px;
+    padding: 28px 16px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    background: #f8fafc;
+    transition: border-color 0.15s, background 0.15s;
+    margin-bottom: 12px;
+  }
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--primary);
+    background: #eff6ff;
+    color: var(--primary);
+  }
+  .dropzone .dz-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-regular);
+    margin-bottom: 6px;
+  }
+  .file-pick {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    font-size: 13px;
+  }
+  .file-pick .meta { flex: 1; min-width: 0; }
+  .file-pick .meta .n {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .file-pick .meta .s { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .progress {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+    margin: 8px 0 4px;
+  }
+  .progress > i {
+    display: block;
+    height: 100%;
+    background: var(--primary);
+    border-radius: 999px;
+    width: 0%;
+    transition: width 0.15s;
+  }
+  .pager {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    flex-wrap: wrap;
+  }
+  .pager .btn { height: 28px; padding: 0 10px; font-size: 12px; }
+  .pager .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    border-color: var(--border);
+    color: var(--text-secondary);
+  }
+  .pager select { height: 28px; font-size: 12px; }
+  .policy-line {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .preview-box {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #f8fafc;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 12px;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .preview-box .glyph {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+  .url-box {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: #0f172a;
+    color: #94a3b8;
+    padding: 10px 12px;
+    border-radius: 6px;
+    word-break: break-all;
+    text-align: left;
+    line-height: 1.6;
+  }
 </style>
 </head>
 <body>
@@ -664,6 +840,57 @@
   </div>
 </div>
 
+<div class="modal-mask" id="uploadModal">
+  <div class="modal">
+    <div class="modal-header"><span>上传文件</span><span class="modal-close" onclick="closeModal('uploadModal')">×</span></div>
+    <div class="modal-body">
+      <div class="dropzone" id="uploadDrop" onclick="document.getElementById('uploadInput').click()">
+        <div class="dz-title">点击选择文件，或拖拽到此处</div>
+        <div>支持 PNG / JPEG / GIF / PDF · 单文件 ≤ 10MB · 仅单文件</div>
+        <input type="file" id="uploadInput" accept=".png,.jpg,.jpeg,.gif,.pdf,image/png,image/jpeg,image/gif,application/pdf" style="display:none" onchange="onFileInput(event)" />
+      </div>
+      <div class="file-pick" id="uploadPick" style="display:none">
+        <div class="meta" id="uploadFileName"></div>
+        <a class="link" onclick="openUploadModal()">重新选择</a>
+      </div>
+      <div id="uploadProgressWrap" style="display:none">
+        <div class="progress"><i id="uploadBar"></i></div>
+        <div class="hint" id="uploadProgressLabel"></div>
+      </div>
+      <div class="policy-line" style="margin-top:0">
+        服务端将二次校验 MIME/大小；对象名 UUID；元数据落 <b>sys_file</b>。上传接口 <code>@RateLimit</code>（默认 10/min/用户），超限返回 HTTP 429 + <code>10003</code>。
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('uploadModal')">取消</button>
+      <button class="btn btn-primary" onclick="confirmUpload()">上传</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="previewModal">
+  <div class="modal">
+    <div class="modal-header"><span id="previewTitle">预览文件</span><span class="modal-close" onclick="closeModal('previewModal')">×</span></div>
+    <div class="modal-body">
+      <div class="preview-box">
+        <div class="glyph">📄</div>
+        <div style="font-weight:600" id="previewName"></div>
+        <div class="muted" style="font-size:12px" id="previewMeta"></div>
+      </div>
+      <div class="hint" id="previewDownloadHint" style="display:none;margin:0 0 8px">下载动作：浏览器打开预签名 URL 或触发保存（模拟）。</div>
+      <div class="url-box" id="previewUrl"></div>
+      <div class="hint" id="previewExpire"></div>
+      <div class="policy-line">
+        预签名 URL 为短时临时凭证，不入库、不写日志全文；过期后由后端重新签发（<code>GET /api/v1/files/{id}/url</code>）。大文件不经网关中转 body。
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('previewModal')">关闭</button>
+      <button class="btn btn-primary" onclick="toast('模拟：在新窗口打开预签名 URL','ok')">打开链接</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-wrap" id="toasts"></div>
 
 <script>
@@ -686,6 +913,7 @@ let menus = [
   { id: 2004, parentId: 1002, type: 2, name: "审计日志", permission: "example:audit:list", path: "/audits", component: "views/audit/AuditList.vue", icon: "", sort: 2, status: 1, hidden: 0, requiresAuth: 1, isFrame: 0, isCache: 1, remark: "" },
   { id: 90009, parentId: 2003, type: 3, name: "上传文件", permission: "example:file:upload", path: "", component: "", icon: "", sort: 1, status: 1, hidden: 0, requiresAuth: 1, isFrame: 0, isCache: 0, remark: "" },
   { id: 90010, parentId: 2003, type: 3, name: "删除文件", permission: "example:file:delete", path: "", component: "", icon: "", sort: 2, status: 1, hidden: 0, requiresAuth: 1, isFrame: 0, isCache: 0, remark: "" },
+  { id: 90011, parentId: 2003, type: 3, name: "预览下载", permission: "example:file:read", path: "", component: "", icon: "", sort: 3, status: 1, hidden: 0, requiresAuth: 1, isFrame: 0, isCache: 0, remark: "" },
 ];
 let roles = [
   { id: 9001, roleCode: "admin", roleName: "管理员", dataScope: 1, menuCheckStrictly: 1, sort: 1, status: 1, remark: "内置全量", menuIds: [], userIds: [] },
@@ -697,6 +925,23 @@ const users = [
   { id: "2026092400000002", name: "ops01", display: "运营专员" },
   { id: "2026092400000003", name: "view01", display: "审计员" },
 ];
+/* 文件元数据 Mock（对齐 sys_file / object-storage-design.md） */
+const FILE_MIME_ALLOW = [
+  { value: "image/png", label: "PNG 图片" },
+  { value: "image/jpeg", label: "JPEG 图片" },
+  { value: "image/gif", label: "GIF 图片" },
+  { value: "application/pdf", label: "PDF 文档" },
+];
+const FILE_MAX_BYTES = 10 * 1024 * 1024;
+let files = [
+  { id: "2026092400000101", bucket: "example", objectKey: "a3f2c1e8-9b01-4c2d-8e44-11aa22bb33cc.png", originalName: "产品封面.png", contentType: "image/png", sizeBytes: 482193, createBy: "2026092400000001", createByName: "超级管理员", createTime: "2026-09-24 10:12:03", deleted: 0 },
+  { id: "2026092400000102", bucket: "example", objectKey: "b71d0aa2-55c4-4e10-9c88-44dd55ee66ff.jpg", originalName: "活动照片.jpg", contentType: "image/jpeg", sizeBytes: 1536000, createBy: "2026092400000002", createByName: "运营专员", createTime: "2026-09-24 11:40:18", deleted: 0 },
+  { id: "2026092400000103", bucket: "example", objectKey: "c9e3bb41-77a2-4d11-ae22-55ff66aa7788.pdf", originalName: "操作手册.pdf", contentType: "application/pdf", sizeBytes: 2048000, createBy: "2026092400000001", createByName: "超级管理员", createTime: "2026-09-24 14:05:44", deleted: 0 },
+  { id: "2026092400000104", bucket: "example", objectKey: "d1a55c90-1234-4abc-9def-6677889900aa.gif", originalName: "加载动效.gif", contentType: "image/gif", sizeBytes: 256000, createBy: "2026092400000003", createByName: "审计员", createTime: "2026-09-24 16:22:01", deleted: 0 },
+];
+let fileQuery = { keyword: "", mime: "", page: 1, size: 10 };
+let pendingUpload = null;
+let fileSeq = 104;
 let editMenuId = null;
 let editRoleId = null;
 let assignRoleId = null;
@@ -778,14 +1023,14 @@ function setPage(page) {
   if (page === "dash") content.innerHTML = renderDash();
   else if (page === "menus") content.innerHTML = renderMenus();
   else if (page === "roles") content.innerHTML = renderRoles();
-  else if (page === "files") content.innerHTML = renderSimplePage("文件管理", "演示上传/列表/预签名/逻辑删除；写操作 @Idempotent，查询 @RateLimit。");
+  else if (page === "files") content.innerHTML = renderFiles();
   else if (page === "audit") content.innerHTML = renderSimplePage("审计日志", "关键写操作审计（菜单/角色/授权/文件）；只读分页查询。");
 }
 function renderDash() {
   return `<div class="page-card"><div class="dash">
     <h2>示例管理端</h2>
-    <p>本原型对齐 <b>rbac-design.md</b> 与 <b>admin-ui-design.md（墨岩）</b>：可操作菜单树 CRUD、类型联动、角色 CRUD、菜单授权树（全量覆盖）、用户-角色分配。</p>
-    <p class="muted">侧栏进入「菜单管理」「角色管理」体验完整交互；业务逻辑含叶子删除校验、权限标识唯一、admin 保护、id 分段分配。</p>
+    <p>本原型对齐 <b>rbac-design.md</b>、<b>admin-ui-design.md（墨岩）</b> 与 <b>object-storage-design.md</b>：可操作菜单树 CRUD、角色授权，并体验<b>文件管理</b>（上传校验 / 列表筛选 / 预签名预览 / 逻辑删除）。</p>
+    <p class="muted">侧栏进入各页体验完整交互；文件策略与后端 example.minio.* 对齐，演示单文件生命周期，不含批量上传。</p>
   </div></div>`;
 }
 function renderSimplePage(title, desc) {
@@ -902,6 +1147,206 @@ function filterRoles() {
       </td>
     </tr>`;
   }).join("") || `<tr><td colspan="6" class="empty">无匹配角色</td></tr>`;
+}
+
+/* ===== 文件管理页（对齐 example-system-design.md §7.1 / object-storage-design.md） ===== */
+function formatBytes(n) {
+  if (n < 1024) return n + " B";
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+  return (n / 1024 / 1024).toFixed(2) + " MB";
+}
+function mimeTag(ct) {
+  const cls = ct.includes("pdf") ? "tag-mime-pdf" : "tag-mime-img";
+  const short = ({ "image/png": "PNG", "image/jpeg": "JPEG", "image/gif": "GIF", "application/pdf": "PDF" })[ct] || ct;
+  return `<span class="tag ${cls} tag-mime">${short}</span>`;
+}
+function filterFiles() {
+  return files.filter(f => {
+    if (f.deleted) return false;
+    if (fileQuery.keyword && !f.originalName.toLowerCase().includes(fileQuery.keyword.toLowerCase())) return false;
+    if (fileQuery.mime && f.contentType !== fileQuery.mime) return false;
+    return true;
+  });
+}
+function renderFiles() {
+  const all = filterFiles();
+  const total = all.length;
+  const pages = Math.max(1, Math.ceil(total / fileQuery.size));
+  if (fileQuery.page > pages) fileQuery.page = pages;
+  const start = (fileQuery.page - 1) * fileQuery.size;
+  const pageItems = all.slice(start, start + fileQuery.size);
+  const totalBytes = files.filter(f => !f.deleted).reduce((s, f) => s + f.sizeBytes, 0);
+  const imgCount = files.filter(f => !f.deleted && f.contentType.startsWith("image/")).length;
+  const pdfCount = files.filter(f => !f.deleted && f.contentType === "application/pdf").length;
+
+  const rows = pageItems.map(f => `<tr>
+    <td>
+      <div class="file-name-cell" title="${f.objectKey}">
+        <div class="name">${f.originalName}</div>
+        <div class="key">${f.objectKey.slice(0, 18)}…</div>
+      </div>
+    </td>
+    <td>${mimeTag(f.contentType)}</td>
+    <td>${formatBytes(f.sizeBytes)}</td>
+    <td class="muted">${f.createByName || f.createBy}</td>
+    <td class="muted">${f.createTime}</td>
+    <td>
+      <a class="link" onclick="openFilePreview('${f.id}')">预览</a>
+      <a class="link" onclick="openFilePreview('${f.id}', true)">下载</a>
+      <a class="link danger" onclick="deleteFile('${f.id}')">删除</a>
+    </td>
+  </tr>`).join("");
+
+  const mimeOpts = [`<option value="">全部类型</option>`]
+    .concat(FILE_MIME_ALLOW.map(m => `<option value="${m.value}" ${fileQuery.mime === m.value ? "selected" : ""}>${m.label}</option>`))
+    .join("");
+
+  return `<div class="page-card">
+    <h1 class="page-title">文件管理</h1>
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-label">有效文件</div><div class="stat-value">${files.filter(f => !f.deleted).length}</div><div class="stat-sub">逻辑删除不计入</div></div>
+      <div class="stat-card"><div class="stat-label">图片</div><div class="stat-value">${imgCount}</div><div class="stat-sub">png / jpeg / gif</div></div>
+      <div class="stat-card"><div class="stat-label">PDF</div><div class="stat-value">${pdfCount}</div><div class="stat-sub">application/pdf</div></div>
+      <div class="stat-card"><div class="stat-label">占用（元数据）</div><div class="stat-value">${formatBytes(totalBytes)}</div><div class="stat-sub">桶 example · 单文件 ≤10MB</div></div>
+    </div>
+    <div class="toolbar">
+      <button class="btn btn-primary" onclick="openUploadModal()">上传</button>
+      <input class="filter-input" id="fileKeyword" placeholder="原始文件名关键字" value="${fileQuery.keyword}" />
+      <select id="fileMime" style="width:140px">${mimeOpts}</select>
+      <button class="btn" onclick="applyFileFilter()">查询</button>
+      <button class="btn" onclick="resetFileFilter()">重置</button>
+      <span class="hint" style="margin:0">预签名短 TTL 直连 MinIO，不经网关中转 body</span>
+    </div>
+    <table>
+      <thead><tr>
+        <th style="width:26%">文件名 / 对象键</th><th>类型</th><th>大小</th><th>上传人</th><th>上传时间</th><th style="width:180px">操作</th>
+      </tr></thead>
+      <tbody>${rows || `<tr><td colspan="6" class="empty">暂无文件</td></tr>`}</tbody>
+    </table>
+    <div class="pager">
+      <span>共 ${total} 条</span>
+      <select onchange="changeFilePageSize(this.value)">
+        <option value="10" ${fileQuery.size === 10 ? "selected" : ""}>10 条/页</option>
+        <option value="20" ${fileQuery.size === 20 ? "selected" : ""}>20 条/页</option>
+      </select>
+      <button class="btn" ${fileQuery.page <= 1 ? "disabled" : ""} onclick="changeFilePage(${fileQuery.page - 1})">上一页</button>
+      <span>${fileQuery.page} / ${pages}</span>
+      <button class="btn" ${fileQuery.page >= pages ? "disabled" : ""} onclick="changeFilePage(${fileQuery.page + 1})">下一页</button>
+    </div>
+    <div class="policy-line">
+      策略示意（与后端 <code>example.minio.*</code> 对齐）：MIME 白名单 = png/jpeg/gif/pdf；单文件 ≤ 10MB；对象名 UUID；删除为逻辑删除（<code>deleted=1</code>），MinIO 对象由运维脚本清理（不建定时任务）；上传/列表/预签名 <code>@RateLimit</code>，删除 <code>@Idempotent</code> + 审计。详见 <b>object-storage-design.md</b>。
+    </div>
+  </div>`;
+}
+function applyFileFilter() {
+  fileQuery.keyword = (document.getElementById("fileKeyword")?.value || "").trim();
+  fileQuery.mime = document.getElementById("fileMime")?.value || "";
+  fileQuery.page = 1;
+  setPage("files");
+}
+function resetFileFilter() {
+  fileQuery = { keyword: "", mime: "", page: 1, size: fileQuery.size };
+  setPage("files");
+}
+function changeFilePage(p) {
+  fileQuery.page = Math.max(1, p);
+  setPage("files");
+}
+function changeFilePageSize(sz) {
+  fileQuery.size = Number(sz) || 10;
+  fileQuery.page = 1;
+  setPage("files");
+}
+
+function openUploadModal() {
+  pendingUpload = null;
+  document.getElementById("uploadPick").style.display = "none";
+  document.getElementById("uploadDrop").style.display = "";
+  document.getElementById("uploadProgressWrap").style.display = "none";
+  document.getElementById("uploadFileName").textContent = "";
+  openModal("uploadModal");
+}
+function onFileInput(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  const okType = FILE_MIME_ALLOW.some(m => m.value === file.type);
+  if (!okType) {
+    toast("类型不在白名单（png/jpeg/gif/pdf）", "err");
+    ev.target.value = "";
+    return;
+  }
+  if (file.size > FILE_MAX_BYTES) {
+    toast("超过单文件上限 10MB", "err");
+    ev.target.value = "";
+    return;
+  }
+  pendingUpload = { name: file.name, size: file.size, type: file.type };
+  document.getElementById("uploadDrop").style.display = "none";
+  document.getElementById("uploadPick").style.display = "";
+  document.getElementById("uploadFileName").innerHTML =
+    `<div class="n">${file.name}</div><div class="s">${formatBytes(file.size)} · ${file.type}</div>`;
+}
+function confirmUpload() {
+  if (!pendingUpload) return toast("请先选择文件", "err");
+  const wrap = document.getElementById("uploadProgressWrap");
+  const bar = document.getElementById("uploadBar");
+  const label = document.getElementById("uploadProgressLabel");
+  wrap.style.display = "";
+  let p = 0;
+  label.textContent = "上传中…（模拟 POST /api/v1/files · @RateLimit）";
+  const timer = setInterval(() => {
+    p += 20;
+    bar.style.width = Math.min(100, p) + "%";
+    if (p >= 100) {
+      clearInterval(timer);
+      fileSeq += 1;
+      const id = "2026092400000" + fileSeq;
+      const uuid = crypto.randomUUID ? crypto.randomUUID() : "mock-" + Date.now();
+      files.unshift({
+        id,
+        bucket: "example",
+        objectKey: uuid + (pendingUpload.name.match(/\.[a-z0-9]+$/i)?.[0] || ""),
+        originalName: pendingUpload.name,
+        contentType: pendingUpload.type,
+        sizeBytes: pendingUpload.size,
+        createBy: "2026092400000001",
+        createByName: "超级管理员",
+        createTime: new Date().toLocaleString("zh-CN", { hour12: false }).replace(/\//g, "-"),
+        deleted: 0,
+      });
+      closeModal("uploadModal");
+      toast("上传成功（已写 sys_file，对象名 UUID）", "ok");
+      fileQuery.page = 1;
+      setPage("files");
+    }
+  }, 120);
+}
+
+function openFilePreview(id, asDownload) {
+  const f = files.find(x => x.id === id && !x.deleted);
+  if (!f) return toast("文件不存在", "err");
+  // 模拟 GET /api/v1/files/{id}/url → { url, expireAt }
+  const expireAt = new Date(Date.now() + 10 * 60 * 1000);
+  const fakeUrl = `https://minio.local/example/${f.objectKey}?X-Amz-Expires=600&X-Amz-Signature=…`;
+  document.getElementById("previewTitle").textContent = asDownload ? "下载文件" : "预览文件";
+  document.getElementById("previewName").textContent = f.originalName;
+  document.getElementById("previewMeta").innerHTML =
+    `${mimeTag(f.contentType)} · ${formatBytes(f.sizeBytes)} · 上传 ${f.createTime}`;
+  document.getElementById("previewUrl").textContent = fakeUrl;
+  document.getElementById("previewExpire").textContent =
+    "预签名有效期至 " + expireAt.toLocaleString("zh-CN", { hour12: false }) + "（TTL 10min · 短时凭证）";
+  document.getElementById("previewDownloadHint").style.display = asDownload ? "" : "none";
+  openModal("previewModal");
+  toast(asDownload ? "已签发预签名下载 URL（模拟）" : "已签发预签名预览 URL（模拟）", "ok");
+}
+
+function deleteFile(id) {
+  const f = files.find(x => x.id === id);
+  if (!f) return;
+  if (!confirm(`确认删除「${f.originalName}」？\n\n这是逻辑删除（deleted=1）：列表不再展示，MinIO 对象延后由运维脚本清理。\n重复提交将返回首次 Result（@Idempotent）。`)) return;
+  f.deleted = 1;
+  toast("已逻辑删除，并记入审计（FILE_DELETE）", "ok");
+  setPage("files");
 }
 
 /* ===== 菜单表单 ===== */
@@ -1233,6 +1678,22 @@ function removeUserFromRole(id) {
 document.querySelectorAll("#nav .nav-item[data-page]").forEach(el => {
   el.addEventListener("click", () => setPage(el.dataset.page));
 });
+/* 文件上传拖拽 */
+(function bindUploadDnd() {
+  const dz = document.getElementById("uploadDrop");
+  const input = document.getElementById("uploadInput");
+  if (!dz || !input) return;
+  dz.addEventListener("dragover", (e) => { e.preventDefault(); dz.classList.add("dragover"); });
+  dz.addEventListener("dragleave", () => dz.classList.remove("dragover"));
+  dz.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dz.classList.remove("dragover");
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      input.files = e.dataTransfer.files;
+      onFileInput({ target: input });
+    }
+  });
+})();
 setPage("dash");
 </script>
 </body>
