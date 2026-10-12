@@ -8,6 +8,7 @@ spring:
       host: 192.168.99.100
       port: 6379
       database: 3
+      password: 123456
   cloud:
     nacos:
       discovery:
@@ -15,10 +16,14 @@ spring:
         username: nacos
         password: nacos
         namespace: local
-        group: BLOG
+        group: BLOG_CENTER
 blog:
   minio:
     endpoint: http://192.168.99.100:9000
-    access-key: minio-test
-    secret-key: minio-test-secret
+    access-key: minio_admin
+    secret-key: 123456
     bucket: blog
+user:
+  feign:
+    user-center:
+      base-url: http://127.0.0.1:18173

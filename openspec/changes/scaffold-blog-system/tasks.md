@@ -19,7 +19,8 @@
 
 - [x] 3.1 编写建表 SQL 落 `deploy/db/migration/blog_db/`：`sys_sequence` / `sys_file` / `blog_audit_log`（字段对齐 `docs/template/example-system-design.md` §6.2，表名按 blog 映射；审计 5 字段、16 位发号主键、`uk_/idx_` 命名、单表索引 ≤5；`sys_file` 删除语义=`deleted`）
 - [x] 3.2 同目录落 RBAC 4 表 SQL（`sys_menu` / `sys_role` / `sys_user_role` / `sys_role_menu`，按 `rbac-design.md` §2，无 `system_code`）
-- [ ] 3.3 测试环境建库 `blog_db`（utf8mb4）并**人工执行** SQL；生产执行前按 `CLAUDE.md` §7 征询（仅登记执行记录，不自动执行生产）
+- [x] 3.3 编写 RBAC 基线种子 `deploy/db/seed/2026-10-10-blog-db-rbac-framework.sql`（L2 自举骨架 + L4 文件/审计域 + L3 `admin` + L5 绑定；短号 `rbac-design.md` §2.0；`component` 对齐 `blog-admin` `componentByPath`；`INSERT IGNORE` 幂等；冒烟 `user_id=2026092400000001`）
+- [ ] 3.4 测试环境建库 `blog_db`（utf8mb4）并**人工执行** migration + seed；生产执行前按 `CLAUDE.md` §7 征询（仅登记执行记录，不自动执行生产）
 
 ## 4. 错误码与对内契约（blog-internal-api）
 

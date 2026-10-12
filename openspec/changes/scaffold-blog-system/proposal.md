@@ -8,6 +8,7 @@
 
 - 新增独立系统 `backend/blog/`（Maven 多模块：`blog-common` / `blog-framework` / `blog-api` / `blog-service` / `blog-gateway`）与 `frontend/blog-admin/`（Vue3 管理端），系统名与包名前缀为 `blog`（`com.qjj.blog.*`）
 - 新建独立库 `blog_db`（7 张表：`sys_sequence` + RBAC 4 + `blog_audit_log` + `sys_file`），建表 SQL 随本变更提供、**人工执行**（`CLAUDE.md` §2.2）
+- 交付 **RBAC 基线种子**（`rbac-design.md` §5）：L2 自举骨架（菜单/角色管理）+ L4 文件/审计域节点 + L3 `admin` + L5 绑定，落 `deploy/db/seed/`，短号 §2.0、`INSERT IGNORE` 幂等
 - 交付 **RBAC 全套**（`rbac-design.md` §2 同构 4 表）：菜单树 CRUD、角色管理、用户-角色分配、`/me/menus` 动态路由、`/me/permissions` 权限集（软校验/按钮显隐，纯网关登录态）
 - 交付 **文件管理**（MinIO，裁剪源 `object-storage-design.md`）：单文件上传、列表/元数据、预签名 URL、逻辑删除；管理端交互对齐 `example-system-design.md` §7.1 与 `assets/rbac-admin-proto.html`
 - 交付 **操作审计**：`blog_audit_log`（通用 `target_type`/`target_id` 形态，覆盖 MENU/ROLE/FILE）

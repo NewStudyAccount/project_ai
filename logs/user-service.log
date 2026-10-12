@@ -1,42 +1,243 @@
-2026-10-08 00:02:49.988 INFO  [] [] c.a.n.common.executor.ThreadPoolManager - [ThreadPoolManager] Start destroying ThreadPool
-2026-10-08 00:02:49.988 INFO  [] [] c.a.n.common.http.HttpClientBeanHolder - [HttpClientBeanHolder] Start destroying common HttpClient
-2026-10-08 00:02:50.012 INFO  [] [] c.a.c.n.registry.NacosServiceRegistry - De-registering from Nacos Server now...
-2026-10-08 00:02:49.988 INFO  [] [] c.a.nacos.common.notify.NotifyCenter - [NotifyCenter] Start destroying Publisher
-2026-10-08 00:02:50.019 INFO  [] [] c.a.nacos.common.notify.NotifyCenter - [NotifyCenter] Completed destruction of Publisher
-2026-10-08 00:02:50.023 INFO  [] [] c.a.n.common.executor.ThreadPoolManager - [ThreadPoolManager] Completed destruction of ThreadPool
-2026-10-08 00:02:50.023 INFO  [] [] c.a.n.common.http.HttpClientBeanHolder - [HttpClientBeanHolder] Completed destruction of HttpClient
-2026-10-08 00:02:50.043 INFO  [] [] c.a.c.n.registry.NacosServiceRegistry - De-registration finished.
-2026-10-08 00:02:50.020 ERROR [] [] c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
+2026-10-12 09:39:17.060 INFO  [] [] com.qjj.user.service.UserApplication - Starting UserApplication using Java 21.0.7 with PID 10456 (D:\myProject\project_ai\backend\user\user-service\target\classes started by AI in D:\myProject\project_ai)
+2026-10-12 09:39:17.066 INFO  [] [] com.qjj.user.service.UserApplication - The following 1 profile is active: "local"
+2026-10-12 09:39:18.809 INFO  [] [] o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2026-10-12 09:39:18.813 INFO  [] [] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-10-12 09:39:18.844 INFO  [] [] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 13 ms. Found 0 Redis repository interfaces.
+2026-10-12 09:39:19.036 INFO  [] [] o.s.cloud.context.scope.GenericScope - BeanFactory id=c13f54f9-3187-3b32-810d-77bb492d0fc2
+2026-10-12 09:39:19.729 INFO  [] [] o.s.b.w.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 18173 (http)
+2026-10-12 09:39:19.752 INFO  [] [] o.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-10-12 09:39:19.752 INFO  [] [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.55]
+2026-10-12 09:39:19.805 INFO  [] [] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-10-12 09:39:19.805 INFO  [] [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2667 ms
+2026-10-12 09:39:20.538 INFO  [] [] org.redisson.Version - Redisson 3.52.0
+2026-10-12 09:39:26.495 WARN  [] [] o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'idempotentAspect' defined in file [D:\myProject\project_ai\backend\user\user-framework\target\classes\com\qjj\user\framework\idempotent\IdempotentAspect.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'stringRedisTemplate' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Unsatisfied dependency expressed through method 'stringRedisTemplate' parameter 0: Error creating bean with name 'redissonConnectionFactory' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Unsatisfied dependency expressed through method 'redissonConnectionFactory' parameter 0: Error creating bean with name 'redisson' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Failed to instantiate [org.redisson.api.RedissonClient]: Factory method 'redisson' threw exception with message: java.util.concurrent.ExecutionException: org.redisson.client.RedisConnectionException: Unable to connect to Redis server: 192.168.99.100/192.168.99.100:6379
+2026-10-12 09:39:26.498 INFO  [] [] o.apache.catalina.core.StandardService - Stopping service [Tomcat]
+2026-10-12 09:39:26.516 INFO  [] [] o.s.b.a.l.ConditionEvaluationReportLogger - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-10-12 09:39:26.530 ERROR [] [] o.springframework.boot.SpringApplication - Application run failed
+org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'idempotentAspect' defined in file [D:\myProject\project_ai\backend\user\user-framework\target\classes\com\qjj\user\framework\idempotent\IdempotentAspect.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'stringRedisTemplate' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Unsatisfied dependency expressed through method 'stringRedisTemplate' parameter 0: Error creating bean with name 'redissonConnectionFactory' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Unsatisfied dependency expressed through method 'redissonConnectionFactory' parameter 0: Error creating bean with name 'redisson' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Failed to instantiate [org.redisson.api.RedissonClient]: Factory method 'redisson' threw exception with message: java.util.concurrent.ExecutionException: org.redisson.client.RedisConnectionException: Unable to connect to Redis server: 192.168.99.100/192.168.99.100:6379
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:804)
+	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:240)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1393)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1230)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:569)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.instantiateSingleton(DefaultListableBeanFactory.java:1235)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingleton(DefaultListableBeanFactory.java:1201)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:1130)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:991)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:628)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:752)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:318)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1361)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1350)
+	at com.qjj.user.service.UserApplication.main(UserApplication.java:19)
+Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'stringRedisTemplate' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Unsatisfied dependency expressed through method 'stringRedisTemplate' parameter 0: Error creating bean with name 'redissonConnectionFactory' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Unsatisfied dependency expressed through method 'redissonConnectionFactory' parameter 0: Error creating bean with name 'redisson' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Failed to instantiate [org.redisson.api.RedissonClient]: Factory method 'redisson' threw exception with message: java.util.concurrent.ExecutionException: org.redisson.client.RedisConnectionException: Unable to connect to Redis server: 192.168.99.100/192.168.99.100:6379
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:804)
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:546)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1373)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1203)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:569)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1715)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1660)
+	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:913)
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:791)
+	... 21 common frames omitted
+Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'redissonConnectionFactory' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Unsatisfied dependency expressed through method 'redissonConnectionFactory' parameter 0: Error creating bean with name 'redisson' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Failed to instantiate [org.redisson.api.RedissonClient]: Factory method 'redisson' threw exception with message: java.util.concurrent.ExecutionException: org.redisson.client.RedisConnectionException: Unable to connect to Redis server: 192.168.99.100/192.168.99.100:6379
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:804)
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:546)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1373)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1203)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:569)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202)
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:254)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1777)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1660)
+	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:913)
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:791)
+	... 34 common frames omitted
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'redisson' defined in class path resource [org/redisson/spring/starter/RedissonAutoConfigurationV2.class]: Failed to instantiate [org.redisson.api.RedissonClient]: Factory method 'redisson' threw exception with message: java.util.concurrent.ExecutionException: org.redisson.client.RedisConnectionException: Unable to connect to Redis server: 192.168.99.100/192.168.99.100:6379
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:657)
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:489)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1373)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1203)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:569)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202)
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:254)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1777)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1660)
+	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:913)
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:791)
+	... 48 common frames omitted
+Caused by: org.springframework.beans.BeanInstantiationException: Failed to instantiate [org.redisson.api.RedissonClient]: Factory method 'redisson' threw exception with message: java.util.concurrent.ExecutionException: org.redisson.client.RedisConnectionException: Unable to connect to Redis server: 192.168.99.100/192.168.99.100:6379
+	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.lambda$instantiate$0(SimpleInstantiationStrategy.java:200)
+	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiateWithFactoryMethod(SimpleInstantiationStrategy.java:89)
+	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:169)
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:653)
+	... 62 common frames omitted
+Caused by: org.redisson.client.RedisConnectionException: java.util.concurrent.ExecutionException: org.redisson.client.RedisConnectionException: Unable to connect to Redis server: 192.168.99.100/192.168.99.100:6379
+	at org.redisson.connection.MasterSlaveConnectionManager.doConnect(MasterSlaveConnectionManager.java:229)
+	at org.redisson.connection.MasterSlaveConnectionManager.connect(MasterSlaveConnectionManager.java:188)
+	at org.redisson.connection.ConnectionManager.create(ConnectionManager.java:98)
+	at org.redisson.Redisson.<init>(Redisson.java:76)
+	at org.redisson.Redisson.create(Redisson.java:119)
+	at org.redisson.spring.starter.RedissonAutoConfiguration.redisson(RedissonAutoConfiguration.java:329)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.lambda$instantiate$0(SimpleInstantiationStrategy.java:172)
+	... 65 common frames omitted
+Caused by: java.util.concurrent.ExecutionException: org.redisson.client.RedisConnectionException: Unable to connect to Redis server: 192.168.99.100/192.168.99.100:6379
+	at java.base/java.util.concurrent.CompletableFuture.reportGet(CompletableFuture.java:396)
+	at java.base/java.util.concurrent.CompletableFuture.get(CompletableFuture.java:2096)
+	at org.redisson.connection.MasterSlaveConnectionManager.doConnect(MasterSlaveConnectionManager.java:224)
+	... 73 common frames omitted
+Caused by: org.redisson.client.RedisConnectionException: Unable to connect to Redis server: 192.168.99.100/192.168.99.100:6379
+	at org.redisson.connection.ConnectionsHolder.lambda$createConnection$2(ConnectionsHolder.java:169)
+	at java.base/java.util.concurrent.CompletableFuture.uniHandle(CompletableFuture.java:934)
+	at java.base/java.util.concurrent.CompletableFuture$UniHandle.tryFire(CompletableFuture.java:911)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2194)
+	at org.redisson.connection.ConnectionsHolder.lambda$createConnection$5(ConnectionsHolder.java:183)
+	at java.base/java.util.concurrent.CompletableFuture.uniWhenComplete(CompletableFuture.java:863)
+	at java.base/java.util.concurrent.CompletableFuture$UniWhenComplete.tryFire(CompletableFuture.java:841)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2194)
+	at org.redisson.client.RedisClient$2$1.run(RedisClient.java:316)
+	at io.netty.util.concurrent.AbstractEventExecutor.runTask$$$capture(AbstractEventExecutor.java:173)
+	at io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java)
+	at io.netty.util.concurrent.AbstractEventExecutor.safeExecute$$$capture(AbstractEventExecutor.java:166)
+	at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java)
+	at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:472)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.util.concurrent.CompletionException: org.redisson.client.RedisAuthRequiredException: NOAUTH Authentication required.. channel: [id: 0x67d6b52f, L:/192.168.99.1:7313 - R:192.168.99.100/192.168.99.100:6379] data: CommandData [command=(SELECT), params: [2], promise: java.util.concurrent.CompletableFuture@60e72a89[Not completed, 2 dependents], codec=null]
+	at java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:332)
+	at java.base/java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:347)
+	at java.base/java.util.concurrent.CompletableFuture$BiRelay.tryFire(CompletableFuture.java:1498)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:510)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2194)
+	at org.redisson.client.protocol.CommandData.tryFailure(CommandData.java:87)
+	at org.redisson.client.handler.CommandDecoder.decode(CommandDecoder.java:405)
+	at org.redisson.client.handler.CommandDecoder.decodeCommand(CommandDecoder.java:220)
+	at org.redisson.client.handler.CommandDecoder.decode(CommandDecoder.java:148)
+	at org.redisson.client.handler.CommandDecoder.decode(CommandDecoder.java:124)
+	at io.netty.handler.codec.ByteToMessageDecoder.decodeRemovalReentryProtection(ByteToMessageDecoder.java:545)
+	at io.netty.handler.codec.ReplayingDecoder.callDecode(ReplayingDecoder.java:366)
+	at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:296)
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:444)
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412)
+	at io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1357)
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:440)
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420)
+	at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:868)
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:171)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:796)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:732)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:658)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)
+	... 4 common frames omitted
+Caused by: org.redisson.client.RedisAuthRequiredException: NOAUTH Authentication required.. channel: [id: 0x67d6b52f, L:/192.168.99.1:7313 - R:192.168.99.100/192.168.99.100:6379] data: CommandData [command=(SELECT), params: [2], promise: java.util.concurrent.CompletableFuture@60e72a89[Not completed, 2 dependents], codec=null]
+	... 23 common frames omitted
+2026-10-12 09:40:43.715 INFO  [] [] com.qjj.user.service.UserApplication - Starting UserApplication using Java 21.0.7 with PID 15212 (D:\myProject\project_ai\backend\user\user-service\target\classes started by AI in D:\myProject\project_ai)
+2026-10-12 09:40:43.718 INFO  [] [] com.qjj.user.service.UserApplication - The following 1 profile is active: "local"
+2026-10-12 09:40:45.202 INFO  [] [] o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2026-10-12 09:40:45.205 INFO  [] [] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-10-12 09:40:45.241 INFO  [] [] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 19 ms. Found 0 Redis repository interfaces.
+2026-10-12 09:40:45.495 INFO  [] [] o.s.cloud.context.scope.GenericScope - BeanFactory id=c13f54f9-3187-3b32-810d-77bb492d0fc2
+2026-10-12 09:40:46.302 INFO  [] [] o.s.b.w.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 18173 (http)
+2026-10-12 09:40:46.324 INFO  [] [] o.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-10-12 09:40:46.324 INFO  [] [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.55]
+2026-10-12 09:40:46.391 INFO  [] [] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-10-12 09:40:46.391 INFO  [] [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2608 ms
+2026-10-12 09:40:47.866 INFO  [] [] org.redisson.Version - Redisson 3.52.0
+2026-10-12 09:40:48.447 INFO  [] [] o.redisson.connection.ConnectionsHolder - 1 connections initialized for 192.168.99.100/192.168.99.100:6379
+2026-10-12 09:40:48.728 INFO  [] [] o.redisson.connection.ConnectionsHolder - 24 connections initialized for 192.168.99.100/192.168.99.100:6379
+2026-10-12 09:40:49.849 INFO  [] [] c.b.m.s.MybatisPlusApplicationContextAware - Register ApplicationContext instances org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@1e9804b9
+2026-10-12 09:40:50.879 INFO  [] [] o.s.b.a.e.web.EndpointLinksResolver - Exposing 3 endpoints beneath base path '/actuator'
+2026-10-12 09:40:51.064 INFO  [] [] o.s.b.w.embedded.tomcat.TomcatWebServer - Tomcat started on port 18173 (http) with context path '/'
+2026-10-12 09:40:51.089 INFO  [] [] c.a.n.c.a.ram.identify.CredentialWatcher - null No credential found
+2026-10-12 09:40:51.093 INFO  [] [] c.a.nacos.client.logging.NacosLogging - Nacos Logging Adapter Builder: com.alibaba.nacos.logger.adapter.logback14.LogbackNacosLoggingAdapterBuilder
+2026-10-12 09:40:51.095 INFO  [] [] c.a.nacos.client.logging.NacosLogging - Nacos Logging Adapter: com.alibaba.nacos.logger.adapter.logback14.LogbackNacosLoggingAdapter match ch.qos.logback.classic.Logger success.
+2026-10-12 09:40:51.096 INFO  [] [] c.a.nacos.client.logging.NacosLogging - Nacos Logging Adapter Builder: com.alibaba.nacos.logger.adapter.log4j2.Log4j2NacosLoggingAdapterBuilder
+2026-10-12 09:40:51.225 INFO  [] [] c.a.n.p.a.s.c.ClientAuthPluginManager - [ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.
+2026-10-12 09:40:51.227 INFO  [] [] c.a.n.p.a.s.c.ClientAuthPluginManager - [ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.
+2026-10-12 09:40:53.760 INFO  [] [] c.a.n.c.a.AbstractAbilityControlManager - Ready to get current node abilities...
+2026-10-12 09:40:53.771 INFO  [] [] c.a.n.c.a.AbstractAbilityControlManager - Ready to initialize current node abilities, support modes: [SDK_CLIENT]
+2026-10-12 09:40:53.773 INFO  [] [] c.a.n.c.a.AbstractAbilityControlManager - Initialize current abilities finish...
+2026-10-12 09:40:53.775 INFO  [] [] c.a.n.c.a.d.NacosAbilityManagerHolder - [AbilityControlManager] Successfully initialize AbilityControlManager
+2026-10-12 09:40:54.075 INFO  [] [] c.a.c.n.registry.NacosServiceRegistry - nacos registry, USER_CENTER user-service 192.168.99.1:18173 register finished
+2026-10-12 09:40:54.149 INFO  [] [] com.qjj.user.service.UserApplication - Started UserApplication in 11.37 seconds (process running for 12.71)
+2026-10-12 09:40:54.174 WARN  [] [] o.s.core.events.SpringDocAppInitializer - SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-10-12 09:40:54.175 WARN  [] [] o.s.core.events.SpringDocAppInitializer - SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-10-12 09:40:55.050 INFO  [] [] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-12 09:40:55.050 INFO  [] [] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-10-12 09:40:55.055 INFO  [] [] o.s.web.servlet.DispatcherServlet - Completed initialization in 4 ms
+2026-10-12 09:40:55.056 INFO  [] [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-10-12 09:40:56.195 INFO  [] [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@2aa952a
+2026-10-12 09:40:56.202 INFO  [] [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-10-12 10:13:49.203 INFO  [] [] c.a.n.common.http.HttpClientBeanHolder - [HttpClientBeanHolder] Start destroying common HttpClient
+2026-10-12 10:13:49.203 INFO  [] [] c.a.nacos.common.notify.NotifyCenter - [NotifyCenter] Start destroying Publisher
+2026-10-12 10:13:49.203 INFO  [] [] c.a.n.common.executor.ThreadPoolManager - [ThreadPoolManager] Start destroying ThreadPool
+2026-10-12 10:13:49.203 INFO  [] [] c.a.nacos.common.notify.NotifyCenter - [NotifyCenter] Completed destruction of Publisher
+2026-10-12 10:13:49.203 INFO  [] [] c.a.n.common.executor.ThreadPoolManager - [ThreadPoolManager] Completed destruction of ThreadPool
+2026-10-12 10:13:49.203 INFO  [] [] c.a.n.common.http.HttpClientBeanHolder - [HttpClientBeanHolder] Completed destruction of HttpClient
+2026-10-12 10:13:49.205 INFO  [] [] c.a.c.n.registry.NacosServiceRegistry - De-registering from Nacos Server now...
+2026-10-12 10:13:49.203 ERROR [] [] c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
 java.lang.InterruptedException
 	at java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1727)
 	at java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
 	at com.alibaba.nacos.common.notify.DefaultPublisher.openEventHandler(DefaultPublisher.java:111)
 	at com.alibaba.nacos.common.notify.DefaultPublisher.run(DefaultPublisher.java:95)
-2026-10-08 00:02:50.022 ERROR [] [] c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
+2026-10-12 10:13:49.203 ERROR [] [] c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
 java.lang.InterruptedException
 	at java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1727)
 	at java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
 	at com.alibaba.nacos.common.notify.DefaultPublisher.openEventHandler(DefaultPublisher.java:111)
 	at com.alibaba.nacos.common.notify.DefaultPublisher.run(DefaultPublisher.java:95)
-2026-10-08 00:02:50.023 ERROR [] [] c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
+2026-10-12 10:13:49.203 ERROR [] [] c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
 java.lang.InterruptedException
 	at java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1727)
 	at java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
 	at com.alibaba.nacos.common.notify.DefaultPublisher.openEventHandler(DefaultPublisher.java:111)
 	at com.alibaba.nacos.common.notify.DefaultPublisher.run(DefaultPublisher.java:95)
-2026-10-08 00:02:50.019 ERROR [] [] c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
+2026-10-12 10:13:49.203 ERROR [] [] c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
 java.lang.InterruptedException
 	at java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1727)
 	at java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
 	at com.alibaba.nacos.common.notify.DefaultPublisher.openEventHandler(DefaultPublisher.java:111)
 	at com.alibaba.nacos.common.notify.DefaultPublisher.run(DefaultPublisher.java:95)
-2026-10-08 00:02:50.023 ERROR [] [] c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
+2026-10-12 10:13:49.203 ERROR [] [] c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
 java.lang.InterruptedException
 	at java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1727)
 	at java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
 	at com.alibaba.nacos.common.notify.DefaultPublisher.openEventHandler(DefaultPublisher.java:111)
 	at com.alibaba.nacos.common.notify.DefaultPublisher.run(DefaultPublisher.java:95)
-2026-10-08 00:02:50.059 ERROR [] [] c.a.c.n.r.NacosGracefulShutdownDelegate - Error occurred while performing Nacos client graceful shutdown
+2026-10-12 10:13:49.229 INFO  [] [] c.a.c.n.registry.NacosServiceRegistry - De-registration finished.
+2026-10-12 10:13:49.232 ERROR [] [] c.a.c.n.r.NacosGracefulShutdownDelegate - Error occurred while performing Nacos client graceful shutdown
 java.lang.NullPointerException: Cannot read field "sharePublisher" because "com.alibaba.nacos.common.notify.NotifyCenter.INSTANCE" is null
 	at com.alibaba.nacos.common.notify.NotifyCenter.deregisterSubscriber(NotifyCenter.java:242)
 	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.shutdown(NamingGrpcClientProxy.java:537)
@@ -60,8 +261,112 @@ java.lang.NullPointerException: Cannot read field "sharePublisher" because "com.
 	at java.base/java.lang.Iterable.forEach(Iterable.java:75)
 	at org.springframework.boot.SpringApplicationShutdownHook.run(SpringApplicationShutdownHook.java:116)
 	at java.base/java.lang.Thread.run(Thread.java:1583)
-2026-10-08 00:02:50.092 INFO  [] [] o.s.b.w.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
-2026-10-08 00:02:50.118 INFO  [] [] o.s.b.w.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
-2026-10-08 00:02:50.183 WARN  [] [] o.s.b.f.support.DisposableBeanAdapter - Custom destroy method 'close' on bean with name 'nacosServiceRegistry' propagated an exception: java.lang.NullPointerException: Cannot read field "sharePublisher" because "com.alibaba.nacos.common.notify.NotifyCenter.INSTANCE" is null
-2026-10-08 00:02:50.231 INFO  [] [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
-2026-10-08 00:02:50.253 INFO  [] [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-10-12 10:13:49.236 INFO  [] [] o.s.b.w.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-10-12 10:13:49.240 INFO  [] [] o.s.b.w.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-10-12 10:13:49.248 WARN  [] [] o.s.b.f.support.DisposableBeanAdapter - Custom destroy method 'close' on bean with name 'nacosServiceRegistry' propagated an exception: java.lang.NullPointerException: Cannot read field "sharePublisher" because "com.alibaba.nacos.common.notify.NotifyCenter.INSTANCE" is null
+2026-10-12 10:13:49.260 INFO  [] [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-10-12 10:13:49.268 INFO  [] [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-10-12 10:13:52.165 INFO  [] [] com.qjj.user.service.UserApplication - Starting UserApplication using Java 21.0.7 with PID 16336 (D:\myProject\project_ai\backend\user\user-service\target\classes started by AI in D:\myProject\project_ai)
+2026-10-12 10:13:52.166 INFO  [] [] com.qjj.user.service.UserApplication - The following 1 profile is active: "local"
+2026-10-12 10:13:53.259 INFO  [] [] o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2026-10-12 10:13:53.261 INFO  [] [] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-10-12 10:13:53.289 INFO  [] [] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 16 ms. Found 0 Redis repository interfaces.
+2026-10-12 10:13:53.495 INFO  [] [] o.s.cloud.context.scope.GenericScope - BeanFactory id=c13f54f9-3187-3b32-810d-77bb492d0fc2
+2026-10-12 10:13:54.111 INFO  [] [] o.s.b.w.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 18173 (http)
+2026-10-12 10:13:54.125 INFO  [] [] o.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-10-12 10:13:54.125 INFO  [] [] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.55]
+2026-10-12 10:13:54.184 INFO  [] [] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-10-12 10:13:54.185 INFO  [] [] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1983 ms
+2026-10-12 10:13:55.027 INFO  [] [] org.redisson.Version - Redisson 3.52.0
+2026-10-12 10:13:55.392 INFO  [] [] o.redisson.connection.ConnectionsHolder - 1 connections initialized for 192.168.99.100/192.168.99.100:6379
+2026-10-12 10:13:55.587 INFO  [] [] o.redisson.connection.ConnectionsHolder - 24 connections initialized for 192.168.99.100/192.168.99.100:6379
+2026-10-12 10:13:56.219 INFO  [] [] c.b.m.s.MybatisPlusApplicationContextAware - Register ApplicationContext instances org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@7fab4be7
+2026-10-12 10:13:56.871 INFO  [] [] o.s.b.a.e.web.EndpointLinksResolver - Exposing 3 endpoints beneath base path '/actuator'
+2026-10-12 10:13:56.990 INFO  [] [] o.s.b.w.embedded.tomcat.TomcatWebServer - Tomcat started on port 18173 (http) with context path '/'
+2026-10-12 10:13:57.007 INFO  [] [] c.a.n.c.a.ram.identify.CredentialWatcher - null No credential found
+2026-10-12 10:13:57.010 INFO  [] [] c.a.nacos.client.logging.NacosLogging - Nacos Logging Adapter Builder: com.alibaba.nacos.logger.adapter.logback14.LogbackNacosLoggingAdapterBuilder
+2026-10-12 10:13:57.011 INFO  [] [] c.a.nacos.client.logging.NacosLogging - Nacos Logging Adapter: com.alibaba.nacos.logger.adapter.logback14.LogbackNacosLoggingAdapter match ch.qos.logback.classic.Logger success.
+2026-10-12 10:13:57.012 INFO  [] [] c.a.nacos.client.logging.NacosLogging - Nacos Logging Adapter Builder: com.alibaba.nacos.logger.adapter.log4j2.Log4j2NacosLoggingAdapterBuilder
+2026-10-12 10:13:57.089 INFO  [] [] c.a.n.p.a.s.c.ClientAuthPluginManager - [ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.
+2026-10-12 10:13:57.089 INFO  [] [] c.a.n.p.a.s.c.ClientAuthPluginManager - [ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.
+2026-10-12 10:13:58.160 INFO  [] [] c.a.n.c.a.AbstractAbilityControlManager - Ready to get current node abilities...
+2026-10-12 10:13:58.163 INFO  [] [] c.a.n.c.a.AbstractAbilityControlManager - Ready to initialize current node abilities, support modes: [SDK_CLIENT]
+2026-10-12 10:13:58.164 INFO  [] [] c.a.n.c.a.AbstractAbilityControlManager - Initialize current abilities finish...
+2026-10-12 10:13:58.164 INFO  [] [] c.a.n.c.a.d.NacosAbilityManagerHolder - [AbilityControlManager] Successfully initialize AbilityControlManager
+2026-10-12 10:13:58.243 INFO  [] [] c.a.c.n.registry.NacosServiceRegistry - nacos registry, USER_CENTER user-service 192.168.99.1:18173 register finished
+2026-10-12 10:13:58.271 INFO  [] [] com.qjj.user.service.UserApplication - Started UserApplication in 6.765 seconds (process running for 7.581)
+2026-10-12 10:13:58.281 WARN  [] [] o.s.core.events.SpringDocAppInitializer - SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-10-12 10:13:58.281 WARN  [] [] o.s.core.events.SpringDocAppInitializer - SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-10-12 10:13:58.525 INFO  [] [] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-12 10:13:58.526 INFO  [] [] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-10-12 10:13:58.526 INFO  [] [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-10-12 10:13:58.529 INFO  [] [] o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+2026-10-12 10:13:58.962 INFO  [] [] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@739b9c58
+2026-10-12 10:13:58.968 INFO  [] [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-10-12 10:28:53.791 INFO  [] [] c.a.n.common.executor.ThreadPoolManager - [ThreadPoolManager] Start destroying ThreadPool
+2026-10-12 10:28:53.791 INFO  [] [] c.a.n.common.http.HttpClientBeanHolder - [HttpClientBeanHolder] Start destroying common HttpClient
+2026-10-12 10:28:53.791 INFO  [] [] c.a.nacos.common.notify.NotifyCenter - [NotifyCenter] Start destroying Publisher
+2026-10-12 10:28:53.791 INFO  [] [] c.a.nacos.common.notify.NotifyCenter - [NotifyCenter] Completed destruction of Publisher
+2026-10-12 10:28:53.791 INFO  [] [] c.a.n.common.executor.ThreadPoolManager - [ThreadPoolManager] Completed destruction of ThreadPool
+2026-10-12 10:28:53.791 INFO  [] [] c.a.n.common.http.HttpClientBeanHolder - [HttpClientBeanHolder] Completed destruction of HttpClient
+2026-10-12 10:28:53.793 INFO  [] [] c.a.c.n.registry.NacosServiceRegistry - De-registering from Nacos Server now...
+2026-10-12 10:28:53.791 ERROR [] [] c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
+java.lang.InterruptedException
+	at java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1727)
+	at java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.openEventHandler(DefaultPublisher.java:111)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.run(DefaultPublisher.java:95)
+2026-10-12 10:28:53.791 ERROR [] [] c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
+java.lang.InterruptedException
+	at java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1727)
+	at java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.openEventHandler(DefaultPublisher.java:111)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.run(DefaultPublisher.java:95)
+2026-10-12 10:28:53.791 ERROR [] [] c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
+java.lang.InterruptedException
+	at java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1727)
+	at java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.openEventHandler(DefaultPublisher.java:111)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.run(DefaultPublisher.java:95)
+2026-10-12 10:28:53.791 ERROR [] [] c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
+java.lang.InterruptedException
+	at java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1727)
+	at java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.openEventHandler(DefaultPublisher.java:111)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.run(DefaultPublisher.java:95)
+2026-10-12 10:28:53.791 ERROR [] [] c.a.nacos.common.notify.NotifyCenter - Event listener exception : 
+java.lang.InterruptedException
+	at java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1727)
+	at java.base/java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:420)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.openEventHandler(DefaultPublisher.java:111)
+	at com.alibaba.nacos.common.notify.DefaultPublisher.run(DefaultPublisher.java:95)
+2026-10-12 10:28:53.911 INFO  [] [] c.a.c.n.registry.NacosServiceRegistry - De-registration finished.
+2026-10-12 10:28:53.916 ERROR [] [] c.a.c.n.r.NacosGracefulShutdownDelegate - Error occurred while performing Nacos client graceful shutdown
+java.lang.NullPointerException: Cannot read field "sharePublisher" because "com.alibaba.nacos.common.notify.NotifyCenter.INSTANCE" is null
+	at com.alibaba.nacos.common.notify.NotifyCenter.deregisterSubscriber(NotifyCenter.java:242)
+	at com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy.shutdown(NamingGrpcClientProxy.java:537)
+	at com.alibaba.nacos.client.naming.remote.NamingClientProxyDelegate.shutdown(NamingClientProxyDelegate.java:212)
+	at com.alibaba.nacos.client.naming.NacosNamingService.shutDown(NacosNamingService.java:637)
+	at com.alibaba.cloud.nacos.NacosServiceManager.nacosServiceShutDown(NacosServiceManager.java:117)
+	at com.alibaba.cloud.nacos.registry.NacosServiceRegistry.close(NacosServiceRegistry.java:120)
+	at org.springframework.cloud.client.serviceregistry.AbstractAutoServiceRegistration.stop(AbstractAutoServiceRegistration.java:311)
+	at com.alibaba.cloud.nacos.registry.NacosGracefulShutdownDelegate.doGracefulShutdown(NacosGracefulShutdownDelegate.java:69)
+	at com.alibaba.cloud.nacos.registry.NacosGracefulShutdownDelegate.onApplicationEvent(NacosGracefulShutdownDelegate.java:64)
+	at com.alibaba.cloud.nacos.registry.NacosGracefulShutdownDelegate.onApplicationEvent(NacosGracefulShutdownDelegate.java:34)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:185)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:178)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:156)
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:455)
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:388)
+	at org.springframework.context.support.AbstractApplicationContext.doClose(AbstractApplicationContext.java:1187)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.doClose(ServletWebServerApplicationContext.java:179)
+	at org.springframework.context.support.AbstractApplicationContext.close(AbstractApplicationContext.java:1150)
+	at org.springframework.boot.SpringApplicationShutdownHook.closeAndWait(SpringApplicationShutdownHook.java:147)
+	at java.base/java.lang.Iterable.forEach(Iterable.java:75)
+	at org.springframework.boot.SpringApplicationShutdownHook.run(SpringApplicationShutdownHook.java:116)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-10-12 10:28:53.917 INFO  [] [] o.s.b.w.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-10-12 10:28:53.923 INFO  [] [] o.s.b.w.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-10-12 10:28:53.932 WARN  [] [] o.s.b.f.support.DisposableBeanAdapter - Custom destroy method 'close' on bean with name 'nacosServiceRegistry' propagated an exception: java.lang.NullPointerException: Cannot read field "sharePublisher" because "com.alibaba.nacos.common.notify.NotifyCenter.INSTANCE" is null
+2026-10-12 10:28:53.942 INFO  [] [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-10-12 10:28:53.946 INFO  [] [] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.

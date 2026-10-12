@@ -24,7 +24,7 @@
 
 - 落地 `backend/blog/` 五模块 + `frontend/blog-admin/`，忠实 `example-system-design.md` §2/§3 标准链路与模块划分（系统名 blog）
 - 交付 `blog-rbac` / `blog-file` / `blog-audit` / `blog-internal-api` 四项能力（对齐设计稿 §4 演示清单）
-- 建库 `blog_db`（7 表）+ 建表 SQL（`deploy/db/migration/blog_db/`，人工执行）
+- 建库 `blog_db`（7 表）+ 建表 SQL（`deploy/db/migration/blog_db/`）+ RBAC 基线种子（`deploy/db/seed/`，`rbac-design.md` §5），人工执行
 - 横切默认值形态与键名对齐设计稿 §3/§5.3（可配，不锁死参数值）
 - 跑通 `CLAUDE.md` §3.2 自检：`npm run lint && npm run type-check`、`mvn -q compile`
 
@@ -40,7 +40,7 @@
 | 1 | **定位：按 example 模板落地业务系统 `blog`，不带业务表** | 对齐设计稿决策 1；CRUD+分页示范由 RBAC 管理页与文件/审计列表承担；博客文章等业务随后续变更 |
 | 2 | **五模块 + `blog-gateway` + `blog-admin`** | 对齐设计稿决策 2 与 `CLAUDE.md` §5.1 硬链路；备选无 api / 无 gateway 否决 |
 | 3 | **横切四项全选**：RBAC 全套、幂等+限流+审计、Feign 契约+Fallback、MinIO 上传 | 对齐设计稿决策 3 |
-| 4 | **表 7 张**：`sys_sequence` + RBAC 4 + `blog_audit_log` + `sys_file` | 对齐设计稿决策 4；RBAC 按 `rbac-design.md` §2 无 `system_code` |
+| 4 | **表 7 张 + RBAC 基线种子**：`sys_sequence` + RBAC 4 + `blog_audit_log` + `sys_file`；种子 L2/L3/L4/L5 见 `rbac-design.md` §5 与 `deploy/db/seed/2026-10-10-blog-db-rbac-framework.sql` | 对齐设计稿决策 4；RBAC 按 `rbac-design.md` §2 无 `system_code`；无种子则无法自举菜单/角色 |
 | 5 | **`blog-api` 演示文件元数据 + ping** | 对齐设计稿决策 5；真实可跑且不背对用户中心强依赖 |
 | 6 | **上传生命周期：上传+查+删+预签名**（无批量） | 对齐设计稿决策 6 |
 | 7 | **16 位发号** = `yyyyMMdd` + 8 位日序列（`Asia/Shanghai`）；`sys_sequence` 段式（段长默认 500） | `CLAUDE.md` §6.4.5；备选 Redis INCR 否决（正确性不押 Redis） |
@@ -49,7 +49,7 @@
 | 9b | **对象存储裁剪源 = `object-storage-design.md`** | MinIO 封装/上传/预签名/逻辑删除/`sys_file`/配置键以该文为准；文件页交互对齐设计稿 §7.1 与 `assets/rbac-admin-proto.html`；本文只写 blog 取值 |
 | 10 | **`sys_file` 删除 = `deleted` 逻辑删除**，不另设 status | 设计稿决策 11 / `object-storage-design.md` §4.3 |
 | 11 | **审计表通用 `target_type`/`target_id`** | 设计稿决策 12 |
-| 12 | **SQL 落 `deploy/db/migration/blog_db/` 人工执行** | 不引 Flyway/Liquibase（`CLAUDE.md` §2.2） |
+| 12 | **SQL 落 `deploy/db/migration/blog_db/` + seed 落 `deploy/db/seed/`，人工执行** | 不引 Flyway/Liquibase（`CLAUDE.md` §2.2）；种子按 `rbac-design.md` §5 短号与幂等规范 |
 | 13 | **配置三份 yml**；键名 kebab-case + `@ConfigurationProperties` | `CLAUDE.md` §6.10；连接信息 `docs/test-env.md` |
 | 14 | **错误码系统号实施时登记** `docs/error-code-ranges.md`，再进 `BlogErrorCodeEnum` | 不预占；系统段 `10001–10004`/校验 `30001` 对齐固定表 |
 | 15 | **版本一律取 `docs/version-baseline.md`**；前端主框架版本先登记再锁 lock | `CLAUDE.md` §2.1 |
@@ -77,7 +77,7 @@
 
 ## Migration Plan
 
-1. 建库 `blog_db`（utf8mb4），人工执行 7 表 SQL（生产前征询）
+1. 建库 `blog_db`（utf8mb4），人工执行 7 表 SQL + RBAC 种子 `2026-10-10-blog-db-rbac-framework.sql`（生产前征询）
 2. 准备 Redis、MinIO（桶 + MIME 白名单）、Nacos；部署 `blog-gateway`、`blog-service`（profile=`test`），`/actuator/health`
 3. Nginx 托管 `blog-admin` 静态 + 反代 `/api` → `blog-gateway`（信任域名 `docs/test-env.md`）
 4. 冒烟（设计稿 §10.1）：RBAC CRUD+授权 → `/me/menus` → 上传/预签名/逻辑删除 → 幂等首次 Result → 限流 429/`10003` → Feign ping/files + Fallback；网关 `lb://` 非 503；网关检查清单（`gateway-design.md` §10）

@@ -1,6 +1,23 @@
 # blog-rbac · 本系统自持 RBAC
 
+> 表结构同构 `rbac-design.md` §2；基线种子分层与 id 规范见 §5。
+
 ## ADDED Requirements
+
+### Requirement: RBAC 基线种子数据
+系统 SHALL 提供可重复执行的 RBAC 基线种子（`deploy/db/seed/`，对齐 `rbac-design.md` §5）：至少含 **L2** 自举骨架（「系统管理」+ 菜单管理 + 角色管理 + 操作按钮）、**L3** `role_code='admin'`、**L5** 冒烟用户→admin 绑定；并按本系统域补 **L4**（文件管理、审计日志及按钮）。菜单 `id` 用层级短号（§2.0），`component` 与 `blog-admin` `componentByPath` 键一致；种子 MUST 幂等（`INSERT IGNORE` + 按 id `UPDATE`）。
+
+#### Scenario: 导入种子后可自举管理
+- **WHEN** 在空库执行 migration 后导入本能力种子
+- **THEN** `sys_menu` 含 L2/L4 节点且 type=2 的 `component` 非空可命中前端路由；`sys_role` 存在启用的 `admin`（`data_scope=1`）
+
+#### Scenario: 重复执行幂等
+- **WHEN** 同一种子脚本重复执行
+- **THEN** 不报错、不产生重复行（依赖唯一键 + `INSERT IGNORE`）
+
+#### Scenario: 冒烟账号具备 admin
+- **WHEN** 用户中心冒烟账号 `user_id=2026092400000001` 登录本系统
+- **THEN** `/me/menus` 含「系统管理/菜单管理/角色管理」及文件/审计入口；`/me/permissions` 含 `blog:menu:*`、`blog:role:*`、`blog:file:*`、`blog:audit:list`
 
 ### Requirement: 菜单管理（资源树 CRUD）
 系统 SHALL 提供本系统菜单/权限资源树管理：节点 `type` 1 目录 / 2 菜单 / 3 按钮 / 4 接口（不下发前端），含 `path` / `component` / `permission?` / `sort` 等；`permission` 标识格式 `blog:resource:action`（全小写、本系统内唯一，应用层校验；目录可留空）。表结构按 `rbac-design.md` §2 同构建于 `blog_db`。关键写 SHALL 走写幂等（`@Idempotent`）并记录操作审计。

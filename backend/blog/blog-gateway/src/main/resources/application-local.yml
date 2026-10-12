@@ -6,7 +6,7 @@ spring:
         username: nacos
         password: nacos
         namespace: local
-        group: GATEWAY_GROUP
+        group: BLOG_CENTER
 blog-gateway:
   security:
     local-pass-through: true

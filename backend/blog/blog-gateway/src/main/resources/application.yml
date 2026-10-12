@@ -1,5 +1,5 @@
 server:
-  port: 8173
+  port: 9100
 spring:
   application:
     name: blog-gateway
@@ -12,9 +12,6 @@ spring:
           uri: lb://blog-service
           predicates:
             - Path=/api/**
-          metadata:
-            nacos:
-              group: USER_GROUP
 blog-gateway:
   security:
     local-pass-through: true
@@ -23,8 +20,8 @@ blog-gateway:
       - /actuator/health
       - /internal/**
     trusted-origins:
-      - http://localhost:5173
-      - http://127.0.0.1:5173
+      - http://localhost:5100
+      - http://127.0.0.1:5100
 management:
   endpoints:
     web:

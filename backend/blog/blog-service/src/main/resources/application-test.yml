@@ -19,4 +19,4 @@ spring:
 user:
   feign:
     user-center:
-      base-url: http://blog-service:8081
+      base-url: http://user-service:8081

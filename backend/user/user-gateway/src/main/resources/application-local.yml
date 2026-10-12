@@ -6,7 +6,7 @@ spring:
         username: nacos
         password: nacos
         namespace: local
-        group: GATEWAY_GROUP
+        group: USER_CENTER
 user-gateway:
   security:
     local-pass-through: true

@@ -28,7 +28,7 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 server:
-  port: 9101
+  port: 19100
 blog:
   idgen:
     segment-size: 500
