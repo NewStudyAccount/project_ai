@@ -7,6 +7,8 @@
   - 前端为构建期 VITE_*（.env* / docker build-arg），API 走同源相对路径 /api。
 构建方式（只依赖 Docker）：
   - 质量门/测试/打包均在容器内执行（maven:3.9-eclipse-temurin-21 / node:24-alpine），宿主机无需 JDK/Maven/Node。
+SSH 发布：
+  - 使用 withCredentials([sshUserPrivateKey]) + ssh -i，不依赖 SSH Agent 插件的 sshagent 步骤。
 """
 from __future__ import annotations
 
@@ -158,14 +160,14 @@ def frontend_script(app_dir: str, image_repo: str, container: str, app_port: str
     }}
     stage('Deploy') {{
       steps {{
-        sshagent(credentials: ["${{SSH_CRED}}"]) {{
+        withCredentials([sshUserPrivateKey(credentialsId: "${{SSH_CRED}}", keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {{
           withCredentials([usernamePassword(credentialsId: "${{REGISTRY_CRED}}", usernameVariable: 'RUSER', passwordVariable: 'RPASS')]) {{
             sh \"\"\"
               set -e
               echo "$RPASS" | docker login "${{REGISTRY}}" -u "$RUSER" --password-stdin
               docker push "${{IMAGE_REPO}}:${{SHORT_COMMIT}}"
               docker push "${{IMAGE_REPO}}:latest"
-              ssh "${{DEPLOY_USER}}@${{DEPLOY_HOST}}" "
+              ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "${{DEPLOY_USER}}@${{DEPLOY_HOST}}" "
                 docker network create project-ai 2>/dev/null || true
                 docker rm -f {container} 2>/dev/null || true
                 docker pull {image_repo}:${{SHORT_COMMIT}}
@@ -180,10 +182,10 @@ def frontend_script(app_dir: str, image_repo: str, container: str, app_port: str
     }}
     stage('Smoke') {{
       steps {{
-        sshagent(credentials: ["${{SSH_CRED}}"]) {{
+        withCredentials([sshUserPrivateKey(credentialsId: "${{SSH_CRED}}", keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {{
           sh \"\"\"
             set -e
-            ssh "${{DEPLOY_USER}}@${{DEPLOY_HOST}}" "curl -fsS --retry 5 --retry-delay 3 --max-time 20 '{health_url}'"
+            ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "${{DEPLOY_USER}}@${{DEPLOY_HOST}}" "curl -fsS --retry 5 --retry-delay 3 --max-time 20 '{health_url}'"
           \"\"\"
         }}
       }}
@@ -265,14 +267,14 @@ def backend_script(sys_dir: str, module: str, image_repo: str, container: str, a
     }}
     stage('Deploy') {{
       steps {{
-        sshagent(credentials: ["${{SSH_CRED}}"]) {{
+        withCredentials([sshUserPrivateKey(credentialsId: "${{SSH_CRED}}", keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {{
           withCredentials([usernamePassword(credentialsId: "${{REGISTRY_CRED}}", usernameVariable: 'RUSER', passwordVariable: 'RPASS')]) {{
             sh \"\"\"
               set -e
               echo "$RPASS" | docker login "${{REGISTRY}}" -u "$RUSER" --password-stdin
               docker push "${{IMAGE_REPO}}:${{SHORT_COMMIT}}"
               docker push "${{IMAGE_REPO}}:latest"
-              ssh "${{DEPLOY_USER}}@${{DEPLOY_HOST}}" "
+              ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "${{DEPLOY_USER}}@${{DEPLOY_HOST}}" "
                 docker network create project-ai 2>/dev/null || true
                 docker rm -f {container} 2>/dev/null || true
                 docker pull {image_repo}:${{SHORT_COMMIT}}
@@ -287,10 +289,10 @@ def backend_script(sys_dir: str, module: str, image_repo: str, container: str, a
     }}
     stage('Smoke') {{
       steps {{
-        sshagent(credentials: ["${{SSH_CRED}}"]) {{
+        withCredentials([sshUserPrivateKey(credentialsId: "${{SSH_CRED}}", keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {{
           sh \"\"\"
             set -e
-            ssh "${{DEPLOY_USER}}@${{DEPLOY_HOST}}" "curl -fsS --retry 5 --retry-delay 3 --max-time 20 '{health_url}'"
+            ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "${{DEPLOY_USER}}@${{DEPLOY_HOST}}" "curl -fsS --retry 5 --retry-delay 3 --max-time 20 '{health_url}'"
           \"\"\"
         }}
       }}

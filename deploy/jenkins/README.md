@@ -47,7 +47,7 @@
    - 前端质量门：`docker run node:24-alpine` 内 `npm ci/lint/type-check/build`
    - 后端测试/打包：`docker run maven:3.9-eclipse-temurin-21` 内 `mvn`（`.m2` 缓存挂 workspace）
    - 若以后要拆构建机，再把脚本改回 `agent { label '...' }` 并配 label。
-3. **插件**：Pipeline、SSH Agent、Credentials Binding、Git。
+3. **插件**：Pipeline、Credentials Binding、Git、SSH Credentials（用 `sshUserPrivateKey` + `ssh -i`，**无需** SSH Agent 插件）。
 4. **首次冒烟**：对 `user-admin-cd` 等执行构建（参数选 `BRANCH`），确认 checkout / 质量门 / 镜像 / 发布 / 健康检查全绿。
 5. （可选）Webhook / 分支触发；分支名 `prod` / `prod-*` 必须人工确认后才会发布。
 
