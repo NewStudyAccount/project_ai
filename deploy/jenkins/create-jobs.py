@@ -4,7 +4,9 @@
 触发参数：BRANCH（必选分支）。
 环境约定：
   - 后端 Spring profile 以各模块 application.yml 的 spring.profiles.active 为准（代码指定），流水线不注入。
-  - 前端为构建期 VITE_*（.env* / docker build-arg），API 走同源相对路径 /api，流水线只 npm run build。
+  - 前端为构建期 VITE_*（.env* / docker build-arg），API 走同源相对路径 /api。
+构建方式（只依赖 Docker）：
+  - 质量门/测试/打包均在容器内执行（maven:3.9-eclipse-temurin-21 / node:24-alpine），宿主机无需 JDK/Maven/Node。
 """
 from __future__ import annotations
 
@@ -98,10 +100,9 @@ def pipeline_xml(description: str, script: str) -> bytes:
 
 
 def frontend_script(app_dir: str, image_repo: str, container: str, app_port: str, health_url: str) -> str:
-    # 前端环境在构建期：VITE_* 来自应用目录 .env / .env.production（或 docker build-arg）。
-    # 流水线只执行 npm run build（vite 默认 production mode），不注入运行时环境开关。
+    # 只依赖 Docker：质量门/构建在 node:24-alpine 容器内；镜像构建用应用 Dockerfile。
     return f"""pipeline {{
-  agent {{ label 'node24' }}
+  agent any
   parameters {{
     string(name: 'BRANCH', defaultValue: '{DEFAULT_BRANCH}', description: 'Git branch to build and deploy', trim: true)
   }}
@@ -119,6 +120,7 @@ def frontend_script(app_dir: str, image_repo: str, container: str, app_port: str
     APP_PORT       = '{app_port}'
     HEALTH_URL     = '{health_url}'
     GIT_BRANCH     = "${{params.BRANCH?.trim() ?: '{DEFAULT_BRANCH}'}}"
+    NODE_IMAGE     = 'node:24-alpine'
   }}
   stages {{
     stage('Checkout') {{
@@ -131,12 +133,16 @@ def frontend_script(app_dir: str, image_repo: str, container: str, app_port: str
     }}
     stage('Quality') {{
       steps {{
-        dir("${{APP_DIR}}") {{
-          sh 'npm ci'
-          sh 'npm run lint'
-          sh 'npm run type-check'
-          sh 'npm run build'
-        }}
+        sh '''
+          set -e
+          docker run --rm -v "${{WORKSPACE}}/${{APP_DIR}}":/app -w /app "${{NODE_IMAGE}}" sh -c "
+            set -e
+            npm ci
+            npm run lint
+            npm run type-check
+            npm run build
+          "
+        '''
       }}
     }}
     stage('Image') {{
@@ -193,10 +199,10 @@ def frontend_script(app_dir: str, image_repo: str, container: str, app_port: str
 
 
 def backend_script(sys_dir: str, module: str, image_repo: str, container: str, app_port: str, health_url: str) -> str:
-    # 后端环境在代码里：application.yml spring.profiles.active（如 local/test）。
-    # docker run 只启动 jar，不传 --spring.profiles.active。
+    # 只依赖 Docker：mvn test/package 在 maven 容器内；镜像构建用模块 Dockerfile。
+    # 后端 profile 以 application.yml 为准，不传 --spring.profiles.active。
     return f"""pipeline {{
-  agent {{ label 'jdk21' }}
+  agent any
   parameters {{
     string(name: 'BRANCH', defaultValue: '{DEFAULT_BRANCH}', description: 'Git branch to build and deploy', trim: true)
   }}
@@ -215,6 +221,7 @@ def backend_script(sys_dir: str, module: str, image_repo: str, container: str, a
     APP_PORT       = '{app_port}'
     HEALTH_URL     = '{health_url}'
     GIT_BRANCH     = "${{params.BRANCH?.trim() ?: '{DEFAULT_BRANCH}'}}"
+    MAVEN_IMAGE    = 'maven:3.9-eclipse-temurin-21'
   }}
   stages {{
     stage('Checkout') {{
@@ -227,16 +234,22 @@ def backend_script(sys_dir: str, module: str, image_repo: str, container: str, a
     }}
     stage('Test') {{
       steps {{
-        dir("${{SYS_DIR}}") {{
-          sh "mvn -pl ${{MODULE}} -am test"
-        }}
+        sh '''
+          set -e
+          docker run --rm -v "${{WORKSPACE}}/${{SYS_DIR}}":/src -w /src \\
+            -v "${{WORKSPACE}}/.m2-cache":/root/.m2 \\
+            "${{MAVEN_IMAGE}}" mvn -pl ${{MODULE}} -am test
+        '''
       }}
     }}
     stage('Package') {{
       steps {{
-        dir("${{SYS_DIR}}") {{
-          sh "mvn -pl ${{MODULE}} -am package -DskipTests"
-        }}
+        sh '''
+          set -e
+          docker run --rm -v "${{WORKSPACE}}/${{SYS_DIR}}":/src -w /src \\
+            -v "${{WORKSPACE}}/.m2-cache":/root/.m2 \\
+            "${{MAVEN_IMAGE}}" mvn -pl ${{MODULE}} -am package -DskipTests
+        '''
       }}
     }}
     stage('Image') {{
@@ -424,6 +437,9 @@ def main() -> int:
     print("BE has BRANCH:", "<name>BRANCH</name>" in be)
     print("BE no profiles inject:", "spring.profiles" not in be)
     print("BE no deployEnvOf:", "deployEnvOf" not in be)
+    print("FE docker quality:", "docker run" in fe and "NODE_IMAGE" in fe)
+    print("BE docker maven:", "MAVEN_IMAGE" in be and "mvn -pl" in be)
+    print("BE host mvn absent:", "sh \"mvn -pl" not in be)
     return 0
 
 

@@ -6,17 +6,17 @@
 
 ## 1. 已创建 Job（Jenkins `http://192.168.99.100:8080/`）
 
-| Job 名 | 系统 | 目标 | kind | Agent | 宿主机端口 |
-|--------|------|------|------|-------|-----------|
-| `user-admin-cd` | user-admin | 前端 | frontend | `node24` | 5173 |
-| `auth-admin-cd` | auth-admin | 前端 | frontend | `node24` | 5175 |
-| `auth-portal-cd` | auth-portal | 前端 | frontend | `node24` | 5174 |
-| `blog-admin-cd` | blog-admin | 前端 | frontend | `node24` | 5176 |
-| `auth-service-cd` | auth | auth-service | backend | `jdk21` | 9080 |
-| `blog-gateway-cd` | blog | blog-gateway | gateway | `jdk21` | 9100 |
-| `blog-service-cd` | blog | blog-service | backend | `jdk21` | 19100 |
-| `user-gateway-cd` | user | user-gateway | gateway | `jdk21` | 8173 |
-| `user-service-cd` | user | user-service | backend | `jdk21` | 18173 |
+| Job 名 | 系统 | 目标 | kind | 构建 | 宿主机端口 |
+|--------|------|------|------|------|-----------|
+| `user-admin-cd` | user-admin | 前端 | frontend | Docker(node:24) | 5173 |
+| `auth-admin-cd` | auth-admin | 前端 | frontend | Docker(node:24) | 5175 |
+| `auth-portal-cd` | auth-portal | 前端 | frontend | Docker(node:24) | 5174 |
+| `blog-admin-cd` | blog-admin | 前端 | frontend | Docker(node:24) | 5176 |
+| `auth-service-cd` | auth | auth-service | backend | Docker(maven:jdk21) | 9080 |
+| `blog-gateway-cd` | blog | blog-gateway | gateway | Docker(maven:jdk21) | 9100 |
+| `blog-service-cd` | blog | blog-service | backend | Docker(maven:jdk21) | 19100 |
+| `user-gateway-cd` | user | user-gateway | gateway | Docker(maven:jdk21) | 8173 |
+| `user-service-cd` | user | user-service | backend | Docker(maven:jdk21) | 18173 |
 
 创建/同步脚本：[`create-jobs.py`](create-jobs.py)（幂等；`python deploy/jenkins/create-jobs.py`）。
 
@@ -42,7 +42,11 @@
 1. **创建凭据**（若尚无）：
    - `ssh-deploy-test`：SSH Username with private key（用户 `root`，部署机私钥）
    - `registry-push-test`：Username/Password（`192.168.99.100:5000` 推送账号）
-2. **Agent 节点**：label `node24`（Node 24 + Docker）、`jdk21`（JDK 21 + Maven + Docker）。
+2. **Agent**：流水线使用 **`agent any`** + **全 Docker 构建**（宿主机**无需** JDK/Maven/Node）。
+   - 节点只要：**Docker**（可拉 `node:24-alpine`、`maven:3.9-eclipse-temurin-21` 及目标镜像）
+   - 前端质量门：`docker run node:24-alpine` 内 `npm ci/lint/type-check/build`
+   - 后端测试/打包：`docker run maven:3.9-eclipse-temurin-21` 内 `mvn`（`.m2` 缓存挂 workspace）
+   - 若以后要拆构建机，再把脚本改回 `agent { label '...' }` 并配 label。
 3. **插件**：Pipeline、SSH Agent、Credentials Binding、Git。
 4. **首次冒烟**：对 `user-admin-cd` 等执行构建（参数选 `BRANCH`），确认 checkout / 质量门 / 镜像 / 发布 / 健康检查全绿。
 5. （可选）Webhook / 分支触发；分支名 `prod` / `prod-*` 必须人工确认后才会发布。
@@ -77,7 +81,7 @@ docker build --build-arg VITE_OIDC_ISSUER=https://... frontend/user-admin
 
 ```text
 {REGISTRY}/project_ai/{target}:{git-short-sha}
-{REGISTRY}/project_ai/{target}:{test|prod}
+{REGISTRY}/project_ai/{target}:latest
 ```
 
 ```bash

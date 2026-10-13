@@ -9,7 +9,7 @@
 > - 必须标明环境；禁止测试与生产混用同一账号。
 > - 本文仅测试环境；建议只存放于内网仓库。
 
-最后更新：2026-09-24　|　维护人：Codex（unified-auth-center）
+最后更新：2026-10-14　|　维护人：Codex（unified-auth-center）
 
 > **端口规划与查询**见 [docs/port-registry.md](port-registry.md)（唯一端口登记处）；本文件负责组件接入与测试账密。
 
@@ -21,7 +21,7 @@
 |------|--------|----------------|-----------|------|----------|----------|------|
 | 应用服务器 | （填写） | 192.168.99.100 | （如有） | 22 | 业务 jar / Docker | （用户名） | 测试密码见 §6 |
 | 前端/Nginx | （填写） | （填写）           | （如有） | 80/443 | 静态 + 反代 | （用户名） | |
-| Jenkins | （填写） | （填写）           | （如有） | 8080 | CI/CD | — | 测试账号可写 §6；生产 Jenkins 禁止写入 |
+| Jenkins | （填写） | 192.168.99.100 | （如有） | 8080 | CI/CD | — | 测试账号见 §6.1；生产 Jenkins 禁止写入 |
 | 跳板机 | （填写） | （填写）           | （如有） | 22 | 运维入口 | （用户名） | |
 
 ### 用户中心（scaffold-user-center）
@@ -108,7 +108,8 @@ OIDC RP（unify-login-facade）：
 
 | 项 | 值 |
 |----|-----|
-| Jenkins URL | （填写） |
+| Jenkins URL | `http://192.168.99.100:8080/` |
+| 登录用户 | `qjj`（密码见 §6.1） |
 | 常用 Job | 见 `docs/jenkins-pipeline-guide.md` §7 登记表 |
 | `DEPLOY_ENV` | `test` |
 | Spring profile | `test` |
@@ -136,6 +137,7 @@ OIDC RP（unify-login-facade）：
 | MySQL | test | root  | 123456 | |
 | Redis | test | root  | 123456 | |
 | Nacos | test | nacos | nacos  | |
+| Jenkins | test | qjj | Qjj327846@!! | 管理台 `http://192.168.99.100:8080/`；同步见 `jenkins-pipeline-guide.md` |
 
 ### 6.2 生产（禁止写入本仓库）
 
@@ -162,4 +164,5 @@ OIDC RP（unify-login-facade）：
 | 2026-09-24 | 登记 user_db、user-gateway/user-service 端口、Nginx 信任域名 | scaffold-user-center |
 | 2026-09-24 | 登记 auth-portal/auth-admin/auth-service 端口、测试域名与 CORS 信任域名 | unified-auth-center |
 | 2026-09-24 | 登记 OIDC RP client、redirect/post-logout 白名单与 user-admin 信任域名 | unify-login-facade |
+| 2026-10-14 | 登记 Jenkins 测试环境地址与管理台账号 | jenkins-pipeline-guide |
 
