@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>blog-system · ER 图</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --primary: #3b82f6;
+    --accent: #38bdf8;
+    --ok: #166534;
+    --warn: #92400e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 24px;
+  }
+  header {
+    max-width: 1200px;
+    margin: 0 auto 16px;
+  }
+  h1 { font-size: 20px; font-weight: 600; }
+  .sub { margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    margin: 12px auto 0; max-width: 1200px;
+    font-size: 12px; color: var(--muted);
+  }
+  .legend span {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 999px; padding: 4px 10px;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 2px; }
+  .wrap {
+    max-width: 1200px; margin: 16px auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: auto;
+  }
+  svg { display: block; width: 100%; min-width: 980px; height: auto; }
+  .card-title {
+    font-size: 13px; font-weight: 600;
+    font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+    fill: #f8fafc;
+  }
+  .card-title.ink { fill: var(--ink); }
+  .field {
+    font-size: 11px; fill: #334155;
+    font-family: "JetBrains Mono", Consolas, monospace;
+  }
+  .field.pk { fill: #1d4ed8; font-weight: 600; }
+  .field.fk { fill: #b45309; font-weight: 600; }
+  .note {
+    font-size: 11px; fill: var(--muted);
+    font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .foot {
+    max-width: 1200px; margin: 0 auto 32px;
+    color: var(--muted); font-size: 12px; line-height: 1.7;
+  }
+  code {
+    font-family: "JetBrains Mono", Consolas, monospace;
+    background: #e2e8f0; padding: 1px 6px; border-radius: 4px;
+    font-size: 11px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>blog 内容业务 · ER 图</h1>
+  <p class="sub">
+    与 <code>table-design.md</code> 同步 · 6 张新增表 + 既有 <code>sys_file</code> 引用 ·
+    正文在 MinIO（非表外键）· 审计字段 5 列未画入（全表齐套）
+  </p>
+</header>
+<div class="legend">
+  <span><i class="dot" style="background:#1d4ed8"></i>主键 PK</span>
+  <span><i class="dot" style="background:#b45309"></i>外键/关联 FK</span>
+  <span><i class="dot" style="background:#334155"></i>业务字段</span>
+  <span><i class="dot" style="background:#64748b"></i>审计字段省略</span>
+  <span><i class="dot" style="background:#0ea5e9"></i>OSS 对象（非表）</span>
+</div>
+
+<div class="wrap">
+<svg viewBox="0 0 1180 920" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="blog content ER diagram">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#64748b" />
+    </marker>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#0ea5e9" />
+    </marker>
+    <style>
+      .box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1; }
+      .box-head { fill: #0f172a; }
+      .box-head-oss { fill: #0ea5e9; }
+      .box-head-file { fill: #334155; }
+      .rel { fill: none; stroke: #64748b; stroke-width: 1.5; }
+      .rel-oss { fill: none; stroke: #0ea5e9; stroke-width: 1.5; stroke-dasharray: 5 4; }
+    </style>
+  </defs>
+
+  <!-- ========== blog_category ========== -->
+  <g transform="translate(40,40)">
+    <rect class="box" width="220" height="248" rx="8" />
+    <rect class="box-head" width="220" height="32" rx="8" />
+    <rect class="box-head" y="16" width="220" height="16" />
+    <text class="card-title" x="12" y="21" fill="#f8fafc">blog_category 分类</text>
+    <text class="field pk" x="12" y="52">id  PK</text>
+    <text class="field fk" x="12" y="72">parent_id  FK</text>
+    <text class="field" x="12" y="92">name</text>
+    <text class="field" x="12" y="112">slug  UK</text>
+    <text class="field" x="12" y="132">description</text>
+    <text class="field" x="12" y="152">sort</text>
+    <text class="field" x="12" y="172">status</text>
+    <text class="note" x="12" y="200">最多 2 级 · 同级 name 唯一</text>
+    <text class="note" x="12" y="218">删除须无子且无文章</text>
+    <text class="note" x="12" y="236">审计 ×5 未画</text>
+  </g>
+
+  <!-- ========== blog_tag ========== -->
+  <g transform="translate(40,360)">
+    <rect class="box" width="220" height="210" rx="8" />
+    <rect class="box-head" width="220" height="32" rx="8" />
+    <rect class="box-head" y="16" width="220" height="16" />
+    <text class="card-title" x="12" y="21" fill="#f8fafc">blog_tag 标签</text>
+    <text class="field pk" x="12" y="52">id  PK</text>
+    <text class="field" x="12" y="72">name  UK</text>
+    <text class="field" x="12" y="92">slug  UK</text>
+    <text class="field" x="12" y="112">sort</text>
+    <text class="field" x="12" y="132">status</text>
+    <text class="note" x="12" y="164">全局扁平 · name 唯一</text>
+    <text class="note" x="12" y="182">有引用不可删</text>
+    <text class="note" x="12" y="200">审计 ×5 未画</text>
+  </g>
+
+  <!-- ========== blog_article_tag ========== -->
+  <g transform="translate(40,630)">
+    <rect class="box" width="220" height="180" rx="8" />
+    <rect class="box-head" width="220" height="32" rx="8" />
+    <rect class="box-head" y="16" width="220" height="16" />
+    <text class="card-title" x="12" y="21" fill="#f8fafc">blog_article_tag 关联</text>
+    <text class="field pk" x="12" y="52">id  PK</text>
+    <text class="field fk" x="12" y="72">article_id  FK</text>
+    <text class="field fk" x="12" y="92">tag_id  FK</text>
+    <text class="note" x="12" y="124">UK (article_id, tag_id)</text>
+    <text class="note" x="12" y="142">保存文章时整组替换</text>
+    <text class="note" x="12" y="160">审计 ×5 未画</text>
+  </g>
+
+  <!-- ========== blog_article ========== -->
+  <g transform="translate(380,40)">
+    <rect class="box" width="260" height="360" rx="8" />
+    <rect class="box-head" width="260" height="32" rx="8" />
+    <rect class="box-head" y="16" width="260" height="16" />
+    <text class="card-title" x="12" y="21" fill="#f8fafc">blog_article 文章主表</text>
+    <text class="field pk" x="12" y="52">id  PK</text>
+    <text class="field" x="12" y="72">slug  UK</text>
+    <text class="field fk" x="12" y="92">category_id  FK</text>
+    <text class="field" x="12" y="112">title</text>
+    <text class="field" x="12" y="132">summary</text>
+    <text class="field fk" x="12" y="152">cover_file_id  FK</text>
+    <text class="field" x="12" y="172">author_id</text>
+    <text class="field" x="12" y="192">author_name</text>
+    <text class="field" x="12" y="212">status  0/1/2</text>
+    <text class="field" x="12" y="232">publish_time</text>
+    <text class="field" x="12" y="252">is_top</text>
+    <text class="field" x="12" y="272">view_count  预留</text>
+    <text class="note" x="12" y="304">0 草稿 · 1 已发布 · 2 已下架</text>
+    <text class="note" x="12" y="322">发布须有正文 · 已发布不可删</text>
+    <text class="note" x="12" y="340">用户端只读 status=1</text>
+    <text class="note" x="12" y="352">审计 ×5 未画</text>
+  </g>
+
+  <!-- ========== blog_article_detail ========== -->
+  <g transform="translate(780,40)">
+    <rect class="box" width="280" height="280" rx="8" />
+    <rect class="box-head" width="280" height="32" rx="8" />
+    <rect class="box-head" y="16" width="280" height="16" />
+    <text class="card-title" x="12" y="21" fill="#f8fafc">blog_article_detail 详细表</text>
+    <text class="field pk" x="12" y="52">id  PK</text>
+    <text class="field fk" x="12" y="72">article_id  UK/FK</text>
+    <text class="field fk" x="12" y="92">content_file_id  FK→sys_file</text>
+    <text class="field fk" x="12" y="112">draft_file_id  FK→sys_file</text>
+    <text class="field" x="12" y="132">content_format / word_count</text>
+    <text class="field" x="12" y="152">draft_format / draft_word</text>
+    <text class="field" x="12" y="172">seo_* / draft_seo_*</text>
+    <text class="note" x="12" y="210">正文对象必登记 sys_file</text>
+    <text class="note" x="12" y="228">发布才 draft_file→content_file</text>
+    <text class="note" x="12" y="246">用户端只读 content_file_id</text>
+    <text class="note" x="12" y="264">审计 ×5 未画</text>
+  </g>
+
+  <!-- ========== OSS ========== -->
+  <g transform="translate(780,380)">
+    <rect class="box" width="280" height="160" rx="8" stroke="#0ea5e9" />
+    <rect class="box-head-oss" width="280" height="32" rx="8" />
+    <rect class="box-head-oss" y="16" width="280" height="16" />
+    <text class="card-title" x="12" y="21" fill="#ffffff">MinIO / OSS 对象（非表）</text>
+    <text class="field" x="12" y="56">blog-content/{articleId}/xxx.md</text>
+    <text class="field" x="12" y="76">blog-content/{articleId}/xxx.html</text>
+    <text class="note" x="12" y="112">正文全文 · 覆盖写新对象</text>
+    <text class="note" x="12" y="130">旧对象运维清理（不建定时）</text>
+    <text class="note" x="12" y="148">策略见 object-storage-design.md</text>
+  </g>
+
+  <!-- ========== sys_file 既有 ========== -->
+  <g transform="translate(780,600)">
+    <rect class="box" width="280" height="200" rx="8" stroke="#94a3b8" />
+    <rect class="box-head-file" width="280" height="32" rx="8" />
+    <rect class="box-head-file" y="16" width="280" height="16" />
+    <text class="card-title" x="12" y="21" fill="#f8fafc">sys_file · OSS 上传登记表</text>
+    <text class="field pk" x="12" y="56">id  PK</text>
+    <text class="field" x="12" y="76">bucket / object_key  UK</text>
+    <text class="field" x="12" y="96">original_name / content_type</text>
+    <text class="field" x="12" y="116">size_bytes / deleted</text>
+    <text class="field fk" x="12" y="136">biz_type / biz_id</text>
+    <text class="note" x="12" y="164">FILE · COVER · LIVE · DRAFT</text>
+    <text class="note" x="12" y="182">凡 OSS 对象必登记一行</text>
+  </g>
+
+  <!-- ========== blog_site_config ========== -->
+  <g transform="translate(380,460)">
+    <rect class="box" width="260" height="190" rx="8" />
+    <rect class="box-head" width="260" height="32" rx="8" />
+    <rect class="box-head" y="16" width="260" height="16" />
+    <text class="card-title" x="12" y="21" fill="#f8fafc">blog_site_config 站点配置</text>
+    <text class="field pk" x="12" y="52">id  PK</text>
+    <text class="field" x="12" y="72">config_key  UK</text>
+    <text class="field" x="12" y="92">config_value</text>
+    <text class="field" x="12" y="112">remark</text>
+    <text class="note" x="12" y="144">site.title / about / copyright</text>
+    <text class="note" x="12" y="162">用户端 portal 读取</text>
+    <text class="note" x="12" y="180">审计 ×5 未画</text>
+  </g>
+
+  <!-- ========== 关系线 ========== -->
+  <!-- category -> article -->
+  <path class="rel" d="M260 120 H320 V160 H380" marker-end="url(#arrow)" />
+  <text class="note" x="275" y="112">1</text>
+  <text class="note" x="355" y="152">N</text>
+
+  <!-- article -> detail 1:1 -->
+  <path class="rel" d="M640 120 H780" marker-end="url(#arrow)" />
+  <text class="note" x="690" y="112">1 : 1</text>
+
+  <!-- detail -> OSS -->
+  <path class="rel-oss" d="M920 320 V380" marker-end="url(#arrowBlue)" />
+  <text class="note" x="930" y="355">object_key</text>
+
+  <!-- detail -> sys_file -->
+  <path class="rel" d="M1060 320 V600" marker-end="url(#arrow)" />
+  <text class="note" x="1070" y="460">file_id</text>
+
+  <!-- article -> cover -> sys_file -->
+  <path class="rel" d="M510 400 V520 H640 V640 H780" marker-end="url(#arrow)" />
+  <text class="note" x="520" y="480">cover_file_id</text>
+  <text class="note" x="700" y="620">N</text>
+
+  <!-- tag -> article_tag -->
+  <path class="rel" d="M150 570 V630" marker-end="url(#arrow)" />
+  <text class="note" x="160" y="605">M</text>
+
+  <!-- article_tag -> article -->
+  <path class="rel" d="M260 700 H320 V220 H380" marker-end="url(#arrow)" />
+  <text class="note" x="275" y="692">N</text>
+  <text class="note" x="330" y="210">M</text>
+
+  <!-- 状态机小注 -->
+  <g transform="translate(380,700)">
+    <rect class="box" width="260" height="140" rx="8" fill="#f8fafc" />
+    <text class="card-title ink" x="12" y="28">文章状态机</text>
+    <text class="note" x="12" y="56">0 草稿 ──发布──▶ 1 已发布</text>
+    <text class="note" x="12" y="78">1 已发布 ──下架──▶ 2 已下架</text>
+    <text class="note" x="12" y="100">2 已下架 ──发布──▶ 1 已发布</text>
+    <text class="note" x="12" y="122">0/2 可逻辑删 · 1 须先下架</text>
+  </g>
+</svg>
+</div>
+
+<div class="foot">
+  <p><strong>关系摘要</strong></p>
+  <p>blog_category 1 — N blog_article（category_id）；blog_tag M — N blog_article（blog_article_tag）；blog_article 1 — 1 blog_article_detail；detail.content_file_id / draft_file_id → sys_file.id；blog_article.cover_file_id → sys_file.id；sys_file 登记全部 OSS 上传（biz_type/biz_id）；blog_site_config 独立。</p>
+  <p style="margin-top:8px">效力：与 <code>table-design.md</code> 冲突时以表格正文为准。审计字段（create_time / update_time / create_by / update_by / deleted）全表齐套，图中省略。</p>
+</div>
+</body>
+</html>

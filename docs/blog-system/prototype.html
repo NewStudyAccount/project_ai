@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>blog-system · 页面原型</title>
+<style>
+  :root {
+    --bg-page: #f1f5f9;
+    --bg-surface: #ffffff;
+    --bg-sidebar: #0f172a;
+    --bg-sidebar-active: rgba(56, 189, 248, 0.12);
+    --text-primary: #0f172a;
+    --text-regular: #334155;
+    --text-secondary: #64748b;
+    --text-on-dark: #e2e8f0;
+    --text-on-dark-muted: #94a3b8;
+    --border: #e2e8f0;
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --accent-bar: #38bdf8;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --warning: #f59e0b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+  /* ===== 顶栏切换 ===== */
+  .proto-bar {
+    background: var(--bg-sidebar);
+    color: var(--text-on-dark);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .proto-bar h1 { font-size: 15px; font-weight: 600; }
+  .proto-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .proto-tab {
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background: transparent;
+    color: var(--text-on-dark-muted);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .proto-tab.active {
+    background: var(--bg-sidebar-active);
+    color: var(--accent-bar);
+    border-color: var(--accent-bar);
+  }
+  .proto-note {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-on-dark-muted);
+    max-width: 420px;
+    line-height: 1.5;
+  }
+  .panel { display: none; }
+  .panel.show { display: block; }
+
+  /* ===== 管理端壳 ===== */
+  .app {
+    display: flex;
+    height: calc(100vh - 52px);
+    min-width: 1100px;
+  }
+  .sidebar {
+    width: 220px;
+    background: var(--bg-sidebar);
+    color: var(--text-on-dark);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 8px;
+  }
+  .nav-l1 {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px 0 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text-on-dark-muted);
+    cursor: pointer;
+    margin-bottom: 4px;
+  }
+  .nav-l1.active {
+    background: var(--bg-sidebar-active);
+    color: var(--accent-bar);
+    font-weight: 500;
+  }
+  .nav-section {
+    margin: 12px 12px 6px;
+    font-size: 11px;
+    color: #475569;
+    letter-spacing: 0.04em;
+  }
+  .main {
+    flex: 1;
+    overflow: auto;
+    padding: 20px;
+    background: var(--bg-page);
+  }
+  .page-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .page-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    align-items: center;
+  }
+  .toolbar .spacer { flex: 1; }
+  .btn {
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    color: var(--text-regular);
+    border-radius: 6px;
+    padding: 7px 12px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .btn.primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+  .btn.primary:hover { background: var(--primary-hover); }
+  .btn.danger { color: var(--danger); border-color: #fecaca; }
+  .btn.sm { padding: 4px 8px; font-size: 11px; }
+  .input, .select {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 12px;
+    color: var(--text-regular);
+    background: #fff;
+    min-width: 120px;
+  }
+  table.list {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  table.list th {
+    text-align: left;
+    color: var(--text-secondary);
+    font-weight: 500;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    background: #f8fafc;
+  }
+  table.list td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-regular);
+    vertical-align: middle;
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+  }
+  .status-pill.ok { background: #dcfce7; color: #166534; }
+  .status-pill.warn { background: #fef3c7; color: #92400e; }
+  .status-pill.mute { background: #e2e8f0; color: #475569; }
+  .status-pill.draft { background: #e0e7ff; color: #3730a3; }
+  .tag-chip {
+    display: inline-block;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin: 0 4px 4px 0;
+    font-size: 11px;
+  }
+  .muted { color: var(--text-secondary); }
+  .split {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 12px;
+    height: calc(100% - 40px);
+    min-height: 480px;
+  }
+  .tree-panel {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    overflow: auto;
+  }
+  .tree-item {
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-regular);
+  }
+  .tree-item:hover { background: #f1f5f9; }
+  .tree-item.active {
+    background: #eff6ff;
+    color: var(--primary);
+    font-weight: 500;
+  }
+  .tree-item.child { padding-left: 28px; }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 10px 12px;
+    align-items: center;
+    max-width: 720px;
+  }
+  .form-grid label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: right;
+  }
+  textarea.input { width: 100%; min-height: 96px; resize: vertical; }
+  .editor-box {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-height: 220px;
+    padding: 12px;
+    font-size: 12px;
+    color: var(--text-regular);
+    background: #f8fafc;
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+  .editor-toolbar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .hint {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    line-height: 1.6;
+  }
+
+  /* ===== 用户端 portal ===== */
+  .portal {
+    min-height: calc(100vh - 52px);
+    background: #fafafa;
+  }
+  .portal-nav {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    height: 56px;
+    display: flex;
+    align-items: center;
+    padding: 0 40px;
+    gap: 24px;
+  }
+  .portal-logo {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-primary);
+  }
+  .portal-links {
+    display: flex;
+    gap: 18px;
+    font-size: 13px;
+    color: var(--text-regular);
+  }
+  .portal-links span { cursor: pointer; }
+  .portal-links span.on { color: var(--primary); font-weight: 500; }
+  .portal-search {
+    margin-left: auto;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 12px;
+    width: 200px;
+    color: var(--text-secondary);
+  }
+  .portal-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 55%, #0ea5e9 100%);
+    color: #f8fafc;
+    padding: 48px 40px 36px;
+  }
+  .portal-hero h2 { font-size: 28px; font-weight: 700; letter-spacing: 0.02em; }
+  .portal-hero p { margin-top: 10px; opacity: 0.85; font-size: 13px; max-width: 560px; line-height: 1.7; }
+  .portal-body {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 28px 24px 48px;
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 24px;
+  }
+  .article-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+  .article-card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .article-card h3:hover { color: var(--primary); }
+  .article-meta {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+  }
+  .article-summary {
+    font-size: 13px;
+    color: var(--text-regular);
+    line-height: 1.75;
+  }
+  .side-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .side-card h4 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .side-list li {
+    list-style: none;
+    padding: 6px 0;
+    font-size: 12px;
+    color: var(--text-regular);
+    display: flex;
+    justify-content: space-between;
+  }
+  .tag-cloud span {
+    display: inline-block;
+    margin: 0 6px 8px 0;
+    padding: 4px 10px;
+    background: #f1f5f9;
+    border-radius: 999px;
+    font-size: 11px;
+    color: var(--text-regular);
+  }
+  .detail-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 24px 48px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .detail-wrap h1 {
+    font-size: 26px;
+    line-height: 1.35;
+    margin-bottom: 12px;
+  }
+  .detail-body {
+    margin-top: 24px;
+    font-size: 14px;
+    line-height: 1.9;
+    color: var(--text-regular);
+    white-space: pre-wrap;
+  }
+  .portal-footer {
+    text-align: center;
+    padding: 24px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    border-top: 1px solid var(--border);
+    background: #fff;
+  }
+  .pill-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .pill-bar span {
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-regular);
+    cursor: pointer;
+  }
+  .pill-bar span.on {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+</style>
+</head>
+<body>
+<div class="proto-bar">
+  <h1>blog-system · 页面原型</h1>
+  <div class="proto-tabs">
+    <button class="proto-tab active" data-panel="admin-articles">管理 · 文章</button>
+    <button class="proto-tab" data-panel="admin-taxonomy">管理 · 分类/标签</button>
+    <button class="proto-tab" data-panel="admin-create-meta">管理 · 新建主表</button>
+    <button class="proto-tab" data-panel="admin-write-content">管理 · 写正文</button>
+    <button class="proto-tab" data-panel="admin-edit-meta">管理 · 编辑主表</button>
+    <button class="proto-tab" data-panel="portal-home">用户端 · 首页</button>
+    <button class="proto-tab" data-panel="portal-list">用户端 · 列表</button>
+    <button class="proto-tab" data-panel="portal-detail">用户端 · 详情</button>
+  </div>
+  <div class="proto-note">布局对齐 admin-ui-design（墨岩）· 效力低于 table-design / business-design · 原型不覆盖契约</div>
+</div>
+
+<!-- ========== 管理 · 文章列表 ========== -->
+<div class="panel show" id="admin-articles">
+  <div class="app">
+    <aside class="sidebar">
+      <div class="nav-section">内容管理</div>
+      <div class="nav-l1 active">文章管理</div>
+      <div class="nav-l1">分类管理</div>
+      <div class="nav-l1">标签管理</div>
+      <div class="nav-section">系统</div>
+      <div class="nav-l1">文件管理</div>
+      <div class="nav-l1">审计日志</div>
+      <div class="nav-l1">菜单 / 角色</div>
+    </aside>
+    <main class="main">
+      <div class="page-title">文章管理</div>
+      <div class="page-card">
+        <div class="toolbar">
+          <input class="input" placeholder="标题关键词" style="min-width:180px" />
+          <select class="select">
+            <option>全部分类</option>
+            <option>技术</option>
+            <option>· 后端</option>
+            <option>· 前端</option>
+            <option>随笔</option>
+          </select>
+          <select class="select">
+            <option>全部状态</option>
+            <option>草稿</option>
+            <option>已发布</option>
+            <option>已下架</option>
+          </select>
+          <select class="select">
+            <option>全部标签</option>
+            <option>Vue</option>
+            <option>Spring</option>
+            <option>设计</option>
+          </select>
+          <button class="btn">查询</button>
+          <button class="btn">重置</button>
+          <div class="spacer"></div>
+          <button class="btn primary" data-goto="admin-create-meta">+ 新建文章</button>
+        </div>
+        <table class="list">
+          <thead>
+            <tr>
+              <th style="width:28%">标题</th>
+              <th>分类</th>
+              <th>标签</th>
+              <th>作者</th>
+              <th>状态</th>
+              <th>发布时间</th>
+              <th style="width:140px">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div style="font-weight:500;color:#0f172a">Spring Cloud 网关鉴权实践</div>
+                <div class="muted" style="font-size:11px;margin-top:4px">slug: gateway-auth</div>
+              </td>
+              <td>技术 / 后端</td>
+              <td><span class="tag-chip">Spring</span><span class="tag-chip">网关</span></td>
+              <td>qjj</td>
+              <td><span class="status-pill ok">已发布</span></td>
+              <td class="muted">2026-10-12 10:20</td>
+              <td>
+                <button class="btn sm" data-goto="admin-edit-meta">改信息</button>
+                <button class="btn sm" data-goto="admin-write-content">改正文</button>
+                <button class="btn sm">下架</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div style="font-weight:500;color:#0f172a">前端列表页设计备忘</div>
+                <div class="muted" style="font-size:11px;margin-top:4px">slug: —</div>
+              </td>
+              <td>技术 / 前端</td>
+              <td><span class="tag-chip">Vue</span><span class="tag-chip">设计</span></td>
+              <td>qjj</td>
+              <td><span class="status-pill draft">草稿</span></td>
+              <td class="muted">—</td>
+              <td>
+                <button class="btn sm" data-goto="admin-edit-meta">改信息</button>
+                <button class="btn sm" data-goto="admin-write-content">写正文</button>
+                <button class="btn sm danger">删除</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div style="font-weight:500;color:#0f172a">十月读书小结</div>
+                <div class="muted" style="font-size:11px;margin-top:4px">slug: october-notes</div>
+              </td>
+              <td>随笔</td>
+              <td><span class="tag-chip">随笔</span></td>
+              <td>qjj</td>
+              <td><span class="status-pill warn">已下架</span></td>
+              <td class="muted">2026-10-01 09:00</td>
+              <td>
+                <button class="btn sm" data-goto="admin-edit-meta">改信息</button>
+                <button class="btn sm" data-goto="admin-write-content">改正文</button>
+                <button class="btn sm danger">删除</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="hint">分页：current / size · 排序白名单 publish_time · 筛选 keyword/categoryId/tagId/status · 仅管理端可见草稿/下架</div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ========== 管理 · 分类/标签 ========== -->
+<div class="panel" id="admin-taxonomy">
+  <div class="app">
+    <aside class="sidebar">
+      <div class="nav-section">内容管理</div>
+      <div class="nav-l1">文章管理</div>
+      <div class="nav-l1 active">分类管理</div>
+      <div class="nav-l1">标签管理</div>
+    </aside>
+    <main class="main">
+      <div class="page-title">分类与标签</div>
+      <div class="split">
+        <div class="tree-panel">
+          <div class="toolbar" style="margin-bottom:8px">
+            <strong style="font-size:13px">分类树</strong>
+            <div class="spacer"></div>
+            <button class="btn sm primary">+ 根分类</button>
+          </div>
+          <div class="tree-item active">技术 <span class="muted">（12）</span></div>
+          <div class="tree-item child">后端 <span class="muted">（8）</span></div>
+          <div class="tree-item child">前端 <span class="muted">（4）</span></div>
+          <div class="tree-item">随笔 <span class="muted">（3）</span></div>
+          <div class="hint" style="margin-top:12px">最多 2 级 · 删除须无子分类且无文章</div>
+        </div>
+        <div class="page-card">
+          <div class="toolbar">
+            <strong style="font-size:13px">分类编辑 · 技术</strong>
+            <div class="spacer"></div>
+            <button class="btn">取消</button>
+            <button class="btn primary">保存</button>
+          </div>
+          <div class="form-grid">
+            <label>名称</label>
+            <input class="input" value="技术" />
+            <label>slug</label>
+            <input class="input" value="tech" />
+            <label>父级</label>
+            <select class="select"><option>无（根）</option></select>
+            <label>排序</label>
+            <input class="input" value="1" />
+            <label>状态</label>
+            <select class="select"><option>启用</option><option>停用</option></select>
+            <label>描述</label>
+            <textarea class="input">技术相关文章</textarea>
+          </div>
+
+          <div style="height:24px"></div>
+          <div class="toolbar">
+            <strong style="font-size:13px">标签列表</strong>
+            <div class="spacer"></div>
+            <button class="btn primary">+ 新建标签</button>
+          </div>
+          <table class="list">
+            <thead>
+              <tr>
+                <th>名称</th>
+                <th>slug</th>
+                <th>引用</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="tag-chip">Spring</span></td>
+                <td class="muted">spring</td>
+                <td>6</td>
+                <td><span class="status-pill ok">启用</span></td>
+                <td><button class="btn sm">编辑</button> <button class="btn sm danger">删除</button></td>
+              </tr>
+              <tr>
+                <td><span class="tag-chip">Vue</span></td>
+                <td class="muted">vue</td>
+                <td>4</td>
+                <td><span class="status-pill ok">启用</span></td>
+                <td><button class="btn sm">编辑</button> <button class="btn sm danger">删除</button></td>
+              </tr>
+              <tr>
+                <td><span class="tag-chip">设计</span></td>
+                <td class="muted">design</td>
+                <td>2</td>
+                <td><span class="status-pill mute">停用</span></td>
+                <td><button class="btn sm">编辑</button> <button class="btn sm danger">删除</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ========== 管理 · 新建主表 ========== -->
+<div class="panel" id="admin-create-meta">
+  <div class="app">
+    <aside class="sidebar">
+      <div class="nav-section">内容管理</div>
+      <div class="nav-l1 active">文章管理</div>
+      <div class="nav-l1">分类管理</div>
+      <div class="nav-l1">标签管理</div>
+    </aside>
+    <main class="main">
+      <div class="page-title">新建文章 · 第 1 步 / 共 2 步 · 主表</div>
+      <div class="page-card">
+        <div class="hint" style="margin-bottom:16px;padding:10px 12px;background:#eff6ff;border-radius:8px;color:#1e40af">
+          流程：本页只建 <strong>blog_article 主表</strong> → 保存成功后<strong>自动跳转</strong>「写正文」页（详细表 / OSS）。
+          本页<strong>不出现</strong>正文编辑器。
+        </div>
+        <div class="form-grid" style="max-width:720px">
+          <label>标题 *</label>
+          <input class="input" placeholder="文章标题" />
+          <label>slug</label>
+          <input class="input" placeholder="空则用 id；如 gateway-auth" />
+          <label>分类</label>
+          <select class="select">
+            <option>未分类</option>
+            <option>技术 / 后端</option>
+            <option>技术 / 前端</option>
+            <option>随笔</option>
+          </select>
+          <label>标签</label>
+          <div>
+            <span class="tag-chip">Spring ×</span>
+            <button class="btn sm">+ 添加标签</button>
+          </div>
+          <label>摘要</label>
+          <textarea class="input" placeholder="列表展示用，≤500 字" style="min-height:64px"></textarea>
+          <label>封面</label>
+          <div>
+            <button class="btn">上传封面（sys_file）</button>
+            <span class="muted" style="margin-left:8px;font-size:11px">cover_file_id · ≤10MB</span>
+          </div>
+          <label>置顶</label>
+          <select class="select"><option>否</option><option>是</option></select>
+        </div>
+        <div class="toolbar" style="margin-top:24px;justify-content:flex-end">
+          <button class="btn">取消</button>
+          <button class="btn primary" data-goto="admin-write-content">保存主表并去写正文 →</button>
+        </div>
+        <div class="hint" style="text-align:right;margin-top:8px">
+          POST /admin/articles · 只写 blog_article · status=0 草稿 · 返回 articleId 后跳转写正文
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ========== 管理 · 写正文（详细表） ========== -->
+<div class="panel" id="admin-write-content">
+  <div class="app">
+    <aside class="sidebar">
+      <div class="nav-section">内容管理</div>
+      <div class="nav-l1 active">文章管理</div>
+      <div class="nav-l1">分类管理</div>
+      <div class="nav-l1">标签管理</div>
+    </aside>
+    <main class="main">
+      <div class="page-title">写正文 · 第 2 步 / 共 2 步 · 详细表（双轨：草稿 / 线上）</div>
+      <div class="page-card">
+        <div class="hint" style="margin-bottom:16px;padding:10px 12px;background:#ecfdf5;border-radius:8px;color:#065f46">
+          主表：<strong>Spring Cloud 网关鉴权实践</strong> · 当前 <span class="status-pill ok">已发布</span>
+          · <span class="status-pill warn">有未发布草稿</span>
+          · <strong>线上仍是旧版正文</strong>（object_key）· 编辑器内容来自 draft_object_key
+        </div>
+        <div class="form-grid" style="max-width:860px">
+          <label>正文格式</label>
+          <select class="select">
+            <option>markdown</option>
+            <option>html</option>
+          </select>
+          <label>正文 *</label>
+          <div>
+            <div class="editor-toolbar">
+              <button class="btn sm">B</button>
+              <button class="btn sm">I</button>
+              <button class="btn sm">H1</button>
+              <button class="btn sm">H2</button>
+              <button class="btn sm">链接</button>
+              <button class="btn sm">代码</button>
+              <button class="btn sm">图片</button>
+              <span class="muted" style="font-size:11px;margin-left:8px">≤500KB · 保存草稿只写 draft 轨</span>
+            </div>
+            <div class="editor-box"># 这是未发布的修改稿
+
+已发布文章改这里，点「保存草稿」不会下线线上旧文；
+点「发布 / 更新发布」才把本稿提升为线上版。</div>
+            <div class="hint" style="margin-top:8px">
+              保存草稿：put draft 对象 + <strong>登记 sys_file(ARTICLE_DRAFT)</strong> + detail.draft_file_id<br/>
+              发布：登记 sys_file(ARTICLE_LIVE) + detail.content_file_id ← 线上；用户端才切换
+            </div>
+          </div>
+          <label>SEO 标题</label>
+          <input class="input" placeholder="存 draft_seo_*，发布时覆盖线上" />
+          <label>SEO 描述</label>
+          <textarea class="input" placeholder="draft_seo_description" style="min-height:56px"></textarea>
+        </div>
+        <div class="toolbar" style="margin-top:24px">
+          <button class="btn" data-goto="admin-edit-meta">← 返回改主表</button>
+          <div class="spacer"></div>
+          <button class="btn danger">放弃草稿</button>
+          <button class="btn">保存草稿（线上不动）</button>
+          <button class="btn primary">发布 / 更新发布</button>
+        </div>
+        <div class="hint">
+          <strong>保存草稿</strong>：PUT …/content mode=draft → 只写 draft_* · status 不变 · 已发布文用户端仍读旧 object_key<br/>
+          <strong>发布</strong>：POST …/publish → draft 提升为 object_key · status=1 · 用户端才切换<br/>
+          <strong>放弃草稿</strong>：DELETE …/draft · 线上版保持不变
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ========== 管理 · 编辑主表 ========== -->
+<div class="panel" id="admin-edit-meta">
+  <div class="app">
+    <aside class="sidebar">
+      <div class="nav-section">内容管理</div>
+      <div class="nav-l1 active">文章管理</div>
+      <div class="nav-l1">分类管理</div>
+      <div class="nav-l1">标签管理</div>
+    </aside>
+    <main class="main">
+      <div class="page-title">编辑文章信息 · 仅主表</div>
+      <div class="page-card">
+        <div class="hint" style="margin-bottom:16px;padding:10px 12px;background:#fff7ed;border-radius:8px;color:#9a3412">
+          本页与「写正文」<strong>完全分离</strong>：保存只更新 <strong>blog_article</strong>。
+          正文请走独立入口「写正文 / 编辑正文」（详细表 + OSS）。
+        </div>
+        <div class="form-grid" style="max-width:720px">
+          <label>标题 *</label>
+          <input class="input" value="Spring Cloud 网关鉴权实践" />
+          <label>slug</label>
+          <input class="input" value="gateway-auth" />
+          <label>分类</label>
+          <select class="select">
+            <option>技术 / 后端</option>
+            <option>技术 / 前端</option>
+            <option>随笔</option>
+          </select>
+          <label>标签</label>
+          <div>
+            <span class="tag-chip">Spring ×</span>
+            <span class="tag-chip">网关 ×</span>
+            <button class="btn sm">+ 添加</button>
+          </div>
+          <label>摘要</label>
+          <textarea class="input" style="min-height:64px">总结网关统一 JWT 鉴权、业务只信 X-User-* 的实践。</textarea>
+          <label>封面</label>
+          <div>
+            <button class="btn">更换封面</button>
+            <span class="muted" style="margin-left:8px;font-size:11px">cover_file_id</span>
+          </div>
+          <label>置顶</label>
+          <select class="select"><option>否</option><option>是</option></select>
+          <label>状态</label>
+          <div>
+            <span class="status-pill ok">已发布</span>
+            <span class="muted" style="margin-left:8px;font-size:11px">本页不改 status / 不写正文</span>
+          </div>
+        </div>
+        <div class="toolbar" style="margin-top:24px;justify-content:flex-end">
+          <button class="btn" data-goto="admin-write-content">去编辑正文 →</button>
+          <button class="btn primary">保存主表</button>
+        </div>
+        <div class="hint" style="text-align:right;margin-top:8px">
+          PUT /admin/articles/{id} · 只更主表 · 不触碰 detail.object_key
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ========== 用户端 · 首页 ========== -->
+<div class="panel" id="portal-home">
+  <div class="portal">
+    <div class="portal-nav">
+      <div class="portal-logo">QJJ Blog</div>
+      <div class="portal-links">
+        <span class="on">首页</span>
+        <span>文章</span>
+        <span>分类</span>
+        <span>标签</span>
+        <span>关于</span>
+      </div>
+      <div class="portal-search">搜索文章…</div>
+    </div>
+    <div class="portal-hero">
+      <h2>记录 · 分享 · 沉淀</h2>
+      <p>blog-portal 用户端原型：只读已发布文章。标题/摘要/封面来自主表，正文详情走 OSS。站点文案来自 blog_site_config。</p>
+    </div>
+    <div class="portal-body">
+      <div>
+        <div class="pill-bar">
+          <span class="on">全部</span>
+          <span>技术</span>
+          <span>后端</span>
+          <span>前端</span>
+          <span>随笔</span>
+        </div>
+        <div class="article-card">
+          <h3>Spring Cloud 网关鉴权实践</h3>
+          <div class="article-meta">qjj · 2026-10-12 · 技术/后端 · <span class="tag-chip">Spring</span><span class="tag-chip">网关</span></div>
+          <div class="article-summary">总结在 blog 系统中用网关统一 JWT 鉴权、业务服务只信 X-User-* 的实践，以及 /internal/** 的隔离边界。</div>
+        </div>
+        <div class="article-card">
+          <h3>前端列表页设计备忘</h3>
+          <div class="article-meta">qjj · 2026-10-08 · 技术/前端 · <span class="tag-chip">Vue</span><span class="tag-chip">设计</span></div>
+          <div class="article-summary">列表页工具栏密度、状态软胶囊、权限钮不渲染等布局约定摘要。</div>
+        </div>
+        <div class="article-card">
+          <h3>十月读书小结</h3>
+          <div class="article-meta">qjj · 2026-10-01 · 随笔 · <span class="tag-chip">随笔</span></div>
+          <div class="article-summary">本月阅读笔记与摘录，仅作个人记录。</div>
+        </div>
+      </div>
+      <div>
+        <div class="side-card">
+          <h4>分类</h4>
+          <ul class="side-list">
+            <li><span>技术</span><span class="muted">12</span></li>
+            <li><span>· 后端</span><span class="muted">8</span></li>
+            <li><span>· 前端</span><span class="muted">4</span></li>
+            <li><span>随笔</span><span class="muted">3</span></li>
+          </ul>
+        </div>
+        <div class="side-card">
+          <h4>标签</h4>
+          <div class="tag-cloud">
+            <span>Spring 6</span>
+            <span>Vue 4</span>
+            <span>网关 3</span>
+            <span>设计 2</span>
+            <span>随笔 1</span>
+          </div>
+        </div>
+        <div class="side-card">
+          <h4>站点</h4>
+          <div class="muted" style="font-size:12px;line-height:1.7">
+            来自 blog_site_config：site.title / site.description / site.copyright
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="portal-footer">© 2026 QJJ Blog · site.copyright</div>
+  </div>
+</div>
+
+<!-- ========== 用户端 · 列表 ========== -->
+<div class="panel" id="portal-list">
+  <div class="portal">
+    <div class="portal-nav">
+      <div class="portal-logo">QJJ Blog</div>
+      <div class="portal-links">
+        <span>首页</span>
+        <span class="on">文章</span>
+        <span>分类</span>
+        <span>标签</span>
+        <span>关于</span>
+      </div>
+      <div class="portal-search">搜索文章…</div>
+    </div>
+    <div class="portal-body" style="grid-template-columns:1fr 260px">
+      <div>
+        <div class="page-title" style="margin-bottom:12px">文章列表 <span class="muted" style="font-size:12px;font-weight:400">?category=tech&amp;keyword=网关</span></div>
+        <div class="pill-bar">
+          <span class="on">最新</span>
+          <span>置顶优先</span>
+          <span class="muted" style="border:none;background:transparent">共 3 篇</span>
+        </div>
+        <div class="article-card">
+          <h3>Spring Cloud 网关鉴权实践</h3>
+          <div class="article-meta">2026-10-12 · 技术/后端</div>
+          <div class="article-summary">统一 JWT 鉴权、X-User-* 身份注入、内部接口隔离……</div>
+        </div>
+        <div class="article-card">
+          <h3>前端列表页设计备忘</h3>
+          <div class="article-meta">2026-10-08 · 技术/前端</div>
+          <div class="article-summary">工具栏、表格、状态胶囊、权限按钮……</div>
+        </div>
+        <div class="article-card">
+          <h3>十月读书小结</h3>
+          <div class="article-meta">2026-10-01 · 随笔</div>
+          <div class="article-summary">阅读摘录与笔记……</div>
+        </div>
+      </div>
+      <div>
+        <div class="side-card">
+          <h4>筛选</h4>
+          <div class="muted" style="font-size:12px;line-height:1.8">
+            GET /api/v1/public/articles<br/>
+            · categoryId<br/>
+            · tagId<br/>
+            · keyword<br/>
+            · only status=1
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="portal-footer">© 2026 QJJ Blog</div>
+  </div>
+</div>
+
+<!-- ========== 用户端 · 详情 ========== -->
+<div class="panel" id="portal-detail">
+  <div class="portal">
+    <div class="portal-nav">
+      <div class="portal-logo">QJJ Blog</div>
+      <div class="portal-links">
+        <span>首页</span>
+        <span class="on">文章</span>
+        <span>分类</span>
+        <span>标签</span>
+        <span>关于</span>
+      </div>
+      <div class="portal-search">搜索文章…</div>
+    </div>
+    <div style="max-width:800px;margin:24px auto;padding:0 16px">
+      <div class="detail-wrap">
+        <div class="muted" style="font-size:12px;margin-bottom:10px">
+          <span class="tag-chip">Spring</span>
+          <span class="tag-chip">网关</span>
+          &nbsp;·&nbsp; 技术/后端 &nbsp;·&nbsp; qjj &nbsp;·&nbsp; 2026-10-12
+        </div>
+        <h1>Spring Cloud 网关鉴权实践</h1>
+        <div class="muted" style="font-size:12px">seo_title / seo_description 来自 blog_article_detail</div>
+        <div class="detail-body"># 背景
+
+业务服务不自建登录，由网关统一验签并注入 X-User-Id。
+
+## 要点
+1. 网关 JWT 资源服务器
+2. 业务只信网关注入身份
+3. /internal/** 网络隔离
+
+（正文自 MinIO 对象读取：blog_article_detail.object_key）</div>
+        <div class="hint" style="margin-top:24px">
+          GET /api/v1/public/articles/{id} · 仅已发布 · 列表不加载正文 · 大文可选 content-url 预签名
+        </div>
+      </div>
+    </div>
+    <div class="portal-footer">© 2026 QJJ Blog</div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var tabs = document.querySelectorAll('.proto-tab');
+    var panels = document.querySelectorAll('.panel');
+
+    function show(id) {
+      tabs.forEach(function (t) {
+        t.classList.toggle('active', t.getAttribute('data-panel') === id);
+      });
+      panels.forEach(function (p) {
+        p.classList.toggle('show', p.id === id);
+      });
+    }
+
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        show(tab.getAttribute('data-panel'));
+      });
+    });
+
+    document.querySelectorAll('[data-goto]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        show(btn.getAttribute('data-goto'));
+      });
+    });
+  })();
+</script>
+</body>
+</html>
