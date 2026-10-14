@@ -25,7 +25,7 @@ blog 系统骨架已落地（`backend/blog/*`、`frontend/blog-admin`、`blog_db
 | 文章标签 | `blog_tag` + `blog_article_tag` 多对多 |
 | 文章主表 | `blog_article`（列表/摘要/状态/归属） |
 | 文章详细表 | `blog_article_detail`（正文元数据与可检索摘要字段） |
-| 具体信息存 OSS | 正文 Markdown/HTML 对象写 MinIO，库内只持 `object_key` |
+| 具体信息存 OSS | 正文 Markdown/HTML 对象写 MinIO；业务只持 `content_file_id` / `draft_file_id`，定位经 `sys_file.object_key` |
 | 已有管理前端、需建用户前端 | `blog-admin` 扩内容管理页；**新建** `blog-portal` |
 
 ### 1.2 项目边界（Non-goals）
@@ -38,7 +38,8 @@ blog 系统骨架已落地（`backend/blog/*`、`frontend/blog-admin`、`blog_db
 - Excel、分布式定时任务、多语言强制交付、MinIO 对象定时清理
 - 独立搜索引擎（Elasticsearch 等）；检索先 DB，量级不够再开变更
 - 生产密钥入仓；连接串/账密只查 `docs/test-env.md` / Nacos
-- 改动既有横切能力口径（发号、`@Idempotent`、`@RateLimit`、审计、`sys_file` 文件管理）
+- 改动既有横切能力口径（发号、`@Idempotent`、`@RateLimit`、审计、`sys_file` 既有列与删除语义）
+- **例外（已裁决）**：`sys_file` 允许**增量补列** `biz_type`/`biz_id`（见 table-design §2.0）；不改既有列、不改 `deleted` 删除语义
 
 ---
 
@@ -65,7 +66,7 @@ flowchart TB
   TAG -->|M:N| AT
   A -->|1:1| AT
   A -->|1:1| D
-  D -->|object_key| OBJ
+  D -->|content_file_id| OBJ
 ```
 
 **主表 / 详细表拆分原因：**
@@ -74,7 +75,7 @@ flowchart TB
 |----|------|----------|
 | `blog_article` | 列表、筛选、排序、状态、分类、摘要、封面 | 高频读（列表/首页） |
 | `blog_article_detail` | 正文元数据、字数、格式、目录/SEO 等 | 低频读（仅详情页） |
-| OSS 对象 | Markdown/HTML **正文全文** | 详情读；列表**不**加载 |
+| OSS 对象 | Markdown/HTML **正文全文**（经 `sys_file` 登记） | 详情读；列表**不**加载 |
 
 ---
 
@@ -101,7 +102,7 @@ stateDiagram-v2
 **规则：**
 
 1. 删除仅对 `草稿` / `已下架` 开放（逻辑删除 `deleted=1`）；已发布须先下架
-2. 发布前必须存在正文（OSS 对象可读 + `blog_article_detail` 有 `object_key`）
+2. 发布前必须存在正文（OSS 对象可读 + `blog_article_detail` 有 `content_file_id` 或 `draft_file_id`）
 3. 发布 / 下架 / 重发 为关键写：`@Idempotent` + 审计
 4. 用户端**只**读 `status=1 AND deleted=0`
 5. 改分类/标签不影响状态；改正文不自动改状态（已发布文章改正文即时生效，见 3.3）
@@ -133,15 +134,15 @@ stateDiagram-v2
 | 覆盖更新 | put 新对象 → **INSERT sys_file** → 更新 detail.file_id → 旧 sys_file 行逻辑删 |
 | 列表 | **禁止**拉正文对象 |
 | 详情 | `content_file_id → sys_file → object_key → MinIO` |
-| 大小 | 单篇正文 ≤ **500KB**；图片封面走 `ARTICLE_COVER` / 通用 `FILE` |
+| 大小 | 单篇正文 ≤ **500KB**（`text/markdown` / `text/html`，应用层校验）；封面走 `ARTICLE_COVER` / 通用 `FILE`（既有 MIME 白名单） |
 
 **写入铁律：** 禁止「只 put MinIO、不登记 `sys_file`」；禁止业务表裸存 object_key 而无 file_id 对应行。
 
 **读路径（用户端详情）：**
 
 ```
-GET /api/v1/public/articles/{id}
-  → 校验 status=1
+GET /api/v1/public/articles/{idOrSlug}
+  → 校验 status=1（id 或 slug 解析）
   → 读 blog_article + detail + tags
   → content_file_id → sys_file（ARTICLE_LIVE）→ object_key
   → ObjectStorageClient 读对象 → 组装 content
@@ -165,12 +166,12 @@ GET /api/v1/public/articles/{id}
    → 只写 blog_article；status=0；返回 articleId
 
 2) （自动跳转）「写正文页」
-   → put 正文到 MinIO
-   → 写/更新 blog_article_detail（object_key、format、word_count、seo_*）
+   → put 正文到 MinIO + 登记 sys_file
+   → 写/更新 blog_article_detail（content_file_id 或 draft_file_id、format、word_count、seo_*）
    → 主表不在此步更新
 
 3) 「保存正文」或「保存正文并发布」
-   → POST /admin/articles/{id}/publish（须 detail.object_key 非空）
+   → POST /admin/articles/{id}/publish（须 detail 存在 draft_file_id 或 content_file_id）
 ```
 
 **新建顺序契约：** **主表 INSERT 成功且拿到 id 之后**，才允许写详细表与 OSS；写 OSS 必须 **同步登记 `sys_file`** 再回填 `file_id`。禁止先写 OSS 再补主表作主路径。前端 **禁止** 一页同时提交主表+正文。
@@ -180,13 +181,13 @@ GET /api/v1/public/articles/{id}
 | 页面 | 接口 | 只碰 | 不碰 |
 |------|------|------|------|
 | **编辑主表页** | `PUT /admin/articles/{id}` | `blog_article`（标题/摘要/分类/标签/封面/slug/置顶） | detail、OSS 正文 |
-| **写正文 / 改正文页** | `PUT /admin/articles/{id}/content` | MinIO 新对象 + `blog_article_detail` | 主表业务字段 |
+| **写正文 / 改正文页** | `PUT /admin/articles/{id}/content` | MinIO 新对象 + `sys_file` + `blog_article_detail` | 主表业务字段 |
 | 发布/下架（列表或正文页） | `POST …/publish` / `…/offline` | 仅主表 `status`/`publish_time` | detail、OSS |
 
 **编辑契约：**
 
 1. **两页两接口**：改信息与改正文不混在同一页同一次提交
-2. 保存主表 **不得** 隐式改写 `object_key`；保存正文 **不得** 隐式改写标题/分类/标签
+2. 保存主表 **不得** 隐式改写 `content_file_id` / `draft_file_id`；保存正文 **不得** 隐式改写标题/分类/标签
 3. 已发布文章改元数据或改正文：保持 `status=1`，不自动下架
 4. 各关键写分别 `@Idempotent` + 审计（ARTICLE_UPDATE / ARTICLE_CONTENT_UPDATE）
 
@@ -196,8 +197,8 @@ GET /api/v1/public/articles/{id}
 
 **规则：草稿永不挤掉线上正文；只有「发布」才切换线上版。**
 
-| 当前状态 | 操作 | `draft_object_key` | `object_key` | `status` | 用户端 |
-|----------|------|--------------------|--------------|----------|--------|
+| 当前状态 | 操作 | `draft_file_id` | `content_file_id` | `status` | 用户端 |
+|----------|------|-----------------|-------------------|----------|--------|
 | 从未发布（0） | 保存草稿 | 更新 | 仍空 | 0 | 不可见 |
 | 从未发布（0） | 发布 | 清空 | **写入 draft→live** | 1 | 可见（新文） |
 | **已发布（1）** | **保存草稿** | **更新** | **不动** | **仍为 1** | **仍看线上旧文** |
@@ -235,7 +236,7 @@ GET /api/v1/public/articles/{id}
 | 发布 / 更新发布 | 有草稿或可发布 | 草稿提升为线上；`status=1` |
 | 放弃草稿 | 有未发布草稿 | 丢掉 draft 轨，回到当前线上文 |
 
-**界面提示：** 已发布且存在 `draft_object_key` 时，写正文页显示「有未发布草稿 · 线上仍是旧版」；用户端只读 `object_key`。
+**界面提示：** 已发布且存在 `draft_file_id>0` 时，写正文页显示「有未发布草稿 · 线上仍是旧版」；用户端只读 `content_file_id`。
 
 **元数据（主表）简化约定：** 「编辑主表」保存后元数据即时生效（标题/分类/摘要/封面/置顶）；**正文与 SEO 以发布为准**（SEO 存 draft_seo_*，发布时覆盖 seo_*）。若后续需要「元数据也进草稿轨」，再开变更加 draft 列。
 
@@ -250,17 +251,18 @@ GET /api/v1/public/articles/{id}
 ```
 
 策略与红线裁剪源 = `object-storage-design.md`（MIME/预签名 TTL/禁止业务直绑 SDK/禁止网关中转大包 body）。
+正文 ≤500KB 经业务 JSON 接口写入后由服务端 put，属「小文件经业务接口」；封面等附件走既有 `/api/v1/files` multipart。
 
 ---
 
 ## 4. 库表设计
 
 > **字段级契约以 [table-design.md](./table-design.md) 为唯一源**（含新增/修改清单、索引、种子）。
-> 本节只保留领域摘要；冲突以 table-design 为准。关系图见 [er-diagram.html](./er-diagram.html)。
+> 本节只保留领域摘要；**冲突以 table-design 为准**。关系图见 [er-diagram.html](./er-diagram.html)。
 > 约定：表名 `snake_case`；审计字段齐套（`CLAUDE.md` §6.4.5）；主键 **16 位发号**（`yyyyMMdd` + 8 位日序列）；`id` 对外 String；无物理外键；`uk_` 不做写幂等。
 
 **新增 6 表：** `blog_category` / `blog_tag` / `blog_article` / `blog_article_detail` / `blog_article_tag` / `blog_site_config`。
-**既有表不改 DDL**；封面 `cover_file_id` → `sys_file`；正文对象走 MinIO（不进 `sys_file`）。
+**既有表：** `sys_file` **增量补列** `biz_type`/`biz_id`（唯一修改，见 table-design §2.0）；封面 `cover_file_id`、正文 `content_file_id`/`draft_file_id` 均 → `sys_file.id`；**禁止**业务表裸存 `object_key`。
 
 ### 4.1 `blog_category` 文章分类
 
@@ -308,25 +310,30 @@ GET /api/v1/public/articles/{id}
 | view_count | BIGINT | N | 0 | 预留阅读量字段；**本期不写业务逻辑** |
 | 审计字段 | | | | 同上 |
 
-- 索引：`idx_blog_article_category_id(category_id)`、`idx_blog_article_status(status)`、`idx_blog_article_status_publish_time(status, publish_time)`、`idx_blog_article_author_id(author_id)`、`idx_blog_article_title(title)`（辅助标题检索）
+- 索引：`uk_blog_article_slug(slug)`、`idx_blog_article_category_id(category_id)`、`idx_blog_article_status_pub(status, publish_time)`、`idx_blog_article_author_id(author_id)`、`idx_blog_article_title(title)`（辅助标题检索）
 - 标题检索：管理端/用户端 `title LIKE`（白名单参数绑定，禁止拼 SQL）；中文分词检索不在本期
 
-### 4.4 `blog_article_detail` 文章详细表
+### 4.4 `blog_article_detail` 文章详细表（正文双轨文件引用）
 
 | 字段 | 类型 | 空 | 默认 | 说明 |
 |------|------|----|------|------|
 | id | BIGINT | N | 发号 | 主键 |
 | article_id | BIGINT | N | | 与主表 1:1，`uk` |
-| bucket | VARCHAR(64) | N | '' | MinIO 桶名 |
-| object_key | VARCHAR(255) | N | '' | 正文对象键，空=未写正文 |
-| content_format | VARCHAR(16) | N | 'markdown' | `markdown` / `html` |
-| word_count | INT | N | 0 | 字数（保存时统计） |
-| seo_title | VARCHAR(200) | N | '' | SEO 标题，空则用 `title` |
-| seo_description | VARCHAR(300) | N | '' | SEO 描述 |
+| content_file_id | BIGINT | N | 0 | **线上正文** → `sys_file.id`（biz_type=ARTICLE_LIVE）；0=未发布过 |
+| draft_file_id | BIGINT | N | 0 | **草稿正文** → `sys_file.id`（biz_type=ARTICLE_DRAFT）；0=无草稿 |
+| content_format | VARCHAR(16) | N | 'markdown' | 线上正文格式 `markdown` / `html` |
+| word_count | INT | N | 0 | 线上正文字数 |
+| draft_content_format | VARCHAR(16) | N | 'markdown' | 草稿格式 |
+| draft_word_count | INT | N | 0 | 草稿字数 |
+| seo_title | VARCHAR(200) | N | '' | 线上 SEO（发布时生效） |
+| seo_description | VARCHAR(300) | N | '' | 线上 SEO |
+| draft_seo_title | VARCHAR(200) | N | '' | 草稿 SEO |
+| draft_seo_description | VARCHAR(300) | N | '' | 草稿 SEO |
 | 审计字段 | | | | 同上 |
 
 - 索引：`uk_blog_article_detail_article_id(article_id)`
-- **不存**正文大字段；**不存**标签（关联表）
+- **不存**正文大字段、**不存** `object_key`（定位真相在 `sys_file`）、**不存**标签（关联表）
+- 对象键建议：`blog-content/{articleId}/live/{uuid}.md`、`blog-content/{articleId}/draft/{uuid}.md`
 
 ### 4.5 `blog_article_tag` 文章-标签
 
@@ -337,8 +344,20 @@ GET /api/v1/public/articles/{id}
 | tag_id | BIGINT | N | | 标签 id |
 | 审计字段 | | | | 同上 |
 
-- 索引：`uk_blog_article_tag_article_tag(article_id, tag_id)`、`idx_blog_article_tag_tag_id(tag_id)`
+- 索引：`uk_blog_article_tag_at(article_id, tag_id)`、`idx_blog_article_tag_tag_id(tag_id)`
 - 文章保存标签时：整组替换（删旧插新，同一事务）
+
+### 4.6 `blog_site_config` 站点配置
+
+| 字段 | 类型 | 空 | 默认 | 说明 |
+|------|------|----|------|------|
+| id | BIGINT | N | 发号 | 主键 |
+| config_key | VARCHAR(64) | N | | 配置键（`site.title` 等） |
+| config_value | VARCHAR(1024) | N | '' | 配置值 |
+| remark | VARCHAR(255) | N | '' | 说明 |
+| 审计字段 | | | | 同上 |
+
+- 索引：`uk_blog_site_config_key(config_key)`；种子键见 table-design §2.6
 
 ---
 
@@ -354,21 +373,23 @@ GET /api/v1/public/articles/{id}
 |------|------|------|------|
 | GET | `/admin/categories` | `blog:category:list` | 树或分页列表 |
 | POST | `/admin/categories` | `blog:category:create` | 创建；`@Idempotent` |
-| PUT | `/admin/categories/{id}` | `blog:category:update` | 更新 |
-| DELETE | `/admin/categories/{id}` | `blog:category:delete` | 无子且无文章才可删 |
+| PUT | `/admin/categories/{id}` | `blog:category:update` | 更新；`@Idempotent` |
+| DELETE | `/admin/categories/{id}` | `blog:category:delete` | 无子且无文章才可删；`@Idempotent` |
 | GET | `/admin/tags` | `blog:tag:list` | 分页 |
-| POST | `/admin/tags` | `blog:tag:create` | 创建 |
-| PUT | `/admin/tags/{id}` | `blog:tag:update` | 更新 |
-| DELETE | `/admin/tags/{id}` | `blog:tag:delete` | 无关联才可删 |
+| POST | `/admin/tags` | `blog:tag:create` | 创建；`@Idempotent` |
+| PUT | `/admin/tags/{id}` | `blog:tag:update` | 更新；`@Idempotent` |
+| DELETE | `/admin/tags/{id}` | `blog:tag:delete` | 无关联才可删；`@Idempotent` |
 | GET | `/admin/articles` | `blog:article:list` | 分页筛选：keyword/categoryId/tagId/status |
-| POST | `/admin/articles` | `blog:article:create` | **只建主表**（草稿）；不传正文 |
+| POST | `/admin/articles` | `blog:article:create` | **只建主表**（草稿）；不传正文；`@Idempotent` |
 | GET | `/admin/articles/{id}` | `blog:article:detail` | 主表+详细+标签 |
-| PUT | `/admin/articles/{id}` | `blog:article:update` | **只更新主表**元数据/标签 |
-| PUT | `/admin/articles/{id}/content` | `blog:article:update` | **正文双轨**：`mode=draft` 写草稿轨；已发布不掉线 |
-| DELETE | `/admin/articles/{id}/draft` | `blog:article:update` | 放弃未发布草稿 |
-| POST | `/admin/articles/{id}/publish` | `blog:article:publish` | 草稿→线上并 `status=1` |
-| POST | `/admin/articles/{id}/offline` | `blog:article:publish` | 下架 |
-| DELETE | `/admin/articles/{id}` | `blog:article:delete` | 逻辑删（非已发布） |
+| PUT | `/admin/articles/{id}` | `blog:article:update` | **只更新主表**元数据/标签；`@Idempotent` |
+| PUT | `/admin/articles/{id}/content` | `blog:article:update` | **正文双轨**：`mode=draft` 写草稿轨；已发布不掉线；`@Idempotent` |
+| DELETE | `/admin/articles/{id}/draft` | `blog:article:update` | 放弃未发布草稿；`@Idempotent` |
+| POST | `/admin/articles/{id}/publish` | `blog:article:publish` | 草稿→线上并 `status=1`；`@Idempotent` |
+| POST | `/admin/articles/{id}/offline` | `blog:article:publish` | 下架；`@Idempotent` |
+| DELETE | `/admin/articles/{id}` | `blog:article:delete` | 逻辑删（非已发布）；`@Idempotent` |
+| GET | `/admin/site-config` | `blog:site:list` | 站点配置读取（管理端） |
+| PUT | `/admin/site-config` | `blog:site:update` | 站点配置 UPSERT；`@Idempotent` |
 
 ### 5.2 用户端公开读（无需登录；网关放行 `/api/v1/public/**`）
 
@@ -377,14 +398,17 @@ GET /api/v1/public/articles/{id}
 | GET | `/public/categories` | 启用分类树 |
 | GET | `/public/tags` | 启用标签（可带文章数） |
 | GET | `/public/articles` | 分页：`categoryId` / `tagId` / `keyword`；仅 `status=1`；排序 `is_top DESC, publish_time DESC` |
-| GET | `/public/articles/{id}` | 详情：主表+正文 content+标签；仅已发布 |
-| GET | `/public/articles/{id}/content-url` | 预签名 GET（可选，短 TTL） |
+| GET | `/public/articles/{idOrSlug}` | 详情：主表+正文 content+标签；仅已发布；**id 或 slug 均可**（见下） |
+| GET | `/public/articles/{idOrSlug}/content-url` | 预签名 GET（可选，短 TTL） |
+| GET | `/public/site-config` | 站点配置（站名/关于/备案） |
+
+**寻址约定：** 路径参数接受 `id`（16 位发号）或 `slug`；服务端先按 id 精确匹配，未命中再按 `slug` 唯一匹配；两者皆无 → 按「不存在」处理。路由示例 `/articles/:idOrSlug`。
 
 ### 5.3 关键 DTO 字段（摘要）
 
-**ArticleVO（列表）**：`id, title, summary, coverFileId, categoryId, categoryName, tags[]{id,name}, authorName, status, publishTime, isTop`
+**ArticleVO（列表）**：`id, title, slug, summary, coverFileId, categoryId, categoryName, tags[]{id,name}, authorName, status, publishTime, isTop, hasDraft`
 
-**ArticleDetailVO**：`ArticleVO + content, contentFormat, wordCount, seoTitle, seoDescription`
+**ArticleDetailVO**：`ArticleVO + content, contentFormat, wordCount, seoTitle, seoDescription`（用户端 `content` 只来自 `content_file_id`）
 
 **新建主表入参（POST /admin/articles）**：`title, slug?, categoryId?, summary?, coverFileId?, tagIds?, isTop?` → 仅主表；**不含**正文
 
@@ -410,7 +434,7 @@ GET /api/v1/public/articles/{id}
 ```
 /                    首页：置顶 + 最新
 /articles            列表（支持 ?category=&tag=&keyword=）
-/articles/:id        详情（Markdown 渲染）
+/articles/:idOrSlug  详情（Markdown 渲染；id 或 slug）
 /categories          分类导航
 /tags                标签云
 ```
@@ -427,12 +451,12 @@ GET /api/v1/public/articles/{id}
 |------|----------------|
 | 发号 | 全部新表主键 `framework` 发号 16 位 |
 | 审计字段 | `MetaObjectHandler` 自动填；业务不手写 |
-| 幂等 | 创建/发布/下架/删/存正文 `@Idempotent` |
+| 幂等 | 创建/更新/发布/下架/删/存正文/放弃草稿/站点配置保存 `@Idempotent` |
 | 限流 | 用户端列表/详情 `@RateLimit`（维度：IP 或接口）；管理端写接口按需 |
-| 审计日志 | 分类/标签/文章关键写记 `blog_audit_log`（`target_type`：CATEGORY/TAG/ARTICLE） |
+| 审计日志 | 分类/标签/文章/站点配置关键写记 `blog_audit_log`（`target_type`：CATEGORY/TAG/ARTICLE/SITE_CONFIG） |
 | 身份 | 管理端写用 `UserContext`（网关 `X-User-*`）；用户端匿名 |
-| 校验 | DTO Bean Validation（标题非空、slug 格式、正文大小、status 枚举） |
-| 错误码 | 业务 `2xxxxx` 在 blog 系统号内分配；示例语义：分类下存在文章/子分类、标签被引用、非草稿不可删、未写正文不可发布、正文过大、文章不存在或未发布 |
+| 校验 | DTO Bean Validation（标题非空、slug 格式、正文大小/格式、status 枚举） |
+| 错误码 | 业务 `2xxxxx` = **`203xxx`**（系统号 03，见 `docs/error-code-ranges.md`）；示例语义：分类下存在文章/子分类、标签被引用、非草稿不可删、未写正文不可发布、正文过大、文章不存在或未发布 |
 
 ---
 
@@ -441,7 +465,7 @@ GET /api/v1/public/articles/{id}
 ```
 blog-common     枚举（ArticleStatusEnum…）、常量、DTO 校验注解（纯）
 blog-framework  ObjectStorageClient（已有）、发号/审计/幂等/限流（已有）
-blog-service    entity + mapper + service + controller（内容业务）
+blog-service    entity + mapper + service + controller（内容业务 + 站点配置）
                 package: com.qjj.blog.service.{controller,dto,vo,service,mapper,entity,enums,constants,converter}
 blog-api        本期无新增 Feign（作者不反查）
 blog-gateway    放行 /api/v1/public/**；其余鉴权不变
@@ -449,7 +473,7 @@ blog-gateway    放行 /api/v1/public/**；其余鉴权不变
 
 - Entity 只在 `blog-service`；Controller 不直调 Mapper；MapStruct 只在 `converter/`
 - 事务：保存文章+标签+detail 指针同一事务；**Feign/对象存储 IO 在事务外**（先写 OSS 成功再开事务写库，或事务外补指针失败记日志可重试）
-- 事务与 OSS 顺序建议：`put object`（成功）→ `@Transactional` 更新 detail/article/tag → 失败则审计记 `object_key` 待补偿
+- 事务与 OSS 顺序建议：`put object`（成功）→ **INSERT `sys_file`** → `@Transactional` 更新 detail/article/tag → 失败则审计记 `object_key` 待补偿
 
 ---
 
@@ -465,16 +489,7 @@ blog-gateway    放行 /api/v1/public/**；其余鉴权不变
 
 ## 10. 开放问题（待裁决）
 
-详见 [table-design.md](./table-design.md) §6。摘要：
-
-| # | 问题 | 倾向 |
-|---|------|------|
-| 1 | 正文读取：服务端组装 vs 预签名直连 | 默认服务端组装（≤500KB）；可提供可选 `content-url` |
-| 2 | 分类层级 | **最多 2 级** |
-| 3 | `view_count` | **预留字段，不写逻辑** |
-| 4 | 用户端 RSS/站点地图 | 本期不做 |
-| 5 | 密码保护文章 / 转载链接 | 本期不做 |
-| 6 | 对外产品名 / 用户端域名 | 待 `CLAUDE.md` §9 裁决后回填 |
+**唯一清单见 [table-design.md](./table-design.md) §6**（本文不复述，防双源漂移）。业务侧摘要见该节；涉及用户端产品形态的 RSS/密码保护等仍为本期不做。
 
 ---
 

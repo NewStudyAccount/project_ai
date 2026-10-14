@@ -8,7 +8,7 @@ import java.util.List;
 
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "user-gateway.security")
+@ConfigurationProperties(prefix = "blog-gateway.security")
 public class GatewaySecurityProperties {
 
     private boolean localPassThrough = true;
@@ -17,6 +17,6 @@ public class GatewaySecurityProperties {
 
     private List<String> publicPaths = List.of("/actuator/health", "/internal/**");
 
-    private List<String> trustedOrigins = List.of("http://localhost:5173", "http://127.0.0.1:5173");
+    private List<String> trustedOrigins = List.of("http://localhost:5100", "http://127.0.0.1:5100");
 }
 

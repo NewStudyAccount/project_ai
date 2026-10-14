@@ -11,6 +11,8 @@
 | [er-diagram.html](./er-diagram.html) | 表关系 ER 图（浏览器打开） | 与 table-design 同步 |
 | [prototype.html](./prototype.html) | 管理端 + 用户端页面原型（浏览器打开） | 布局参照，效力低于设计正文 |
 
+> **实施状态：** OpenSpec 变更 `openspec/changes/blog-content-domain/` 已落码（SQL + 后端 + blog-admin 内容页 + blog-portal）；**联调冒烟待环境就绪**。契约偏差以代码 + 该变更 specs 为准回写本目录。
+
 **阅读顺序：** business-design → table-design → api-design → er-diagram → prototype。
 
 **效力顺序：** `CLAUDE.md`（契约） > `table-design.md` / `business-design.md`（本目录正文） > HTML（ER/原型，仅展示与交互参照）。
@@ -19,7 +21,7 @@
 
 ## 范围一句话
 
-文章分类 / 标签 / 主表 / 详细表；正文存 OSS；扩展 `blog-admin`；新建 `blog-portal` 用户端。
+文章分类 / 标签 / 主表 / 详细表（正文双轨：草稿 `draft_file_id` + 线上 `content_file_id`，对象登记 `sys_file`）；`sys_file` 增量补 `biz_type`/`biz_id`；站点配置 `blog_site_config`；扩展 `blog-admin`；新建 `blog-portal` 用户端。
 
 ## 相关既有材料（不在本目录）
 

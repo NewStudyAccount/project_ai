@@ -36,6 +36,7 @@
 | 组件 | 类型 | 端口 | 协议 | 对外入口 | 网络边界 | 备注 |
 |------|------|------|------|----------|----------|------|
 | blog-admin | 前端 | **5176** | http | Docker/静态 `http://localhost:5176` | 本机/办公网 | Vite dev 为 5100；流水线宿主机映射 5176→容器 80 |
+| blog-portal | 前端 | **5177** | http | Docker/静态 `http://localhost:5177` | 本机/办公网 | Vite dev 为 5200；用户端只读 |
 | blog-gateway | 后端网关 | **9100** | http | `/api/**` | 经 Nginx 反代 | blog 系统边缘网关 |
 | blog-service | 业务服务 | **19100** | http | `/api/**` | 仅内网/服务间 | **以 `application.yml` 为准**（曾误登记 9101） |
 
@@ -73,6 +74,7 @@
 | auth-portal:5174 | `/login` `/api` `/oauth2` | `http://127.0.0.1:9080`（auth-service） |
 | auth-admin:5175 | `/login` `/api` `/oauth2` | `http://127.0.0.1:9080`（auth-service） |
 | blog-admin:5100（dev） | `/api` | `http://127.0.0.1:9100`（blog-gateway） |
+| blog-portal:5200（dev） | `/api` | `http://127.0.0.1:9100`（blog-gateway） |
 
 生产：浏览器 → Nginx（静态）→ 网关或 auth-service（见 `deploy/nginx/`）。禁止把「本地 Vite 直连」当作生产拓扑。
 

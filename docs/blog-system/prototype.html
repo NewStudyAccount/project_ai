@@ -705,7 +705,7 @@
         <div class="hint" style="margin-bottom:16px;padding:10px 12px;background:#ecfdf5;border-radius:8px;color:#065f46">
           主表：<strong>Spring Cloud 网关鉴权实践</strong> · 当前 <span class="status-pill ok">已发布</span>
           · <span class="status-pill warn">有未发布草稿</span>
-          · <strong>线上仍是旧版正文</strong>（object_key）· 编辑器内容来自 draft_object_key
+          · <strong>线上仍是旧版正文</strong>（content_file_id）· 编辑器内容来自 draft_file_id
         </div>
         <div class="form-grid" style="max-width:860px">
           <label>正文格式</label>
@@ -747,8 +747,8 @@
           <button class="btn primary">发布 / 更新发布</button>
         </div>
         <div class="hint">
-          <strong>保存草稿</strong>：PUT …/content mode=draft → 只写 draft_* · status 不变 · 已发布文用户端仍读旧 object_key<br/>
-          <strong>发布</strong>：POST …/publish → draft 提升为 object_key · status=1 · 用户端才切换<br/>
+          <strong>保存草稿</strong>：PUT …/content mode=draft → 只写 draft_* · status 不变 · 已发布文用户端仍读旧 content_file_id<br/>
+          <strong>发布</strong>：POST …/publish → draft 提升为 content_file_id · status=1 · 用户端才切换<br/>
           <strong>放弃草稿</strong>：DELETE …/draft · 线上版保持不变
         </div>
       </div>
@@ -809,7 +809,7 @@
           <button class="btn primary">保存主表</button>
         </div>
         <div class="hint" style="text-align:right;margin-top:8px">
-          PUT /admin/articles/{id} · 只更主表 · 不触碰 detail.object_key
+          PUT /admin/articles/{id} · 只更主表 · 不触碰 detail.content_file_id / draft_file_id
         </div>
       </div>
     </main>
@@ -978,9 +978,9 @@
 2. 业务只信网关注入身份
 3. /internal/** 网络隔离
 
-（正文自 MinIO 对象读取：blog_article_detail.object_key）</div>
+（正文自 MinIO 对象读取：content_file_id → sys_file.object_key）</div>
         <div class="hint" style="margin-top:24px">
-          GET /api/v1/public/articles/{id} · 仅已发布 · 列表不加载正文 · 大文可选 content-url 预签名
+          GET /api/v1/public/articles/{idOrSlug} · 仅已发布 · 列表不加载正文 · 大文可选 content-url 预签名
         </div>
       </div>
     </div>

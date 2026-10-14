@@ -19,7 +19,7 @@
 | 幂等 | 标注 **幂等** 的写接口须带 `Idempotent-Key`（或 `X-Request-Id`） |
 | 时间 | `yyyy-MM-dd HH:mm:ss`，时区 `Asia/Shanghai` |
 
-**错误码语义（业务段 `2xxxxx` 实施时分配）：**
+**错误码语义（业务段 `203xxx`，系统号 03 已登记；序号实施时在 `BlogErrorCodeEnum` 分配）：**
 
 | 场景 | 语义 |
 |------|------|
@@ -32,6 +32,8 @@
 | slug 冲突 | SLUG_DUPLICATE |
 | 无草稿可放弃 | DRAFT_NOT_FOUND |
 | 已发布不可直接删 | ARTICLE_PUBLISHED |
+
+**正文格式/大小：** `content` 为 JSON 字符串，≤500KB；`contentFormat` ∈ `markdown|html`（服务端 put 对象 MIME `text/markdown` / `text/html`）。封面等附件走既有 `POST /api/v1/files`（multipart，既有 MIME 白名单）。
 
 ---
 
@@ -115,6 +117,7 @@
 | **接口名** | 更新分类 |
 | **方法/路径** | `PUT /api/v1/admin/categories/{id}` |
 | **权限** | `blog:category:update` |
+| **幂等** | 是 |
 
 **入参（Body）**：同创建；`id` 在路径
 
@@ -209,7 +212,7 @@
 
 ### 2.3 更新标签
 
-`PUT /api/v1/admin/tags/{id}` · `blog:tag:update` · 入参同创建 · 校验冲突后 UPDATE · 审计
+`PUT /api/v1/admin/tags/{id}` · `blog:tag:update` · 幂等 · 入参同创建 · 校验冲突后 UPDATE · 审计
 
 **使用表**：`blog_tag`、`blog_audit_log`
 
@@ -354,6 +357,7 @@
 | **接口名** | 更新文章主表 |
 | **方法/路径** | `PUT /api/v1/admin/articles/{id}` |
 | **权限** | `blog:article:update` |
+| **幂等** | 是 |
 | **说明** | **只改主表/标签**，不碰正文双轨 |
 
 **入参**：同 3.2 Body
@@ -583,10 +587,10 @@
 | 项 | 内容 |
 |----|------|
 | **接口名** | 用户端文章详情 |
-| **方法/路径** | `GET /api/v1/public/articles/{id}` |
+| **方法/路径** | `GET /api/v1/public/articles/{idOrSlug}` |
 | **权限** | 公开 |
 
-**入参**：路径 `id`（或 `slug` 由路由层解析）
+**入参**：路径 `idOrSlug` —— 先按 id 精确匹配，未命中再按 `slug` 唯一匹配；路由 `/articles/:idOrSlug`
 
 **出参 `data`：ArticleDetailVO**
 
@@ -613,12 +617,12 @@
 | 项 | 内容 |
 |----|------|
 | **接口名** | 正文预签名 URL |
-| **方法/路径** | `GET /api/v1/public/articles/{id}/content-url` |
+| **方法/路径** | `GET /api/v1/public/articles/{idOrSlug}/content-url` |
 | **权限** | 公开 |
 
 **出参**：`{ url: string, expiresAt: string }`
 
-**逻辑**：仅已发布 + `content_file_id` → `presignGet` 短 TTL（配置项）
+**逻辑**：仅已发布 + `content_file_id` → `presignGet` 短 TTL（配置项）；寻址同 6.4
 
 **使用表**：`blog_article`、`blog_article_detail`、`sys_file` + **MinIO**
 
@@ -640,31 +644,33 @@
 
 **使用表**：`blog_site_config`
 
-### 7.2 站点配置保存（管理）
+### 7.2 站点配置读取（管理）与保存
 
-`PUT /api/v1/admin/site-config` · `blog:article:update` 或独立 `blog:site:update` · Body 为键值 · UPSERT `blog_site_config` · 审计
+`GET /api/v1/admin/site-config` · `blog:site:list` · 出参同 7.1
+
+`PUT /api/v1/admin/site-config` · `blog:site:update` · 幂等 · Body 为键值 · UPSERT `blog_site_config` · 审计 `SITE_CONFIG`
 
 **使用表**：`blog_site_config`、`blog_audit_log`
 
 ---
 
-## 8. 对象上传（封面 / 通用，既有能力扩展）
+## 8. 对象上传（封面 / 通用，既有能力）
 
-> 完整文件管理见 scaffold `blog-file`；此处仅补与文章相关用法。
+> 完整文件管理见 scaffold `blog-file`（路径 **`/api/v1/files`**，与 `FileController` 一致）；此处仅补与文章相关用法。
 
 ### 8.1 上传封面
 
 | 项 | 内容 |
 |----|------|
 | **接口名** | 上传文件（封面） |
-| **方法/路径** | `POST /api/v1/admin/files`（multipart） |
-| **权限** | `blog:article:create` 或 `blog:file:upload` |
+| **方法/路径** | `POST /api/v1/files`（multipart） |
+| **权限** | `blog:file:upload` |
 
-**入参**：`file` 二进制；`bizType=ARTICLE_COVER`（可选）
+**入参**：`file` 二进制；`bizType=ARTICLE_COVER`（可选；缺省 `FILE`）
 
 **出参**：`FileVO { id, bucket, objectKey, originalName, contentType, sizeBytes }`
 
-**逻辑**：类型/大小校验 → put MinIO → **INSERT sys_file**（biz_type）→ 返回 id 供 3.2/3.4 填 `coverFileId`
+**逻辑**：类型/大小校验（既有 MIME 白名单，封面为图片）→ put MinIO → **INSERT sys_file**（biz_type）→ 返回 id 供 3.2/3.4 填 `coverFileId`
 
 **使用表**：`sys_file`、`blog_audit_log` + **MinIO**
 
@@ -694,11 +700,12 @@
 | 18 | GET | /public/categories | 公开 | blog_category, blog_article |
 | 19 | GET | /public/tags | 公开 | blog_tag, blog_article_tag, blog_article |
 | 20 | GET | /public/articles | 公开 | blog_article, category, tag |
-| 21 | GET | /public/articles/{id} | 公开 | article, detail, sys_file, MinIO |
-| 22 | GET | /public/articles/{id}/content-url | 公开 | 同上 |
+| 21 | GET | /public/articles/{idOrSlug} | 公开 | article, detail, sys_file, MinIO |
+| 22 | GET | /public/articles/{idOrSlug}/content-url | 公开 | 同上 |
 | 23 | GET | /public/site-config | 公开 | blog_site_config |
-| 24 | PUT | /admin/site-config | site:update | blog_site_config |
-| 25 | POST | /admin/files | file:upload | sys_file, MinIO |
+| 24 | GET | /admin/site-config | site:list | blog_site_config |
+| 25 | PUT | /admin/site-config | site:update | blog_site_config |
+| 26 | POST | /files | file:upload | sys_file, MinIO |
 
 `blog_article*` = `blog_article` + `blog_article_detail` + `blog_article_tag` 等。
 
@@ -707,7 +714,7 @@
 ## 10. 调用顺序（新建一篇）
 
 ```text
-POST /admin/files (封面，可选)
+POST /files (封面，可选)
   → POST /admin/articles          // 主表
   → PUT  /admin/articles/{id}/content  mode=draft
   → POST /admin/articles/{id}/publish  // 或 content mode=publish

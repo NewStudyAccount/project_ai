@@ -21,4 +21,10 @@ public class SysFile extends BaseEntity {
     private String contentType;
 
     private Long sizeBytes;
+
+    /** 对象用途：FILE / ARTICLE_COVER / ARTICLE_LIVE / ARTICLE_DRAFT */
+    private String bizType;
+
+    /** 业务 id（如 article_id）；非业务为 0 */
+    private Long bizId;
 }

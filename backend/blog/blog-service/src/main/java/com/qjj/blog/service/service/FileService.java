@@ -10,6 +10,9 @@ public interface FileService {
 
     FileVO upload(MultipartFile file);
 
+    /** 上传并登记业务关联（bizType 缺省 FILE，bizId 缺省 0） */
+    FileVO upload(MultipartFile file, String bizType, Long bizId);
+
     PageResult<FileVO> page(FilePageQuery query);
 
     FileVO get(String id);

@@ -7,6 +7,12 @@ import AuditList from '@/views/audit/AuditList.vue'
 import MenuList from '@/views/menu/MenuList.vue'
 import RoleList from '@/views/role/RoleList.vue'
 import FileList from '@/views/file/FileList.vue'
+import CategoryList from '@/views/content/CategoryList.vue'
+import TagList from '@/views/content/TagList.vue'
+import ArticleList from '@/views/content/ArticleList.vue'
+import ArticleMainForm from '@/views/content/ArticleMainForm.vue'
+import ArticleContentEditor from '@/views/content/ArticleContentEditor.vue'
+import SiteConfig from '@/views/content/SiteConfig.vue'
 import OidcCallback from '@/views/OidcCallback.vue'
 import LoggedOut from '@/views/LoggedOut.vue'
 import NotFound from '@/views/NotFound.vue'
@@ -16,6 +22,10 @@ const componentByPath: Record<string, unknown> = {
   'views/menu/MenuList.vue': MenuList,
   'views/role/RoleList.vue': RoleList,
   'views/file/FileList.vue': FileList,
+  'views/content/CategoryList.vue': CategoryList,
+  'views/content/TagList.vue': TagList,
+  'views/content/ArticleList.vue': ArticleList,
+  'views/content/SiteConfig.vue': SiteConfig,
 }
 
 const staticRoutes: RouteRecordRaw[] = [
@@ -32,6 +42,13 @@ const staticRoutes: RouteRecordRaw[] = [
       { path: 'menus', name: 'Menus', component: MenuList },
       { path: 'roles', name: 'Roles', component: RoleList },
       { path: 'files', name: 'Files', component: FileList },
+      { path: 'categories', name: 'Categories', component: CategoryList },
+      { path: 'tags', name: 'Tags', component: TagList },
+      { path: 'articles', name: 'Articles', component: ArticleList },
+      { path: 'articles/new', name: 'ArticleCreate', component: ArticleMainForm },
+      { path: 'articles/:id/main', name: 'ArticleMain', component: ArticleMainForm },
+      { path: 'articles/:id/content', name: 'ArticleContent', component: ArticleContentEditor },
+      { path: 'site-config', name: 'SiteConfig', component: SiteConfig },
     ],
   },
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound },

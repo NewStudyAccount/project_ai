@@ -10,6 +10,8 @@ public class FileVO {
     private String originalName;
     private String contentType;
     private Long sizeBytes;
+    private String bizType;
+    private Long bizId;
     private Integer deleted;
     private String createTime;
 }

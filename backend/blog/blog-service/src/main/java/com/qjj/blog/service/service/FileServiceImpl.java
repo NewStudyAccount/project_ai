@@ -12,6 +12,7 @@ import com.qjj.blog.framework.storage.ObjectStorageClient;
 import com.qjj.blog.service.dto.FilePageQuery;
 import com.qjj.blog.service.entity.SysFile;
 import com.qjj.blog.service.enums.AuditActionEnum;
+import com.qjj.blog.service.enums.BizFileTypeEnum;
 import com.qjj.blog.service.mapper.SysFileMapper;
 import com.qjj.blog.service.vo.FileVO;
 import com.qjj.blog.service.vo.PresignVO;
@@ -46,6 +47,13 @@ public class FileServiceImpl implements FileService {
     @Transactional
     @RateLimit(keyPrefix = "file-upload", permits = 10, windowSeconds = 60, dimension = RateLimit.Dimension.USER)
     public FileVO upload(MultipartFile file) {
+        return upload(file, null, null);
+    }
+
+    @Override
+    @Transactional
+    @RateLimit(keyPrefix = "file-upload", permits = 10, windowSeconds = 60, dimension = RateLimit.Dimension.USER)
+    public FileVO upload(MultipartFile file, String bizType, Long bizId) {
         if (file == null || file.isEmpty()) {
             throw new BizException(BlogErrorCodeEnum.FILE_UPLOAD_FAILED);
         }
@@ -75,6 +83,8 @@ public class FileServiceImpl implements FileService {
         meta.setOriginalName(original);
         meta.setContentType(contentType == null ? "" : contentType);
         meta.setSizeBytes(file.getSize());
+        meta.setBizType(BizFileTypeEnum.fromCode(bizType).getCode());
+        meta.setBizId(bizId == null ? 0L : bizId);
         fileMapper.insert(meta);
         auditService.record(AuditActionEnum.FILE_UPLOAD, "FILE", String.valueOf(meta.getId()),
                 "上传 " + original);
@@ -90,7 +100,9 @@ public class FileServiceImpl implements FileService {
                 .like(query.getKeyword() != null && !query.getKeyword().isBlank(),
                         SysFile::getOriginalName, query.getKeyword())
                 .eq(query.getContentType() != null && !query.getContentType().isBlank(),
-                        SysFile::getContentType, query.getContentType());
+                        SysFile::getContentType, query.getContentType())
+                .eq(query.getBizType() != null && !query.getBizType().isBlank(),
+                        SysFile::getBizType, query.getBizType());
         String orderBy = query.getOrderBy() == null ? "create_time" : query.getOrderBy().toLowerCase();
         if (!ORDER_FIELDS.contains(orderBy)) {
             orderBy = "create_time";
@@ -154,6 +166,8 @@ public class FileServiceImpl implements FileService {
         vo.setOriginalName(entity.getOriginalName());
         vo.setContentType(entity.getContentType());
         vo.setSizeBytes(entity.getSizeBytes());
+        vo.setBizType(entity.getBizType());
+        vo.setBizId(entity.getBizId());
         vo.setDeleted(entity.getDeleted());
         if (entity.getCreateTime() != null) {
             vo.setCreateTime(entity.getCreateTime().format(TIME));

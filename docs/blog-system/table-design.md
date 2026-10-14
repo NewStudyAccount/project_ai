@@ -49,7 +49,7 @@
 | 1 | 文章是否要 `slug` 友好 URL | **要**：`uk_blog_article_slug` | 用户端 `/articles/:slug`；空则用 id |
 | 2 | 分类层级 | **最多 2 级**（根 + 子） | `parent_id`，应用层校验 |
 | 3 | 标签冗余文章数 | **不冗余** | 列表 JOIN 或子查询；避免计数不一致 |
-| 4 | 正文是否进大字段 | **否**，只存 OSS `object_key` | detail 表 |
+| 4 | 正文是否进大字段 | **否**，只存 `content_file_id`/`draft_file_id`（`object_key` 在 `sys_file`） | detail 表 |
 | 5 | 封面 | `cover_file_id` → `sys_file` | 复用文件管理上传 |
 | 6 | `view_count` | **预留字段，本期无逻辑** | 避免后续加列 |
 | 7 | 正文大小上限 | **500KB** | 应用层校验，错误码「正文过大」 |
@@ -92,6 +92,8 @@
 - 禁止只写 MinIO 不落 `sys_file`；禁止业务表只存裸 `object_key` 而无 `sys_file` 行
 - 逻辑删除 `deleted=1` 即文件删除语义（对象清理运维脚本，不建定时）
 - 文件管理列表可按 `biz_type` 过滤；预签名/下载经 file_id 解析
+- **既有上传接口** `POST /api/v1/files` 需补可选入参 `bizType`/`bizId`（缺省 `FILE`/`0`）；权限仍为 `blog:file:upload`
+- **DDL 增量边界**：仅补 `biz_type`/`biz_id` 两列 + `idx_sys_file_biz`；**不改**既有列与 `deleted` 语义（对齐 business-design §1.2 例外条款）
 
 ### 2.1 `blog_category` 文章分类
 
@@ -256,6 +258,8 @@
 | `site.copyright` | 备案/版权 |
 | `site.about` | 关于正文（短文本；长文可再挂 OSS） |
 
+**权限：** 管理端读 `blog:site:list` / 写 `blog:site:update`（不挂在 `blog:article:*` 下）。
+
 ---
 
 ## 3. 关系一览
@@ -307,7 +311,9 @@ blog_site_config     独立
 
 ---
 
-## 6. 开放问题
+## 6. 开放问题（唯一清单）
+
+> 业务侧不另抄一份；`business-design.md` §10 只指向本节。
 
 | # | 问题 | 默认 |
 |---|------|------|
@@ -315,6 +321,12 @@ blog_site_config     独立
 | 2 | `blog_site_config.site.about` 是否也上 OSS | 先 VARCHAR；超长再挂对象 |
 | 3 | 是否允许未分类发布 | 允许，`category_id=0` |
 | 4 | 同步更新 tag 冗余计数 | 不做 |
+| 5 | 正文读取：服务端组装 vs 预签名直连 | 默认服务端组装（≤500KB）；可选 `content-url` |
+| 6 | 用户端 RSS / 站点地图 | 本期不做 |
+| 7 | 密码保护文章 / 转载链接 | 本期不做 |
+| 8 | 对外产品名 / 用户端域名 | 待 `CLAUDE.md` §9 裁决后回填 |
+
+已裁决、不再挂开放问题：分类最多 2 级；`view_count` 预留不写逻辑；正文双轨 + `sys_file` 登记（见 §2.0/§2.4）。
 
 ---
 

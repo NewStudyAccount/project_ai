@@ -19,6 +19,7 @@ blog-gateway:
     public-paths:
       - /actuator/health
       - /internal/**
+      - /api/v1/public/**
     trusted-origins:
       - http://localhost:5100
       - http://127.0.0.1:5100

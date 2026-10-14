@@ -1,0 +1,39 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #f7f8fa;
+  color: #303133;
+}
+a {
+  color: #409eff;
+  text-decoration: none;
+}
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+}
+.card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.markdown {
+  line-height: 1.75;
+  word-break: break-word;
+}
+.markdown pre {
+  background: #f5f7fa;
+  padding: 12px;
+  border-radius: 6px;
+  overflow: auto;
+}
+.markdown code {
+  background: #f5f7fa;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
