@@ -1,7 +1,30 @@
+/* 云白 Cloud Paper · auth-portal 全局样式
+ * 权威：docs/template/admin-ui-design.md §1 / §4.5
+ */
+
 :root {
-  font-family: Inter, 'Microsoft YaHei', sans-serif;
-  color: #303133;
-  background: #f0f2f5;
+  --bg-page: #f6f7f9;
+  --bg-surface: #ffffff;
+  --text-primary: #18181b;
+  --text-regular: #3f3f46;
+  --text-secondary: #71717a;
+  --border: #e4e4e7;
+  --primary: #0284c7;
+  --primary-hover: #0369a1;
+  --danger: #e11d48;
+  --page-radius: 12px;
+  --button-radius: 999px;
+  --shadow-card: 0 1px 2px rgba(24, 24, 27, 0.04), 0 8px 20px rgba(24, 24, 27, 0.04);
+  --el-color-primary: #0284c7;
+  --el-color-primary-light-3: #38a2d8;
+  --el-color-primary-light-5: #6bb8e2;
+  --el-color-primary-light-7: #9fd0ec;
+  --el-color-primary-light-8: #b9def2;
+  --el-color-primary-light-9: #e6f3fa;
+  --el-color-primary-dark-2: #026ea3;
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--text-primary);
+  background: var(--bg-page);
 }
 
 * {
@@ -10,4 +33,28 @@
 
 body {
   margin: 0;
+  min-height: 100vh;
+  background: var(--bg-page);
+}
+
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: var(--bg-page);
+  padding: 24px;
+}
+
+.login-card {
+  width: 380px;
+  max-width: 100%;
+  background: var(--bg-surface);
+  border-radius: var(--page-radius);
+  box-shadow: var(--shadow-card);
+  padding: 32px 28px;
+}
+
+.login-card .el-button--primary {
+  width: 100%;
+  border-radius: var(--button-radius);
 }

@@ -13,7 +13,7 @@
       <el-table-column prop="component" label="组件" width="200" />
       <el-table-column prop="sort" label="排序" width="80" />
       <el-table-column prop="status" label="状态" width="80">
-        <template #default="{ row }">{{ row.status === 1 ? '启用' : '停用' }}</template>
+        <template #default="{ row }"><span :class="['status-pill', row.status === 1 ? 'is-on' : 'is-off']">{{ row.status === 1 ? '启用' : '停用' }}</span></template>
       </el-table-column>
       <el-table-column label="操作" width="240">
         <template #default="{ row }">

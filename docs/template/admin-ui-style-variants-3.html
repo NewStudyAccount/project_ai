@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>管理端页面风格 · 第三轮比选</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #e9eef5;
+    color: #0f172a;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 40px 28px 72px; }
+
+  .hero { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-bottom: 24px; }
+  .hero h1 { font-size: 28px; font-weight: 650; letter-spacing: -0.02em; }
+  .hero p { margin-top: 8px; color: #64748b; font-size: 14px; max-width: 600px; }
+  .hero .meta { text-align: right; font-size: 12px; color: #64748b; }
+  .hero .meta strong { display: block; color: #0f172a; font-size: 13px; margin-bottom: 2px; }
+
+  .toc { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+  .toc a {
+    text-decoration: none; height: 32px; padding: 0 14px; border-radius: 999px;
+    border: 1px solid #c9d3e1; background: #fff; color: #334155; font-size: 13px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .toc a:hover { border-color: #3b82f6; color: #2563eb; }
+  .toc .sw { width: 10px; height: 10px; border-radius: 50%; }
+
+  .keep-note {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    padding: 12px 16px; margin-bottom: 20px;
+    background: #fff; border: 1px dashed #c9d3e1; border-radius: 10px;
+    font-size: 13px; color: #475569;
+  }
+  .keep-note strong { color: #0f172a; }
+  .keep-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 28px; padding: 0 12px; border-radius: 999px;
+    background: #f1f5f9; border: 1px solid #e2e8f0; font-size: 12px;
+  }
+  .keep-chip .sw { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  .scheme {
+    background: #fff; border: 1px solid #d7e0ec; border-radius: 14px;
+    overflow: hidden; margin-bottom: 24px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+  .scheme-head {
+    display: grid; grid-template-columns: 1fr auto; gap: 16px;
+    padding: 22px 24px 18px; border-bottom: 1px solid #e8eef5;
+  }
+  .scheme-head h2 {
+    font-size: 20px; font-weight: 650;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .scheme-head h2 .code {
+    font-size: 11px; font-weight: 500; color: #64748b;
+    background: #f1f5f9; padding: 3px 8px; border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .scheme-head .tagline { margin-top: 6px; color: #475569; font-size: 13.5px; }
+  .scheme-head .fit { text-align: right; font-size: 12px; color: #64748b; }
+  .scheme-head .fit span {
+    display: inline-flex; align-items: center; height: 24px;
+    padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 500; margin-top: 6px;
+  }
+
+  .scheme-body { display: grid; grid-template-columns: 280px 1fr; min-height: 340px; }
+  .scheme-side {
+    padding: 20px; border-right: 1px solid #e8eef5; background: #fafbfc;
+  }
+  .scheme-side h3 {
+    font-size: 12px; font-weight: 600; color: #64748b;
+    letter-spacing: 0.04em; margin-bottom: 12px; text-transform: uppercase;
+  }
+  .swatches { display: grid; gap: 8px; margin-bottom: 18px; }
+  .swatch { display: grid; grid-template-columns: 36px 1fr; gap: 10px; align-items: center; }
+  .swatch i {
+    width: 36px; height: 28px; border-radius: 6px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+  }
+  .swatch .n { font-size: 12px; font-weight: 550; color: #0f172a; }
+  .swatch .v {
+    font-size: 11px; color: #64748b;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .trait { margin-top: 14px; padding-top: 14px; border-top: 1px dashed #dbe3ee; }
+  .trait dt { font-size: 11px; color: #94a3b8; margin-top: 10px; }
+  .trait dd { font-size: 12.5px; color: #334155; }
+
+  .scheme-stage { padding: 18px; }
+
+  .shell {
+    display: grid; grid-template-columns: 168px 1fr;
+    height: 320px; border-radius: 10px; overflow: hidden;
+    border: 1px solid rgba(15, 23, 42, 0.1); font-size: 12px;
+  }
+  .shell .side { display: flex; flex-direction: column; padding: 12px 0; }
+  .shell .brand { padding: 6px 14px 14px; font-weight: 650; font-size: 13px; }
+  .shell .brand small {
+    display: block; font-size: 10px; font-weight: 400;
+    opacity: 0.55; margin-top: 1px; letter-spacing: 0.04em;
+  }
+  .shell .mi {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-left: 3px solid transparent;
+  }
+  .shell .mi .d {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: currentColor; opacity: 0.5;
+  }
+  .shell .mi.on { border-left-color: var(--acc); }
+  .shell .mi.on .d { background: var(--acc); opacity: 1; }
+  .shell .grp {
+    padding: 10px 14px 4px; font-size: 10px;
+    letter-spacing: 0.06em; opacity: 0.55;
+  }
+  .shell .main { display: flex; flex-direction: column; min-width: 0; }
+  .shell .top {
+    height: 42px; display: flex; align-items: center;
+    justify-content: space-between; padding: 0 14px;
+    border-bottom: 1px solid var(--line); flex-shrink: 0;
+  }
+  .shell .top .t { font-weight: 600; font-size: 12.5px; }
+  .shell .top .op { font-size: 11px; opacity: 0.75; }
+  .shell .body { flex: 1; padding: 12px; overflow: hidden; }
+  .pcard {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 8px; padding: 12px; height: 100%;
+  }
+  .pcard h4 { font-size: 14px; font-weight: 650; margin-bottom: 2px; }
+  .pcard .sub { font-size: 11px; opacity: 0.65; margin-bottom: 10px; }
+  .tbar { display: flex; gap: 6px; margin-bottom: 10px; align-items: center; }
+  .b {
+    height: 26px; padding: 0 10px; border-radius: 5px;
+    font-size: 11px; font-weight: 550;
+    display: inline-flex; align-items: center; border: 1px solid transparent;
+  }
+  .b.pri { background: var(--pri); color: var(--pri-ink, #fff); }
+  .b.ghost {
+    background: var(--surface); border-color: var(--line); color: var(--ink-2);
+  }
+  .inp {
+    height: 26px; border: 1px solid var(--line); border-radius: 5px;
+    background: var(--surface); color: var(--ink-3);
+    display: inline-flex; align-items: center; padding: 0 8px;
+    font-size: 11px; margin-left: auto;
+  }
+  table.tt { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .tt th {
+    text-align: left; font-weight: 550; padding: 7px 8px;
+    border-bottom: 1px solid var(--line); color: var(--ink-3);
+    background: var(--head-bg);
+  }
+  .tt td {
+    padding: 8px; border-bottom: 1px solid var(--line); color: var(--ink-2);
+  }
+  .tt tr:last-child td { border-bottom: none; }
+  .pill {
+    display: inline-flex; height: 18px; align-items: center;
+    padding: 0 8px; border-radius: 999px; font-size: 10px; font-weight: 550;
+  }
+  .link { color: var(--pri); font-weight: 500; margin-right: 8px; }
+  .link.danger { color: var(--danger); }
+
+  /* ===== I 霜钢 ===== */
+  .s-i {
+    --bg-page: #e2e8f0;
+    --surface: #ffffff;
+    --side-bg: #1e293b;
+    --side-ink: #f1f5f9;
+    --side-muted: #94a3b8;
+    --acc: #7dd3fc;
+    --pri: #0369a1;
+    --line: #cbd5e1;
+    --head-bg: #f1f5f9;
+    --ink-2: #0f172a;
+    --ink-3: #64748b;
+    --danger: #dc2626;
+    background: var(--bg-page); color: var(--ink-2);
+  }
+  .s-i .side { background: var(--side-bg); color: var(--side-muted); }
+  .s-i .brand { color: var(--side-ink); letter-spacing: 0.06em; }
+  .s-i .mi.on {
+    background: rgba(125, 211, 252, 0.12);
+    color: #e0f2fe; border-left-color: var(--acc);
+  }
+  .s-i .top { background: var(--surface); }
+  .s-i .body { background: var(--bg-page); }
+  .s-i .pcard { border-radius: 4px; box-shadow: inset 0 1px 0 #f8fafc; }
+  .s-i .shell { border-radius: 4px; }
+  .s-i .b { border-radius: 3px; }
+  .s-i .pill.on { background: #e0f2fe; color: #0c4a6e; }
+  .s-i .pill.off { background: #fef3c7; color: #92400e; }
+
+  /* ===== J 赤陶 ===== */
+  .s-j {
+    --bg-page: #fff7ed;
+    --surface: #fffdf9;
+    --side-bg: #7c2d12;
+    --side-ink: #ffedd5;
+    --side-muted: #fdba74;
+    --acc: #fb923c;
+    --pri: #c2410c;
+    --line: #fed7aa;
+    --head-bg: #fff7ed;
+    --ink-2: #431407;
+    --ink-3: #9a3412;
+    --danger: #b91c1c;
+    background: var(--bg-page); color: var(--ink-2);
+  }
+  .s-j .side { background: var(--side-bg); color: var(--side-muted); }
+  .s-j .brand { color: var(--side-ink); }
+  .s-j .mi.on {
+    background: rgba(251, 146, 60, 0.16);
+    color: #fff7ed; border-left-color: var(--acc);
+  }
+  .s-j .top { background: var(--surface); }
+  .s-j .body { background: var(--bg-page); }
+  .s-j .pill.on { background: #ffedd5; color: #9a3412; }
+  .s-j .pill.off { background: #fef3c7; color: #92400e; }
+
+  /* ===== K 夜航 ===== */
+  .s-k {
+    --bg-page: #eef2f7;
+    --surface: #ffffff;
+    --side-bg: #0c1a32;
+    --side-ink: #f8fafc;
+    --side-muted: #94a3b8;
+    --acc: #fbbf24;
+    --pri: #b45309;
+    --line: #d6dee9;
+    --head-bg: #f8fafc;
+    --ink-2: #0f172a;
+    --ink-3: #64748b;
+    --danger: #b91c1c;
+    background: var(--bg-page); color: var(--ink-2);
+  }
+  .s-k .side { background: var(--side-bg); color: var(--side-muted); }
+  .s-k .brand { color: var(--side-ink); }
+  .s-k .brand small { color: #d97706; opacity: 0.9; }
+  .s-k .mi.on {
+    background: rgba(251, 191, 36, 0.12);
+    color: #fef3c7; border-left-color: var(--acc);
+  }
+  .s-k .top { background: var(--surface); }
+  .s-k .body { background: var(--bg-page); }
+  .s-k .pill.on { background: #fef3c7; color: #92400e; }
+  .s-k .pill.off { background: #e2e8f0; color: #475569; }
+
+  /* ===== L 雪笺 ===== */
+  .s-l {
+    --bg-page: #ffffff;
+    --surface: #ffffff;
+    --side-bg: #ffffff;
+    --side-ink: #0a0a0a;
+    --side-muted: #737373;
+    --acc: #ef4444;
+    --pri: #0a0a0a;
+    --pri-ink: #ffffff;
+    --line: #e5e5e5;
+    --head-bg: #fafafa;
+    --ink-2: #0a0a0a;
+    --ink-3: #737373;
+    --danger: #ef4444;
+    background: var(--bg-page); color: var(--ink-2);
+  }
+  .s-l .side {
+    background: var(--side-bg); color: var(--side-muted);
+    border-right: 1px solid var(--line);
+  }
+  .s-l .brand { color: var(--side-ink); font-weight: 700; letter-spacing: -0.02em; }
+  .s-l .mi.on {
+    background: #fafafa;
+    color: var(--side-ink);
+    border-left-color: var(--acc);
+  }
+  .s-l .mi.on .d { background: var(--acc); opacity: 1; }
+  .s-l .top {
+    background: var(--surface);
+    border-bottom: 2px solid #0a0a0a;
+  }
+  .s-l .body { background: var(--bg-page); padding: 0; }
+  .s-l .pcard {
+    border: none; border-radius: 0; border-top: 1px solid var(--line);
+    padding: 14px;
+  }
+  .s-l .shell { border-color: #0a0a0a; border-radius: 0; }
+  .s-l .b { border-radius: 0; }
+  .s-l .b.pri { background: #0a0a0a; }
+  .s-l .inp { border-radius: 0; border-color: #d4d4d4; }
+  .s-l .pill { border-radius: 2px; }
+  .s-l .pill.on { background: #0a0a0a; color: #fff; }
+  .s-l .pill.off { background: #f5f5f5; color: #525252; border: 1px solid #e5e5e5; }
+  .s-l .link { color: #0a0a0a; text-decoration: underline; text-underline-offset: 3px; }
+  .s-l .link.danger { color: #ef4444; }
+
+  .compare {
+    background: #fff; border: 1px solid #d7e0ec; border-radius: 14px; overflow: hidden;
+  }
+  .compare h2 { padding: 20px 24px 8px; font-size: 18px; font-weight: 650; }
+  .compare .hint { padding: 0 24px 16px; color: #64748b; font-size: 13px; }
+  .compare table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .compare th {
+    text-align: left; padding: 12px 16px; background: #f8fafc;
+    color: #64748b; font-weight: 550; font-size: 12px; border-bottom: 1px solid #e8eef5;
+  }
+  .compare td {
+    padding: 14px 16px; border-bottom: 1px solid #eef2f7;
+    color: #334155; vertical-align: top;
+  }
+  .compare tr:last-child td { border-bottom: none; }
+  .compare .name { font-weight: 600; color: #0f172a; }
+  .compare .dot {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; margin-right: 8px;
+  }
+
+  .pool {
+    background: #fff; border: 1px solid #d7e0ec; border-radius: 14px;
+    padding: 20px 24px; margin-bottom: 24px;
+  }
+  .pool h2 { font-size: 16px; font-weight: 650; margin-bottom: 8px; }
+  .pool p { font-size: 13px; color: #64748b; margin-bottom: 14px; }
+  .pool-grid {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px;
+  }
+  .pool-item {
+    border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;
+  }
+  .pool-item .cap {
+    padding: 10px; font-size: 12px;
+  }
+  .pool-item .cap strong { display: block; font-size: 12.5px; color: #0f172a; }
+  .pool-item .cap span { color: #94a3b8; font-size: 11px; }
+  .pool-item .bar { height: 8px; }
+  .pool-item.cand { outline: 2px solid #3b82f6; outline-offset: -2px; }
+  .pool-item.cand .cap span { color: #2563eb; }
+
+  .note {
+    margin-top: 28px; padding: 18px 20px;
+    background: #fff; border: 1px solid #d7e0ec; border-radius: 12px;
+    color: #64748b; font-size: 12.5px; line-height: 1.75;
+  }
+  .note strong { color: #0f172a; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div>
+      <h1>管理端页面风格 · 第三轮比选</h1>
+      <p>候选池增至 3 套：墨岩、云白、石墨。本轮再补四套差异更大的气质——工业霜钢、手工赤陶、金线夜航、瑞士雪笺，继续横向扫风格空间。</p>
+    </div>
+    <div class="meta">
+      <strong>候选 3 + 新增 4</strong>
+      霜钢 / 赤陶 / 夜航 / 雪笺<br />
+      第三轮可视化样张
+    </div>
+  </header>
+
+  <div class="keep-note">
+    <strong>当前候选：</strong>
+    <span class="keep-chip"><span class="sw" style="background:#0f172a"></span>墨岩</span>
+    <span class="keep-chip"><span class="sw" style="background:#0284c7"></span>云白</span>
+    <span class="keep-chip"><span class="sw" style="background:#18181b"></span>石墨</span>
+    <span style="color:#94a3b8">已进入候选池 · 本轮继续扩选</span>
+  </div>
+
+  <div class="pool">
+    <h2>候选池一览</h2>
+    <p>带蓝框为已入选候选；其余为往轮未入选或本轮新方案。最终只定 1 套主风格。</p>
+    <div class="pool-grid">
+      <div class="pool-item cand">
+        <div class="bar" style="background:linear-gradient(90deg,#0f172a 50%,#3b82f6 50%)"></div>
+        <div class="cap"><strong>A 墨岩</strong><span>候选 · 现行定稿</span></div>
+      </div>
+      <div class="pool-item cand">
+        <div class="bar" style="background:linear-gradient(90deg,#fff 50%,#0284c7 50%); border-bottom:1px solid #e2e8f0"></div>
+        <div class="cap"><strong>B 云白</strong><span>候选 · 轻量</span></div>
+      </div>
+      <div class="pool-item cand">
+        <div class="bar" style="background:linear-gradient(90deg,#18181b 50%,#f4f4f5 50%)"></div>
+        <div class="cap"><strong>F 石墨</strong><span>候选 · 工具</span></div>
+      </div>
+      <div class="pool-item">
+        <div class="bar" style="background:linear-gradient(90deg,#c2410c 50%,#f7f2eb 50%)"></div>
+        <div class="cap"><strong>C 琥珀</strong><span>未入选</span></div>
+      </div>
+      <div class="pool-item">
+        <div class="bar" style="background:linear-gradient(90deg,#22d3ee 50%,#0b1220 50%)"></div>
+        <div class="cap"><strong>D 玄夜</strong><span>未入选</span></div>
+      </div>
+      <div class="pool-item">
+        <div class="bar" style="background:linear-gradient(90deg,#0d9488 50%,#ecfdf5 50%)"></div>
+        <div class="cap"><strong>E 青瓷</strong><span>未入选</span></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="toc">
+    <a href="#s-i"><span class="sw" style="background:#0369a1"></span>I · 霜钢</a>
+    <a href="#s-j"><span class="sw" style="background:#c2410c"></span>J · 赤陶</a>
+    <a href="#s-k"><span class="sw" style="background:#b45309"></span>K · 夜航</a>
+    <a href="#s-l"><span class="sw" style="background:#0a0a0a"></span>L · 雪笺</a>
+  </nav>
+
+  <!-- ========== I 霜钢 ========== -->
+  <section class="scheme" id="s-i">
+    <div class="scheme-head">
+      <div>
+        <h2>I · 霜钢 <span class="code">Frost Steel</span></h2>
+        <div class="tagline">钢青灰阶 + 冰蓝指示。小圆角、重秩序，像装备台账或工控上位机的现代版，偏精确与可靠。</div>
+      </div>
+      <div class="fit">
+        适合：工程 / 资产 / 工控<br />
+        <span style="background:#e0f2fe; color:#0c4a6e">工业精密</span>
+      </div>
+    </div>
+    <div class="scheme-body">
+      <div class="scheme-side">
+        <h3>Tokens</h3>
+        <div class="swatches">
+          <div class="swatch"><i style="background:#1e293b"></i><div><div class="n">侧栏</div><div class="v">#1e293b</div></div></div>
+          <div class="swatch"><i style="background:#e2e8f0"></i><div><div class="n">内容区</div><div class="v">#e2e8f0</div></div></div>
+          <div class="swatch"><i style="background:#0369a1"></i><div><div class="n">主色</div><div class="v">#0369a1</div></div></div>
+          <div class="swatch"><i style="background:#7dd3fc"></i><div><div class="n">激活条</div><div class="v">#7dd3fc</div></div></div>
+        </div>
+        <dl class="trait">
+          <dt>气质</dt>
+          <dd>冷静、精确、装备感</dd>
+          <dt>签名细节</dt>
+          <dd>3–4px 小圆角 + 冰蓝竖条</dd>
+          <dt>对比策略</dt>
+          <dd>钢灰分层，避免花哨色相</dd>
+        </dl>
+      </div>
+      <div class="scheme-stage">
+        <div class="shell s-i" style="--acc:#7dd3fc">
+          <div class="side">
+            <div class="brand">工程台<small>ASSET OPS</small></div>
+            <div class="mi on"><span class="d"></span>总览</div>
+            <div class="grp">设备</div>
+            <div class="mi"><span class="d"></span>机组台账</div>
+            <div class="mi"><span class="d"></span>巡检任务</div>
+            <div class="mi"><span class="d"></span>缺陷跟踪</div>
+            <div class="grp">工单</div>
+            <div class="mi"><span class="d"></span>派工记录</div>
+          </div>
+          <div class="main">
+            <div class="top"><div class="t">设备运维端</div><div class="op">eng.zhang · 退出</div></div>
+            <div class="body">
+              <div class="pcard">
+                <h4>巡检任务</h4>
+                <div class="sub">区域、班次与完成情况</div>
+                <div class="tbar">
+                  <span class="b pri">新建巡检</span>
+                  <span class="b ghost">筛选</span>
+                  <span class="inp">搜索设备</span>
+                </div>
+                <table class="tt">
+                  <thead><tr><th>设备</th><th>区域</th><th>状态</th><th>操作</th></tr></thead>
+                  <tbody>
+                    <tr><td>P-204</td><td>A 区</td><td><span class="pill on">完成</span></td><td><span class="link">查看</span><span class="link danger">跳过</span></td></tr>
+                    <tr><td>P-205</td><td>B 区</td><td><span class="pill on">完成</span></td><td><span class="link">查看</span><span class="link danger">跳过</span></td></tr>
+                    <tr><td>P-206</td><td>C 区</td><td><span class="pill off">待检</span></td><td><span class="link">查看</span><span class="link danger">跳过</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== J 赤陶 ========== -->
+  <section class="scheme" id="s-j">
+    <div class="scheme-head">
+      <div>
+        <h2>J · 赤陶 <span class="code">Terracotta</span></h2>
+        <div class="tagline">陶土红棕侧栏 + 暖白台面，赤陶主色。手作与零售陈列感，比琥珀更亮、更有烟火气。</div>
+      </div>
+      <div class="fit">
+        适合：零售 / 门店 / 内容<br />
+        <span style="background:#ffedd5; color:#9a3412">手作温度</span>
+      </div>
+    </div>
+    <div class="scheme-body">
+      <div class="scheme-side">
+        <h3>Tokens</h3>
+        <div class="swatches">
+          <div class="swatch"><i style="background:#7c2d12"></i><div><div class="n">侧栏</div><div class="v">#7c2d12</div></div></div>
+          <div class="swatch"><i style="background:#fff7ed"></i><div><div class="n">内容区</div><div class="v">#fff7ed</div></div></div>
+          <div class="swatch"><i style="background:#c2410c"></i><div><div class="n">主色</div><div class="v">#c2410c</div></div></div>
+          <div class="swatch"><i style="background:#fb923c"></i><div><div class="n">激活条</div><div class="v">#fb923c</div></div></div>
+        </div>
+        <dl class="trait">
+          <dt>气质</dt>
+          <dd>温暖、明亮、偏零售</dd>
+          <dt>签名细节</dt>
+          <dd>陶土深侧栏 + 橙焰竖条</dd>
+          <dt>对比策略</dt>
+          <dd>橙作强调，台面保持暖白不刺眼</dd>
+        </dl>
+      </div>
+      <div class="scheme-stage">
+        <div class="shell s-j" style="--acc:#fb923c">
+          <div class="side">
+            <div class="brand">门店台<small>RETAIL HUB</small></div>
+            <div class="mi on"><span class="d"></span>首页</div>
+            <div class="grp">商品</div>
+            <div class="mi"><span class="d"></span>商品档案</div>
+            <div class="mi"><span class="d"></span>库存调拨</div>
+            <div class="mi"><span class="d"></span>陈列计划</div>
+            <div class="grp">门店</div>
+            <div class="mi"><span class="d"></span>店员排班</div>
+          </div>
+          <div class="main">
+            <div class="top"><div class="t">零售运营端</div><div class="op">store01 · 退出</div></div>
+            <div class="body">
+              <div class="pcard">
+                <h4>库存调拨</h4>
+                <div class="sub">门店间调拨单与在途状态</div>
+                <div class="tbar">
+                  <span class="b pri">新建调拨</span>
+                  <span class="b ghost">筛选</span>
+                  <span class="inp">搜索单号</span>
+                </div>
+                <table class="tt">
+                  <thead><tr><th>调拨单</th><th>路线</th><th>状态</th><th>操作</th></tr></thead>
+                  <tbody>
+                    <tr><td>TR-881</td><td>仓 → 南山店</td><td><span class="pill on">在途</span></td><td><span class="link">查看</span><span class="link danger">取消</span></td></tr>
+                    <tr><td>TR-882</td><td>仓 → 福田店</td><td><span class="pill on">已收</span></td><td><span class="link">查看</span><span class="link danger">取消</span></td></tr>
+                    <tr><td>TR-883</td><td>南山 → 福田</td><td><span class="pill off">草稿</span></td><td><span class="link">查看</span><span class="link danger">取消</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== K 夜航 ========== -->
+  <section class="scheme" id="s-k">
+    <div class="scheme-head">
+      <div>
+        <h2>K · 夜航 <span class="code">Night Voyage</span></h2>
+        <div class="tagline">午夜蓝侧栏 + 浅雾台面，金琥珀作点睛。偏航线、资金、票务或高端商务，沉稳里带一点礼宾感。</div>
+      </div>
+      <div class="fit">
+        适合：商务 / 票务 / 资金<br />
+        <span style="background:#fef3c7; color:#92400e">礼宾金线</span>
+      </div>
+    </div>
+    <div class="scheme-body">
+      <div class="scheme-side">
+        <h3>Tokens</h3>
+        <div class="swatches">
+          <div class="swatch"><i style="background:#0c1a32"></i><div><div class="n">侧栏</div><div class="v">#0c1a32</div></div></div>
+          <div class="swatch"><i style="background:#eef2f7"></i><div><div class="n">内容区</div><div class="v">#eef2f7</div></div></div>
+          <div class="swatch"><i style="background:#b45309"></i><div><div class="n">主色</div><div class="v">#b45309</div></div></div>
+          <div class="swatch"><i style="background:#fbbf24"></i><div><div class="n">激活条</div><div class="v">#fbbf24</div></div></div>
+        </div>
+        <dl class="trait">
+          <dt>气质</dt>
+          <dd>沉稳、礼宾、略高端</dd>
+          <dt>签名细节</dt>
+          <dd>琥珀金竖条 + 深夜蓝侧栏</dd>
+          <dt>对比策略</dt>
+          <dd>金只作细线强调，避免俗气大块</dd>
+        </dl>
+      </div>
+      <div class="scheme-stage">
+        <div class="shell s-k" style="--acc:#fbbf24">
+          <div class="side">
+            <div class="brand">航务台<small>NIGHT VOYAGE</small></div>
+            <div class="mi on"><span class="d"></span>首页</div>
+            <div class="grp">航线</div>
+            <div class="mi"><span class="d"></span>班次计划</div>
+            <div class="mi"><span class="d"></span>舱位库存</div>
+            <div class="mi"><span class="d"></span>改签审批</div>
+            <div class="grp">结算</div>
+            <div class="mi"><span class="d"></span>日终对账</div>
+          </div>
+          <div class="main">
+            <div class="top"><div class="t">航务管理端</div><div class="op">ops.chen · 退出</div></div>
+            <div class="body">
+              <div class="pcard">
+                <h4>班次计划</h4>
+                <div class="sub">航线、时刻与放行状态</div>
+                <div class="tbar">
+                  <span class="b pri">新建班次</span>
+                  <span class="b ghost">筛选</span>
+                  <span class="inp">搜索航线</span>
+                </div>
+                <table class="tt">
+                  <thead><tr><th>班次</th><th>航线</th><th>状态</th><th>操作</th></tr></thead>
+                  <tbody>
+                    <tr><td>NV102</td><td>SHA → SZX</td><td><span class="pill on">可售</span></td><td><span class="link">详情</span><span class="link danger">关闭</span></td></tr>
+                    <tr><td>NV208</td><td>SHA → PEK</td><td><span class="pill on">可售</span></td><td><span class="link">详情</span><span class="link danger">关闭</span></td></tr>
+                    <tr><td>NV311</td><td>SZX → SHA</td><td><span class="pill off">锁定</span></td><td><span class="link">详情</span><span class="link danger">关闭</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== L 雪笺 ========== -->
+  <section class="scheme" id="s-l">
+    <div class="scheme-head">
+      <div>
+        <h2>L · 雪笺 <span class="code">Snow Scroll</span></h2>
+        <div class="tagline">纯白、近黑、一点朱红。瑞士国际主义排版：直角、细线、高对比标题，信息当印刷品来排。</div>
+      </div>
+      <div class="fit">
+        适合：文档 / 配置 / 编辑台<br />
+        <span style="background:#f5f5f5; color:#0a0a0a">瑞士排版</span>
+      </div>
+    </div>
+    <div class="scheme-body">
+      <div class="scheme-side">
+        <h3>Tokens</h3>
+        <div class="swatches">
+          <div class="swatch"><i style="background:#ffffff; border-color:#d4d4d4"></i><div><div class="n">侧栏</div><div class="v">#ffffff</div></div></div>
+          <div class="swatch"><i style="background:#ffffff; border-color:#d4d4d4"></i><div><div class="n">内容区</div><div class="v">#ffffff</div></div></div>
+          <div class="swatch"><i style="background:#0a0a0a"></i><div><div class="n">主色</div><div class="v">#0a0a0a</div></div></div>
+          <div class="swatch"><i style="background:#ef4444"></i><div><div class="n">点睛</div><div class="v">#ef4444</div></div></div>
+        </div>
+        <dl class="trait">
+          <dt>气质</dt>
+          <dd>锐利、印刷、去装饰</dd>
+          <dt>签名细节</dt>
+          <dd>2px 黑顶栏 + 朱红激活短条</dd>
+          <dt>对比策略</dt>
+          <dd>几乎无色，只留黑白灰与一点红</dd>
+        </dl>
+      </div>
+      <div class="scheme-stage">
+        <div class="shell s-l" style="--acc:#ef4444">
+          <div class="side">
+            <div class="brand">文控台<small>DOCS CONTROL</small></div>
+            <div class="mi on"><span class="d"></span>首页</div>
+            <div class="grp">文档</div>
+            <div class="mi"><span class="d"></span>制度目录</div>
+            <div class="mi"><span class="d"></span>修订记录</div>
+            <div class="mi"><span class="d"></span>发布审批</div>
+            <div class="grp">权限</div>
+            <div class="mi"><span class="d"></span>阅读授权</div>
+          </div>
+          <div class="main">
+            <div class="top"><div class="t">文控管理端</div><div class="op">editor · 退出</div></div>
+            <div class="body">
+              <div class="pcard">
+                <h4>修订记录</h4>
+                <div class="sub">版本、生效日与审批状态</div>
+                <div class="tbar">
+                  <span class="b pri">新建修订</span>
+                  <span class="b ghost">筛选</span>
+                  <span class="inp">搜索制度</span>
+                </div>
+                <table class="tt">
+                  <thead><tr><th>文件</th><th>版本</th><th>状态</th><th>操作</th></tr></thead>
+                  <tbody>
+                    <tr><td>采购管理办法</td><td>v3.2</td><td><span class="pill on">已生效</span></td><td><span class="link">打开</span><span class="link danger">废止</span></td></tr>
+                    <tr><td>差旅报销细则</td><td>v2.0</td><td><span class="pill on">已生效</span></td><td><span class="link">打开</span><span class="link danger">废止</span></td></tr>
+                    <tr><td>信息安全规范</td><td>v1.4</td><td><span class="pill off">审批中</span></td><td><span class="link">打开</span><span class="link danger">废止</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- compare -->
+  <section class="compare">
+    <h2>第三轮横向对照</h2>
+    <div class="hint">与候选池（墨岩 / 云白 / 石墨）一并比选。四套新方案刻意拉开：工业冷、手作暖、礼宾金、瑞士极简。</div>
+    <table>
+      <thead>
+        <tr>
+          <th>方案</th>
+          <th>壳明暗</th>
+          <th>主色</th>
+          <th>气质</th>
+          <th>优先场景</th>
+          <th>风险</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="name"><span class="dot" style="background:#0369a1"></span>I 霜钢</td>
+          <td>钢青侧栏 + 灰阶内容</td>
+          <td>#0369a1</td>
+          <td>工业精密</td>
+          <td>工程 / 资产 / 工控</td>
+          <td>与墨岩同属冷系，差异化要靠圆角与灰阶</td>
+        </tr>
+        <tr>
+          <td class="name"><span class="dot" style="background:#c2410c"></span>J 赤陶</td>
+          <td>陶土侧栏 + 暖白内容</td>
+          <td>#c2410c</td>
+          <td>手作温度</td>
+          <td>零售 / 门店 / 内容</td>
+          <td>暖橙长时间值守易视觉疲劳</td>
+        </tr>
+        <tr>
+          <td class="name"><span class="dot" style="background:#b45309"></span>K 夜航</td>
+          <td>午夜蓝侧栏 + 浅雾内容</td>
+          <td>#b45309</td>
+          <td>礼宾金线</td>
+          <td>商务 / 票务 / 资金</td>
+          <td>金色过量会显奢，必须细线克制</td>
+        </tr>
+        <tr>
+          <td class="name"><span class="dot" style="background:#0a0a0a"></span>L 雪笺</td>
+          <td>全白 + 黑线</td>
+          <td>#0a0a0a</td>
+          <td>瑞士排版</td>
+          <td>文档 / 配置 / 编辑台</td>
+          <td>缺色彩分层，大表格易显单调</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="note">
+    <strong>候选池现状：</strong>A 墨岩 · B 云白 · F 石墨（+ 本轮 I–L 可再入选）。<br />
+    建议下一步：从 7 套里收成「三强」，再做登录页/弹窗对照与终选；或直接指定主风格，我来回填
+    <strong>docs/template/admin-ui-design.md</strong> 并整理 CSS 变量。
+  </div>
+</div>
+</body>
+</html>

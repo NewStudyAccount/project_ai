@@ -23,9 +23,9 @@
       <el-table-column prop="id" label="ID" width="180" />
       <el-table-column prop="action" label="结果" width="120">
         <template #default="{ row }">
-          <el-tag :type="row.action === 'LOGIN_SUCCESS' ? 'success' : 'danger'">
+          <span :class="['status-pill', row.action === 'LOGIN_SUCCESS' ? 'is-on' : 'is-bad']">
             {{ row.action === 'LOGIN_SUCCESS' ? '成功' : '失败' }}
-          </el-tag>
+          </span>
         </template>
       </el-table-column>
       <el-table-column prop="targetId" label="用户名" width="140" />

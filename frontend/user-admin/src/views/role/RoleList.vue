@@ -11,7 +11,7 @@
       </el-table-column>
       <el-table-column prop="status" label="状态" width="90">
         <template #default="{ row }">
-          <el-tag :type="row.status === 1 ? 'success' : 'info'">{{ row.status === 1 ? '启用' : '停用' }}</el-tag>
+          <span :class="['status-pill', row.status === 1 ? 'is-on' : 'is-off']">{{ row.status === 1 ? '启用' : '停用' }}</span>
         </template>
       </el-table-column>
       <el-table-column prop="remark" label="备注" min-width="180" />

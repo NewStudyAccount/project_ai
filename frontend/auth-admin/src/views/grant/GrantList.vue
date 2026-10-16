@@ -16,7 +16,7 @@
       <el-table-column prop="scopes" label="Scopes" min-width="140" />
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
-          <el-tag :type="row.status === 1 ? 'success' : 'danger'">{{ row.status === 1 ? '有效' : '已吊销' }}</el-tag>
+          <span :class="['status-pill', row.status === 1 ? 'is-on' : 'is-bad']">{{ row.status === 1 ? '有效' : '已吊销' }}</span>
         </template>
       </el-table-column>
       <el-table-column prop="revokedAt" label="吊销时间" width="170" />

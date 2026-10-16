@@ -72,6 +72,8 @@ function onUnifiedLogout() {
 
 .login-card {
   width: 380px;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.04), 0 8px 20px rgba(24, 24, 27, 0.04);
 }
 
 .card-header {

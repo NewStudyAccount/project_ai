@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>管理端页面风格 · 第二轮比选</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #e8edf4;
+    color: #0f172a;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 40px 28px 72px; }
+
+  .hero { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-bottom: 24px; }
+  .hero h1 { font-size: 28px; font-weight: 650; letter-spacing: -0.02em; }
+  .hero p { margin-top: 8px; color: #64748b; font-size: 14px; max-width: 580px; }
+  .hero .meta { text-align: right; font-size: 12px; color: #64748b; }
+  .hero .meta strong { display: block; color: #0f172a; font-size: 13px; margin-bottom: 2px; }
+
+  .toc { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+  .toc a {
+    text-decoration: none; height: 32px; padding: 0 14px; border-radius: 999px;
+    border: 1px solid #c9d3e1; background: #fff; color: #334155; font-size: 13px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .toc a:hover { border-color: #3b82f6; color: #2563eb; }
+  .toc .sw { width: 10px; height: 10px; border-radius: 50%; }
+
+  .keep-note {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; margin-bottom: 20px;
+    background: #fff; border: 1px dashed #c9d3e1; border-radius: 10px;
+    font-size: 13px; color: #475569;
+  }
+  .keep-note strong { color: #0f172a; }
+  .keep-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 28px; padding: 0 12px; border-radius: 999px;
+    background: #f1f5f9; border: 1px solid #e2e8f0; font-size: 12px;
+  }
+
+  .scheme {
+    background: #fff; border: 1px solid #d7e0ec; border-radius: 14px;
+    overflow: hidden; margin-bottom: 24px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+  .scheme-head {
+    display: grid; grid-template-columns: 1fr auto; gap: 16px;
+    padding: 22px 24px 18px; border-bottom: 1px solid #e8eef5;
+  }
+  .scheme-head h2 {
+    font-size: 20px; font-weight: 650;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .scheme-head h2 .code {
+    font-size: 11px; font-weight: 500; color: #64748b;
+    background: #f1f5f9; padding: 3px 8px; border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .scheme-head .tagline { margin-top: 6px; color: #475569; font-size: 13.5px; }
+  .scheme-head .fit { text-align: right; font-size: 12px; color: #64748b; }
+  .scheme-head .fit span {
+    display: inline-flex; align-items: center; height: 24px;
+    padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 500; margin-top: 6px;
+  }
+
+  .scheme-body { display: grid; grid-template-columns: 280px 1fr; min-height: 340px; }
+  .scheme-side {
+    padding: 20px; border-right: 1px solid #e8eef5; background: #fafbfc;
+  }
+  .scheme-side h3 {
+    font-size: 12px; font-weight: 600; color: #64748b;
+    letter-spacing: 0.04em; margin-bottom: 12px; text-transform: uppercase;
+  }
+  .swatches { display: grid; gap: 8px; margin-bottom: 18px; }
+  .swatch { display: grid; grid-template-columns: 36px 1fr; gap: 10px; align-items: center; }
+  .swatch i {
+    width: 36px; height: 28px; border-radius: 6px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+  }
+  .swatch .n { font-size: 12px; font-weight: 550; color: #0f172a; }
+  .swatch .v {
+    font-size: 11px; color: #64748b;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .trait { margin-top: 14px; padding-top: 14px; border-top: 1px dashed #dbe3ee; }
+  .trait dt { font-size: 11px; color: #94a3b8; margin-top: 10px; }
+  .trait dd { font-size: 12.5px; color: #334155; }
+
+  .scheme-stage { padding: 18px; }
+
+  /* mini shell */
+  .shell {
+    display: grid; grid-template-columns: 168px 1fr;
+    height: 320px; border-radius: 10px; overflow: hidden;
+    border: 1px solid rgba(15, 23, 42, 0.1); font-size: 12px;
+  }
+  .shell .side { display: flex; flex-direction: column; padding: 12px 0; }
+  .shell .brand { padding: 6px 14px 14px; font-weight: 650; font-size: 13px; }
+  .shell .brand small {
+    display: block; font-size: 10px; font-weight: 400;
+    opacity: 0.55; margin-top: 1px; letter-spacing: 0.04em;
+  }
+  .shell .mi {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-left: 3px solid transparent;
+  }
+  .shell .mi .d {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: currentColor; opacity: 0.5;
+  }
+  .shell .mi.on { border-left-color: var(--acc); }
+  .shell .mi.on .d { background: var(--acc); opacity: 1; }
+  .shell .grp {
+    padding: 10px 14px 4px; font-size: 10px;
+    letter-spacing: 0.06em; opacity: 0.55;
+  }
+  .shell .main { display: flex; flex-direction: column; min-width: 0; }
+  .shell .top {
+    height: 42px; display: flex; align-items: center;
+    justify-content: space-between; padding: 0 14px;
+    border-bottom: 1px solid var(--line); flex-shrink: 0;
+  }
+  .shell .top .t { font-weight: 600; font-size: 12.5px; }
+  .shell .top .op { font-size: 11px; opacity: 0.75; }
+  .shell .body { flex: 1; padding: 12px; overflow: hidden; }
+  .pcard {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 8px; padding: 12px; height: 100%;
+  }
+  .pcard h4 { font-size: 14px; font-weight: 650; margin-bottom: 2px; }
+  .pcard .sub { font-size: 11px; opacity: 0.65; margin-bottom: 10px; }
+  .tbar { display: flex; gap: 6px; margin-bottom: 10px; align-items: center; }
+  .b {
+    height: 26px; padding: 0 10px; border-radius: 5px;
+    font-size: 11px; font-weight: 550;
+    display: inline-flex; align-items: center; border: 1px solid transparent;
+  }
+  .b.pri { background: var(--pri); color: var(--pri-ink, #fff); }
+  .b.ghost {
+    background: var(--surface); border-color: var(--line); color: var(--ink-2);
+  }
+  .inp {
+    height: 26px; border: 1px solid var(--line); border-radius: 5px;
+    background: var(--surface); color: var(--ink-3);
+    display: inline-flex; align-items: center; padding: 0 8px;
+    font-size: 11px; margin-left: auto;
+  }
+  table.tt { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .tt th {
+    text-align: left; font-weight: 550; padding: 7px 8px;
+    border-bottom: 1px solid var(--line); color: var(--ink-3);
+    background: var(--head-bg);
+  }
+  .tt td {
+    padding: 8px; border-bottom: 1px solid var(--line); color: var(--ink-2);
+  }
+  .tt tr:last-child td { border-bottom: none; }
+  .pill {
+    display: inline-flex; height: 18px; align-items: center;
+    padding: 0 8px; border-radius: 999px; font-size: 10px; font-weight: 550;
+  }
+  .link { color: var(--pri); font-weight: 500; margin-right: 8px; }
+  .link.danger { color: var(--danger); }
+
+  /* ===== E 青瓷 ===== */
+  .s-e {
+    --bg-page: #ecfdf5;
+    --surface: #ffffff;
+    --side-bg: #0f3d3e;
+    --side-ink: #e6fffa;
+    --side-muted: #99f6e4;
+    --acc: #2dd4bf;
+    --pri: #0d9488;
+    --line: #d1fae5;
+    --head-bg: #f0fdfa;
+    --ink-2: #134e4a;
+    --ink-3: #5eead4;
+    --danger: #e11d48;
+    background: var(--bg-page); color: var(--ink-2);
+  }
+  .s-e .side { background: var(--side-bg); color: #8fd5cc; }
+  .s-e .brand { color: var(--side-ink); }
+  .s-e .mi.on {
+    background: rgba(45, 212, 191, 0.12);
+    color: #f0fdfa; border-left-color: var(--acc);
+  }
+  .s-e .top { background: var(--surface); }
+  .s-e .body { background: var(--bg-page); }
+  .s-e .pill.on { background: #ccfbf1; color: #115e59; }
+  .s-e .pill.off { background: #fef3c7; color: #92400e; }
+  .s-e .link.danger { color: #be123c; }
+
+  /* ===== F 石墨 ===== */
+  .s-f {
+    --bg-page: #f4f4f5;
+    --surface: #ffffff;
+    --side-bg: #18181b;
+    --side-ink: #fafafa;
+    --side-muted: #a1a1aa;
+    --acc: #fafafa;
+    --pri: #18181b;
+    --line: #e4e4e7;
+    --head-bg: #fafafa;
+    --ink-2: #27272a;
+    --ink-3: #71717a;
+    --danger: #dc2626;
+    background: var(--bg-page); color: var(--ink-2);
+  }
+  .s-f .side { background: var(--side-bg); color: var(--side-muted); }
+  .s-f .brand { color: var(--side-ink); letter-spacing: 0.02em; }
+  .s-f .mi.on {
+    background: rgba(250, 250, 250, 0.08);
+    color: #fafafa; border-left-color: var(--acc);
+  }
+  .s-f .top { background: var(--surface); }
+  .s-f .body { background: var(--bg-page); }
+  .s-f .pcard { border-color: #e4e4e7; border-radius: 4px; }
+  .s-f .shell { border-radius: 4px; }
+  .s-f .b.pri { border-radius: 3px; }
+  .s-f .b.ghost { border-radius: 3px; }
+  .s-f .pill.on { background: #e4e4e7; color: #18181b; }
+  .s-f .pill.off { background: #fef3c7; color: #92400e; }
+  .s-f .link { color: #18181b; text-decoration: underline; text-underline-offset: 2px; }
+
+  /* ===== G 绛紫 ===== */
+  .s-g {
+    --bg-page: #f5f3ff;
+    --surface: #ffffff;
+    --side-bg: #2e1065;
+    --side-ink: #f5f3ff;
+    --side-muted: #c4b5fd;
+    --acc: #a78bfa;
+    --pri: #7c3aed;
+    --line: #e9e5ff;
+    --head-bg: #faf8ff;
+    --ink-2: #3b0764;
+    --ink-3: #7c3aed;
+    --danger: #e11d48;
+    background: var(--bg-page); color: var(--ink-2);
+  }
+  .s-g .side { background: var(--side-bg); color: var(--side-muted); }
+  .s-g .brand { color: var(--side-ink); }
+  .s-g .mi.on {
+    background: rgba(167, 139, 250, 0.16);
+    color: #ede9fe; border-left-color: var(--acc);
+  }
+  .s-g .top { background: var(--surface); }
+  .s-g .body { background: var(--bg-page); }
+  .s-g .pill.on { background: #ddd6fe; color: #5b21b6; }
+  .s-g .pill.off { background: #fef3c7; color: #92400e; }
+
+  /* ===== H 松烟 ===== */
+  .s-h {
+    --bg-page: #f4f7f0;
+    --surface: #fffef8;
+    --side-bg: #14532d;
+    --side-ink: #f7fee7;
+    --side-muted: #bbf7d0;
+    --acc: #86efac;
+    --pri: #15803d;
+    --line: #d9e7c8;
+    --head-bg: #f7faef;
+    --ink-2: #14532d;
+    --ink-3: #4d7c0f;
+    --danger: #b91c1c;
+    background: var(--bg-page); color: var(--ink-2);
+  }
+  .s-h .side { background: var(--side-bg); color: #95c48a; }
+  .s-h .brand { color: var(--side-ink); }
+  .s-h .mi.on {
+    background: rgba(134, 239, 172, 0.12);
+    color: #ecfdf5; border-left-color: var(--acc);
+  }
+  .s-h .top { background: var(--surface); }
+  .s-h .body { background: var(--bg-page); }
+  .s-h .pill.on { background: #dcfce7; color: #166534; }
+  .s-h .pill.off { background: #fef9c3; color: #854d0e; }
+
+  /* compare */
+  .compare {
+    background: #fff; border: 1px solid #d7e0ec; border-radius: 14px; overflow: hidden;
+  }
+  .compare h2 { padding: 20px 24px 8px; font-size: 18px; font-weight: 650; }
+  .compare .hint { padding: 0 24px 16px; color: #64748b; font-size: 13px; }
+  .compare table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .compare th {
+    text-align: left; padding: 12px 16px; background: #f8fafc;
+    color: #64748b; font-weight: 550; font-size: 12px; border-bottom: 1px solid #e8eef5;
+  }
+  .compare td {
+    padding: 14px 16px; border-bottom: 1px solid #eef2f7;
+    color: #334155; vertical-align: top;
+  }
+  .compare tr:last-child td { border-bottom: none; }
+  .compare .name { font-weight: 600; color: #0f172a; }
+  .compare .dot {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; margin-right: 8px;
+  }
+
+  .note {
+    margin-top: 28px; padding: 18px 20px;
+    background: #fff; border: 1px solid #d7e0ec; border-radius: 12px;
+    color: #64748b; font-size: 12.5px; line-height: 1.75;
+  }
+  .note strong { color: #0f172a; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div>
+      <h1>管理端页面风格 · 第二轮比选</h1>
+      <p>保留 A 墨岩、B 云白作为前轮基准，本轮新增四套气质差异更大的方案。骨架仍是 App Shell + P-List，只换色板与质感层，便于与第一轮横向对比。</p>
+    </div>
+    <div class="meta">
+      <strong>保留 2 + 新增 4</strong>
+      青瓷 / 石墨 / 绛紫 / 松烟<br />
+      第二轮可视化样张
+    </div>
+  </header>
+
+  <div class="keep-note">
+    <strong>先保留：</strong>
+    <span class="keep-chip"><span class="sw" style="width:8px;height:8px;border-radius:50%;background:#0f172a;display:inline-block"></span> A · 墨岩</span>
+    <span class="keep-chip"><span class="sw" style="width:8px;height:8px;border-radius:50%;background:#0284c7;display:inline-block"></span> B · 云白</span>
+    <span style="color:#94a3b8">详见第一轮样张</span>
+  </div>
+
+  <nav class="toc">
+    <a href="#s-e"><span class="sw" style="background:#0d9488"></span>E · 青瓷</a>
+    <a href="#s-f"><span class="sw" style="background:#18181b"></span>F · 石墨</a>
+    <a href="#s-g"><span class="sw" style="background:#7c3aed"></span>G · 绛紫</a>
+    <a href="#s-h"><span class="sw" style="background:#15803d"></span>H · 松烟</a>
+  </nav>
+
+  <!-- ========== E 青瓷 ========== -->
+  <section class="scheme" id="s-e">
+    <div class="scheme-head">
+      <div>
+        <h2>E · 青瓷 <span class="code">Celadon</span></h2>
+        <div class="tagline">深青瓷侧栏 + 薄荷白台面，青绿主色。清爽、有服务感，适合客服、健康、会员运营等偏「人」的后台。</div>
+      </div>
+      <div class="fit">
+        适合：客服 / 会员 / 健康<br />
+        <span style="background:#ccfbf1; color:#115e59">清透服务感</span>
+      </div>
+    </div>
+    <div class="scheme-body">
+      <div class="scheme-side">
+        <h3>Tokens</h3>
+        <div class="swatches">
+          <div class="swatch"><i style="background:#0f3d3e"></i><div><div class="n">侧栏</div><div class="v">#0f3d3e</div></div></div>
+          <div class="swatch"><i style="background:#ecfdf5"></i><div><div class="n">内容区</div><div class="v">#ecfdf5</div></div></div>
+          <div class="swatch"><i style="background:#0d9488"></i><div><div class="n">主色</div><div class="v">#0d9488</div></div></div>
+          <div class="swatch"><i style="background:#2dd4bf"></i><div><div class="n">激活条</div><div class="v">#2dd4bf</div></div></div>
+        </div>
+        <dl class="trait">
+          <dt>气质</dt>
+          <dd>清透、亲和、偏服务</dd>
+          <dt>签名细节</dt>
+          <dd>薄荷台面 + 湖水青竖条</dd>
+          <dt>对比策略</dt>
+          <dd>侧栏深青压角，内容极浅保表格</dd>
+        </dl>
+      </div>
+      <div class="scheme-stage">
+        <div class="shell s-e" style="--acc:#2dd4bf">
+          <div class="side">
+            <div class="brand">会员中心<small>MEMBER CARE</small></div>
+            <div class="mi on"><span class="d"></span>首页</div>
+            <div class="grp">客户</div>
+            <div class="mi"><span class="d"></span>会员档案</div>
+            <div class="mi"><span class="d"></span>服务工单</div>
+            <div class="mi"><span class="d"></span>回访计划</div>
+            <div class="grp">运营</div>
+            <div class="mi"><span class="d"></span>标签管理</div>
+          </div>
+          <div class="main">
+            <div class="top"><div class="t">会员服务端</div><div class="op">agent01 · 退出</div></div>
+            <div class="body">
+              <div class="pcard">
+                <h4>服务工单</h4>
+                <div class="sub">按优先级跟进客户请求</div>
+                <div class="tbar">
+                  <span class="b pri">新建工单</span>
+                  <span class="b ghost">筛选</span>
+                  <span class="inp">搜索会员</span>
+                </div>
+                <table class="tt">
+                  <thead><tr><th>工单号</th><th>主题</th><th>状态</th><th>操作</th></tr></thead>
+                  <tbody>
+                    <tr><td>TK-1182</td><td>积分兑换咨询</td><td><span class="pill on">处理中</span></td><td><span class="link">查看</span><span class="link danger">关闭</span></td></tr>
+                    <tr><td>TK-1183</td><td>账户信息变更</td><td><span class="pill on">处理中</span></td><td><span class="link">查看</span><span class="link danger">关闭</span></td></tr>
+                    <tr><td>TK-1184</td><td>活动报名失败</td><td><span class="pill off">待响应</span></td><td><span class="link">查看</span><span class="link danger">关闭</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== F 石墨 ========== -->
+  <section class="scheme" id="s-f">
+    <div class="scheme-head">
+      <div>
+        <h2>F · 石墨 <span class="code">Graphite</span></h2>
+        <div class="tagline">去色、近单色、小圆角。侧栏近黑，内容锌白，按钮也走黑。信息密度优先，像工具而不是品牌页。</div>
+      </div>
+      <div class="fit">
+        适合：数据密集 / 内部工具<br />
+        <span style="background:#e4e4e7; color:#27272a">极简工具感</span>
+      </div>
+    </div>
+    <div class="scheme-body">
+      <div class="scheme-side">
+        <h3>Tokens</h3>
+        <div class="swatches">
+          <div class="swatch"><i style="background:#18181b"></i><div><div class="n">侧栏</div><div class="v">#18181b</div></div></div>
+          <div class="swatch"><i style="background:#f4f4f5"></i><div><div class="n">内容区</div><div class="v">#f4f4f5</div></div></div>
+          <div class="swatch"><i style="background:#18181b"></i><div><div class="n">主色</div><div class="v">#18181b</div></div></div>
+          <div class="swatch"><i style="background:#a1a1aa"></i><div><div class="n">次级</div><div class="v">#a1a1aa</div></div></div>
+        </div>
+        <dl class="trait">
+          <dt>气质</dt>
+          <dd>克制、锋利、去装饰</dd>
+          <dt>签名细节</dt>
+          <dd>小圆角 3–4px + 下划线链接</dd>
+          <dt>对比策略</dt>
+          <dd>靠明度差分层，几乎不用色相</dd>
+        </dl>
+      </div>
+      <div class="scheme-stage">
+        <div class="shell s-f" style="--acc:#fafafa">
+          <div class="side">
+            <div class="brand">数据台<small>DATA DESK</small></div>
+            <div class="mi on"><span class="d"></span>总览</div>
+            <div class="grp">资产</div>
+            <div class="mi"><span class="d"></span>数据集</div>
+            <div class="mi"><span class="d"></span>任务队列</div>
+            <div class="mi"><span class="d"></span>血缘图</div>
+            <div class="grp">治理</div>
+            <div class="mi"><span class="d"></span>权限审计</div>
+          </div>
+          <div class="main">
+            <div class="top"><div class="t">数据治理控制台</div><div class="op">analyst · 退出</div></div>
+            <div class="body">
+              <div class="pcard">
+                <h4>数据集</h4>
+                <div class="sub">目录、负责人与更新状态</div>
+                <div class="tbar">
+                  <span class="b pri">导入元数据</span>
+                  <span class="b ghost">筛选</span>
+                  <span class="inp">搜索数据集</span>
+                </div>
+                <table class="tt">
+                  <thead><tr><th>名称</th><th>负责人</th><th>状态</th><th>操作</th></tr></thead>
+                  <tbody>
+                    <tr><td>orders_daily</td><td>li.hua</td><td><span class="pill on">正常</span></td><td><span class="link">打开</span><span class="link danger">停用</span></td></tr>
+                    <tr><td>user_profile</td><td>chen.ao</td><td><span class="pill on">正常</span></td><td><span class="link">打开</span><span class="link danger">停用</span></td></tr>
+                    <tr><td>ops_metric</td><td>wang.yi</td><td><span class="pill off">延迟</span></td><td><span class="link">打开</span><span class="link danger">停用</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== G 绛紫 ========== -->
+  <section class="scheme" id="s-g">
+    <div class="scheme-head">
+      <div>
+        <h2>G · 绛紫 <span class="code">Orchid</span></h2>
+        <div class="tagline">深紫侧栏 + 薰衣草白内容，紫罗兰主色。偏创意 SaaS / 产品分析，比蓝更有产品性格，仍保持管理台可读性。</div>
+      </div>
+      <div class="fit">
+        适合：产品分析 / 创意运营<br />
+        <span style="background:#ddd6fe; color:#5b21b6">产品性格</span>
+      </div>
+    </div>
+    <div class="scheme-body">
+      <div class="scheme-side">
+        <h3>Tokens</h3>
+        <div class="swatches">
+          <div class="swatch"><i style="background:#2e1065"></i><div><div class="n">侧栏</div><div class="v">#2e1065</div></div></div>
+          <div class="swatch"><i style="background:#f5f3ff"></i><div><div class="n">内容区</div><div class="v">#f5f3ff</div></div></div>
+          <div class="swatch"><i style="background:#7c3aed"></i><div><div class="n">主色</div><div class="v">#7c3aed</div></div></div>
+          <div class="swatch"><i style="background:#a78bfa"></i><div><div class="n">激活条</div><div class="v">#a78bfa</div></div></div>
+        </div>
+        <dl class="trait">
+          <dt>气质</dt>
+          <dd>现代、柔和强调、略洋气</dd>
+          <dt>签名细节</dt>
+          <dd>紫晶竖条 + 薰衣草浅台面</dd>
+          <dt>对比策略</dt>
+          <dd>主色只打 CTA 与激活，不大面积铺紫</dd>
+        </dl>
+      </div>
+      <div class="scheme-stage">
+        <div class="shell s-g" style="--acc:#a78bfa">
+          <div class="side">
+            <div class="brand">产品台<small>PRODUCT OPS</small></div>
+            <div class="mi on"><span class="d"></span>首页</div>
+            <div class="grp">洞察</div>
+            <div class="mi"><span class="d"></span>漏斗分析</div>
+            <div class="mi"><span class="d"></span>留存看板</div>
+            <div class="mi"><span class="d"></span>实验管理</div>
+            <div class="grp">配置</div>
+            <div class="mi"><span class="d"></span>事件字典</div>
+          </div>
+          <div class="main">
+            <div class="top"><div class="t">产品运营端</div><div class="op">pm.li · 退出</div></div>
+            <div class="body">
+              <div class="pcard">
+                <h4>实验管理</h4>
+                <div class="sub">A/B 实验列表与运行状态</div>
+                <div class="tbar">
+                  <span class="b pri">新建实验</span>
+                  <span class="b ghost">筛选</span>
+                  <span class="inp">搜索实验</span>
+                </div>
+                <table class="tt">
+                  <thead><tr><th>实验</th><th>流量</th><th>状态</th><th>操作</th></tr></thead>
+                  <tbody>
+                    <tr><td>注册页改版</td><td>20%</td><td><span class="pill on">运行中</span></td><td><span class="link">详情</span><span class="link danger">停止</span></td></tr>
+                    <tr><td>推荐排序 v3</td><td>10%</td><td><span class="pill on">运行中</span></td><td><span class="link">详情</span><span class="link danger">停止</span></td></tr>
+                    <tr><td>会员价提示</td><td>5%</td><td><span class="pill off">待启动</span></td><td><span class="link">详情</span><span class="link danger">停止</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== H 松烟 ========== -->
+  <section class="scheme" id="s-h">
+    <div class="scheme-head">
+      <div>
+        <h2>H · 松烟 <span class="code">Pine Smoke</span></h2>
+        <div class="tagline">墨绿侧栏 + 草木白台面，林间绿主色。稳重里带一点自然温度，适合组织人事、培训、ESG 类系统。</div>
+      </div>
+      <div class="fit">
+        适合：人事 / 组织 / ESG<br />
+        <span style="background:#dcfce7; color:#166534">自然稳重</span>
+      </div>
+    </div>
+    <div class="scheme-body">
+      <div class="scheme-side">
+        <h3>Tokens</h3>
+        <div class="swatches">
+          <div class="swatch"><i style="background:#14532d"></i><div><div class="n">侧栏</div><div class="v">#14532d</div></div></div>
+          <div class="swatch"><i style="background:#f4f7f0"></i><div><div class="n">内容区</div><div class="v">#f4f7f0</div></div></div>
+          <div class="swatch"><i style="background:#15803d"></i><div><div class="n">主色</div><div class="v">#15803d</div></div></div>
+          <div class="swatch"><i style="background:#86efac"></i><div><div class="n">激活条</div><div class="v">#86efac</div></div></div>
+        </div>
+        <dl class="trait">
+          <dt>气质</dt>
+          <dd>沉静、有机、不过冷</dd>
+          <dt>签名细节</dt>
+          <dd>松绿竖条 + 苔白纸感台面</dd>
+          <dt>对比策略</dt>
+          <dd>绿只做强调，大面积保持中性纸色</dd>
+        </dl>
+      </div>
+      <div class="scheme-stage">
+        <div class="shell s-h" style="--acc:#86efac">
+          <div class="side">
+            <div class="brand">组织台<small>PEOPLE & ORG</small></div>
+            <div class="mi on"><span class="d"></span>首页</div>
+            <div class="grp">人事</div>
+            <div class="mi"><span class="d"></span>花名册</div>
+            <div class="mi"><span class="d"></span>异动审批</div>
+            <div class="mi"><span class="d"></span>培训计划</div>
+            <div class="grp">组织</div>
+            <div class="mi"><span class="d"></span>部门树</div>
+          </div>
+          <div class="main">
+            <div class="top"><div class="t">组织人事端</div><div class="op">hr.admin · 退出</div></div>
+            <div class="body">
+              <div class="pcard">
+                <h4>异动审批</h4>
+                <div class="sub">入转调离流程与办理进度</div>
+                <div class="tbar">
+                  <span class="b pri">发起异动</span>
+                  <span class="b ghost">筛选</span>
+                  <span class="inp">搜索员工</span>
+                </div>
+                <table class="tt">
+                  <thead><tr><th>员工</th><th>类型</th><th>状态</th><th>操作</th></tr></thead>
+                  <tbody>
+                    <tr><td>周敏</td><td>转正</td><td><span class="pill on">已通过</span></td><td><span class="link">查看</span><span class="link danger">作废</span></td></tr>
+                    <tr><td>韩磊</td><td>调岗</td><td><span class="pill on">审批中</span></td><td><span class="link">查看</span><span class="link danger">作废</span></td></tr>
+                    <tr><td>林晓</td><td>入职</td><td><span class="pill off">待提交</span></td><td><span class="link">查看</span><span class="link danger">作废</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- compare -->
+  <section class="compare">
+    <h2>第二轮横向对照</h2>
+    <div class="hint">与第一轮对照时，请把「A 墨岩 / B 云白」一并放进同一决策表；骨架不变，避免落入「每系统一个视觉方言」。</div>
+    <table>
+      <thead>
+        <tr>
+          <th>方案</th>
+          <th>壳明暗</th>
+          <th>主色</th>
+          <th>气质</th>
+          <th>优先场景</th>
+          <th>风险</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="name"><span class="dot" style="background:#0d9488"></span>E 青瓷</td>
+          <td>深青侧栏 + 薄荷内容</td>
+          <td>#0d9488</td>
+          <td>清透服务</td>
+          <td>客服 / 会员 / 健康</td>
+          <td>偏行业色，通用管理台略跳</td>
+        </tr>
+        <tr>
+          <td class="name"><span class="dot" style="background:#18181b"></span>F 石墨</td>
+          <td>近黑侧栏 + 锌白内容</td>
+          <td>#18181b</td>
+          <td>极简工具</td>
+          <td>数据密集 / 内部工具</td>
+          <td>情绪冷，营销/前台场景不合适</td>
+        </tr>
+        <tr>
+          <td class="name"><span class="dot" style="background:#7c3aed"></span>G 绛紫</td>
+          <td>深紫侧栏 + 薰衣草内容</td>
+          <td>#7c3aed</td>
+          <td>产品性格</td>
+          <td>产品分析 / 创意运营</td>
+          <td>紫作大面积会显软，需控比例</td>
+        </tr>
+        <tr>
+          <td class="name"><span class="dot" style="background:#15803d"></span>H 松烟</td>
+          <td>墨绿侧栏 + 草木白内容</td>
+          <td>#15803d</td>
+          <td>自然稳重</td>
+          <td>人事 / 组织 / ESG</td>
+          <td>绿与成功态易撞色，状态要降饱和</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="note">
+    <strong>怎么接着比：</strong>把 A/B（保留）与 E–H 放进同一决策即可；选定唯一主风格后回填
+    <strong>docs/template/admin-ui-design.md</strong>。<br />
+    若需要，我可以再补：① 各风格的登录页/弹窗对照；② 压缩成「三强」单页终选稿；③ 把选定色板写成 CSS 变量片段供前端直接引用。
+  </div>
+</div>
+</body>
+</html>

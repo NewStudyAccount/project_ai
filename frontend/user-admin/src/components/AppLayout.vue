@@ -1,6 +1,6 @@
 <template>
   <el-container class="layout">
-    <el-aside width="220px" class="aside">
+    <el-aside width="240px" class="aside">
       <el-menu router :default-active="route.path" class="menu">
         <el-menu-item index="/dashboard">首页</el-menu-item>
         <template v-for="group in visibleMenus" :key="group.id">
@@ -24,7 +24,7 @@
           <el-button link type="primary" @click="onLogout">退出</el-button>
         </span>
       </el-header>
-      <el-main>
+      <el-main class="main">
         <router-view v-if="route.path !== '/'" />
         <Dashboard v-else />
       </el-main>
@@ -72,27 +72,37 @@ function normalizePath(path: string): string {
 }
 
 .aside {
-  background: var(--bg-surface, #fff);
-  border-right: 1px solid var(--border, #ebeef5);
+  background: var(--bg-sidebar, #fff);
+  border-right: 1px solid var(--border, #e4e4e7);
 }
 
 .menu {
   border-right: none;
+  background: transparent;
+}
+
+.menu:not(.el-menu--collapse) {
+  width: 240px;
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 60px;
+  height: 56px;
   background: var(--bg-surface, #fff);
-  border-bottom: 1px solid var(--border, #ebeef5);
+  border-bottom: 1px solid var(--border, #e4e4e7);
 }
 
 .operator {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--text-regular, #606266);
+  color: var(--text-regular, #3f3f46);
+}
+
+.main {
+  background: var(--bg-page, #f6f7f9);
+  padding: 0;
 }
 </style>

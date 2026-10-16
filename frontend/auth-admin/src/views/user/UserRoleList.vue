@@ -21,7 +21,7 @@
       <el-table-column prop="roleCode" label="编码" width="140" />
       <el-table-column prop="roleName" label="名称" width="140" />
       <el-table-column prop="status" label="状态" width="80">
-        <template #default="{ row }">{{ row.status === 1 ? '启用' : '停用' }}</template>
+        <template #default="{ row }"><span :class="['status-pill', row.status === 1 ? 'is-on' : 'is-off']">{{ row.status === 1 ? '启用' : '停用' }}</span></template>
       </el-table-column>
       <el-table-column prop="remark" label="备注" min-width="160" />
     </el-table>

@@ -20,7 +20,7 @@
       <el-table-column prop="systemCode" label="系统" width="100" />
       <el-table-column prop="enabled" label="状态" width="80">
         <template #default="{ row }">
-          <el-tag :type="row.enabled === 1 ? 'success' : 'info'">{{ row.enabled === 1 ? '启用' : '停用' }}</el-tag>
+          <span :class="['status-pill', row.enabled === 1 ? 'is-on' : 'is-off']">{{ row.enabled === 1 ? '启用' : '停用' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="280" fixed="right">

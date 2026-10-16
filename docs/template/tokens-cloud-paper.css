@@ -1,0 +1,100 @@
+/**
+ * 云白 Cloud Paper · 管理端 Design Tokens
+ * 权威定义见 docs/template/admin-ui-design.md §1
+ * 用法：在各 {system}-admin 的 main.css 顶部 @import 或直接合并本段
+ */
+
+:root {
+  /* 背景 */
+  --bg-page: #f6f7f9;
+  --bg-surface: #ffffff;
+  --bg-sidebar: #ffffff;
+  --bg-sidebar-active: #f0f9ff;
+
+  /* 文字 */
+  --text-primary: #18181b;
+  --text-regular: #3f3f46;
+  --text-secondary: #71717a;
+  --text-sidebar: #18181b;
+  --text-sidebar-muted: #71717a;
+  --text-sidebar-active: #0c4a6e;
+
+  /* 线与强调 */
+  --border: #e4e4e7;
+  --primary: #0284c7;
+  --primary-hover: #0369a1;
+  --primary-light: #f0f9ff;
+  --accent-bar: #0284c7;
+  --danger: #e11d48;
+  --success: #0f766e;
+  --warning: #c2410c;
+
+  /* 圆角 / 阴影 / 间距 */
+  --page-radius: 12px;
+  --control-radius: 8px;
+  --button-radius: 999px;
+  --space-page: 16px;
+  --space-toolbar: 8px;
+  --shadow-card: 0 1px 2px rgba(24, 24, 27, 0.04), 0 8px 20px rgba(24, 24, 27, 0.04);
+  --shadow-dialog: 0 8px 24px rgba(15, 23, 42, 0.12);
+
+  /* Element Plus 主色对齐 */
+  --el-color-primary: #0284c7;
+  --el-color-primary-light-3: #38a2d8;
+  --el-color-primary-light-5: #6bb8e2;
+  --el-color-primary-light-7: #9fd0ec;
+  --el-color-primary-light-8: #b9def2;
+  --el-color-primary-light-9: #e6f3fa;
+  --el-color-primary-dark-2: #026ea3;
+
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--text-primary);
+  background: var(--bg-page);
+}
+
+/* 状态软胶囊 */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.status-pill.is-on {
+  background: #d1fae5;
+  color: #065f46;
+}
+.status-pill.is-off {
+  background: #fef3c7;
+  color: #92400e;
+}
+.status-pill.is-bad {
+  background: #ffe4e6;
+  color: #9f1239;
+}
+
+/* 页面容器 */
+.page-card {
+  margin: var(--space-page);
+  padding: 18px 20px;
+  background: var(--bg-surface);
+  border-radius: var(--page-radius);
+  box-shadow: var(--shadow-card);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-toolbar);
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+/* 可选：主按钮胶囊（配合 el-button 使用时覆盖圆角） */
+.el-button--primary.is-plain,
+.toolbar .el-button--primary,
+.dialog-foot .el-button--primary {
+  border-radius: var(--button-radius);
+}

@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>管理端风格 · 候选四强终选</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #e8edf4; color: #0f172a;
+    line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 40px 28px 72px; }
+
+  .hero { margin-bottom: 22px; }
+  .hero h1 { font-size: 28px; font-weight: 650; letter-spacing: -0.02em; }
+  .hero p { margin-top: 8px; color: #64748b; font-size: 14px; max-width: 720px; }
+
+  .matrix {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0 28px;
+  }
+  .m-card {
+    background: #fff; border: 1px solid #d7e0ec; border-radius: 12px;
+    padding: 14px; text-decoration: none; color: inherit;
+  }
+  .m-card:hover { border-color: #3b82f6; box-shadow: 0 4px 14px rgba(15,23,42,.08); }
+  .m-card .bar { height: 10px; border-radius: 999px; margin-bottom: 12px; }
+  .m-card h3 { font-size: 15px; font-weight: 650; }
+  .m-card .en {
+    font-size: 11px; color: #94a3b8; font-family: ui-monospace, Menlo, monospace;
+    margin: 2px 0 8px;
+  }
+  .m-card p { font-size: 12px; color: #64748b; line-height: 1.55; }
+  .m-card .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .m-card .tags span {
+    font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    background: #f1f5f9; color: #475569;
+  }
+
+  .scheme {
+    background: #fff; border: 1px solid #d7e0ec; border-radius: 14px;
+    overflow: hidden; margin-bottom: 24px;
+  }
+  .scheme-head {
+    padding: 20px 24px 14px; border-bottom: 1px solid #e8eef5;
+    display: flex; justify-content: space-between; gap: 16px; align-items: flex-start;
+  }
+  .scheme-head h2 {
+    font-size: 20px; font-weight: 650;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .scheme-head h2 .code {
+    font-size: 11px; font-weight: 500; color: #64748b;
+    background: #f1f5f9; padding: 3px 8px; border-radius: 4px;
+    font-family: ui-monospace, Menlo, monospace;
+  }
+  .scheme-head .tagline { margin-top: 6px; color: #475569; font-size: 13.5px; max-width: 720px; }
+  .vote {
+    flex-shrink: 0; text-align: right; font-size: 12px; color: #64748b;
+  }
+  .vote b {
+    display: inline-flex; align-items: center; height: 28px; padding: 0 12px;
+    border-radius: 999px; font-size: 12px; font-weight: 550; margin-top: 6px;
+  }
+
+  .scheme-body { display: grid; grid-template-columns: 250px 1fr; }
+  .scheme-side {
+    padding: 16px 18px; border-right: 1px solid #e8eef5; background: #fafbfc;
+  }
+  .scheme-side h3 {
+    font-size: 11px; font-weight: 600; color: #64748b;
+    letter-spacing: 0.05em; margin: 12px 0 8px; text-transform: uppercase;
+  }
+  .scheme-side h3:first-child { margin-top: 0; }
+  .swatches { display: grid; gap: 7px; }
+  .swatch { display: grid; grid-template-columns: 32px 1fr; gap: 8px; align-items: center; }
+  .swatch i {
+    width: 32px; height: 24px; border-radius: 5px;
+    border: 1px solid rgba(15,23,42,.08);
+  }
+  .swatch .n { font-size: 11.5px; font-weight: 550; color: #0f172a; }
+  .swatch .v {
+    font-size: 10.5px; color: #64748b;
+    font-family: ui-monospace, Menlo, monospace;
+  }
+  .type-demo {
+    padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;
+  }
+  .type-demo .big { font-size: 26px; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; }
+  .type-demo .mid { font-size: 12px; margin-top: 4px; }
+  .type-demo .small { font-size: 10.5px; color: #64748b; margin-top: 4px; }
+  .mark-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;
+  }
+  .mark {
+    width: 34px; height: 34px; border-radius: 8px;
+    display: grid; place-items: center; color: #fff; font-size: 13px; font-weight: 700;
+  }
+  .mark-row .wm { font-size: 12.5px; font-weight: 650; }
+  .mark-row .wm small {
+    display: block; font-size: 10px; font-weight: 400;
+    color: #94a3b8; letter-spacing: 0.06em;
+  }
+
+  .scheme-stage { padding: 16px; }
+
+  .rshell {
+    border-radius: 10px; overflow: hidden;
+    border: 1px solid rgba(15,23,42,.12);
+    font-size: 12px; height: 380px;
+    display: grid; grid-template-columns: 150px 1fr;
+    background: var(--bg);
+  }
+  .rshell .side {
+    background: var(--side); color: var(--side-muted);
+    display: flex; flex-direction: column; padding: 12px 0;
+  }
+  .rshell .brand {
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 12px 14px; font-weight: 650; font-size: 12px;
+  }
+  .rshell .brand .bm {
+    width: 20px; height: 20px; border-radius: 5px; display: grid; place-items: center;
+    font-size: 10px; color: #fff; background: var(--pri); flex-shrink: 0;
+  }
+  .rshell .mi {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 12px; border-left: 3px solid transparent;
+  }
+  .rshell .mi .d {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: currentColor; opacity: 0.45;
+  }
+  .rshell .mi.on {
+    border-left-color: var(--acc); color: var(--side-on); background: var(--side-active);
+  }
+  .rshell .mi.on .d { background: var(--acc); opacity: 1; }
+  .rshell .grp {
+    padding: 10px 12px 3px; font-size: 10px;
+    letter-spacing: 0.06em; opacity: 0.55;
+  }
+  .rshell .main { display: flex; flex-direction: column; min-width: 0; }
+  .rshell .top {
+    height: 40px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 12px; background: var(--top); border-bottom: 1px solid var(--line);
+  }
+  .rshell .top .t { font-weight: 600; font-size: 12px; }
+  .rshell .top .op { font-size: 11px; opacity: 0.7; }
+  .rshell .body { flex: 1; padding: 12px; overflow: hidden; background: var(--bg); }
+
+  .kpi-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px;
+  }
+  .kpi {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 8px; padding: 9px 11px;
+  }
+  .kpi .k { font-size: 10px; opacity: 0.65; margin-bottom: 3px; }
+  .kpi .v {
+    font-size: 18px; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em;
+  }
+  .kpi .d { font-size: 10px; margin-top: 3px; opacity: 0.7; }
+  .kpi .d.up { color: var(--up, #16a34a); opacity: 1; }
+  .kpi .d.down { color: var(--down, #dc2626); opacity: 1; }
+
+  .panel {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 8px; overflow: hidden;
+  }
+  .panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 11px; border-bottom: 1px solid var(--line);
+  }
+  .panel-head h4 { font-size: 12px; font-weight: 650; }
+  .b {
+    height: 24px; padding: 0 10px; border-radius: 5px;
+    font-size: 11px; font-weight: 550;
+    display: inline-flex; align-items: center; border: 1px solid transparent;
+  }
+  .b.pri { background: var(--pri); color: var(--pri-ink, #fff); }
+  table.tt { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .tt th {
+    text-align: left; font-weight: 550; padding: 6px 10px;
+    border-bottom: 1px solid var(--line); color: var(--ink-3);
+    background: var(--head);
+  }
+  .tt td {
+    padding: 7px 10px; border-bottom: 1px solid var(--line); color: var(--ink-2);
+  }
+  .tt tr:last-child td { border-bottom: none; }
+  .pill {
+    display: inline-flex; height: 18px; align-items: center;
+    padding: 0 8px; border-radius: 999px; font-size: 10px; font-weight: 550;
+  }
+  .link { color: var(--pri); font-weight: 500; margin-right: 8px; }
+  .link.danger { color: var(--danger); }
+
+  /* A 墨岩 */
+  .s-a {
+    --bg: #f1f5f9; --surface: #fff;
+    --side: #0f172a; --side-muted: #94a3b8; --side-on: #f8fafc;
+    --side-active: rgba(56,189,248,.12);
+    --acc: #38bdf8; --pri: #3b82f6;
+    --line: #e2e8f0; --head: #f8fafc;
+    --ink-2: #334155; --ink-3: #64748b; --danger: #ef4444;
+    --up: #16a34a; --down: #dc2626;
+  }
+  .s-a .top { background: var(--surface); }
+  .s-a .pill.on { background: #dcfce7; color: #166534; }
+  .s-a .pill.off { background: #fef3c7; color: #92400e; }
+
+  /* B 云白 */
+  .s-b {
+    --bg: #f6f7f9; --surface: #fff;
+    --side: #fff; --side-muted: #71717a; --side-on: #0c4a6e;
+    --side-active: #f0f9ff;
+    --acc: #0284c7; --pri: #0284c7;
+    --line: #e4e4e7; --head: #fafafa;
+    --ink-2: #3f3f46; --ink-3: #71717a; --danger: #e11d48;
+    --up: #0f766e; --down: #c2410c;
+  }
+  .s-b .side { border-right: 1px solid var(--line); }
+  .s-b .top { background: var(--surface); }
+  .s-b .kpi, .s-b .panel {
+    border-color: transparent;
+    box-shadow: 0 1px 2px rgba(24,24,27,.04), 0 8px 20px rgba(24,24,27,.04);
+    border-radius: 12px;
+  }
+  .s-b .rshell { border-radius: 14px; }
+  .s-b .b { border-radius: 999px; }
+  .s-b .pill.on { background: #d1fae5; color: #065f46; }
+  .s-b .pill.off { background: #fef3c7; color: #92400e; }
+
+  /* F 石墨 */
+  .s-f {
+    --bg: #f4f4f5; --surface: #fff;
+    --side: #18181b; --side-muted: #a1a1aa; --side-on: #fafafa;
+    --side-active: rgba(250,250,250,.08);
+    --acc: #fafafa; --pri: #18181b;
+    --line: #e4e4e7; --head: #fafafa;
+    --ink-2: #27272a; --ink-3: #71717a; --danger: #dc2626;
+    --up: #15803d; --down: #b45309;
+  }
+  .s-f .rshell { border-radius: 4px; }
+  .s-f .kpi, .s-f .panel, .s-f .b { border-radius: 3px; }
+  .s-f .pill { border-radius: 2px; }
+  .s-f .pill.on { background: #e4e4e7; color: #18181b; }
+  .s-f .pill.off { background: #fef3c7; color: #92400e; }
+  .s-f .link { color: #18181b; text-decoration: underline; text-underline-offset: 2px; }
+  .s-f .kpi .v { font-variant-numeric: tabular-nums; }
+
+  /* I 霜钢 */
+  .s-i {
+    --bg: #e2e8f0; --surface: #fff;
+    --side: #1e293b; --side-muted: #94a3b8; --side-on: #e0f2fe;
+    --side-active: rgba(125,211,252,.12);
+    --acc: #7dd3fc; --pri: #0369a1;
+    --line: #cbd5e1; --head: #f1f5f9;
+    --ink-2: #0f172a; --ink-3: #64748b; --danger: #dc2626;
+    --up: #0c4a6e; --down: #c2410c;
+  }
+  .s-i .rshell { border-radius: 4px; }
+  .s-i .kpi, .s-i .panel, .s-i .b { border-radius: 3px; }
+  .s-i .pill { border-radius: 3px; }
+  .s-i .pill.on { background: #e0f2fe; color: #0c4a6e; }
+  .s-i .pill.off { background: #fef3c7; color: #92400e; }
+  .s-i .kpi .v { font-variant-numeric: tabular-nums; }
+  .s-i .brand { letter-spacing: 0.04em; }
+
+  .decision {
+    background: #fff; border: 1px solid #d7e0ec; border-radius: 14px;
+    padding: 22px 24px;
+  }
+  .decision h2 { font-size: 18px; font-weight: 650; margin-bottom: 8px; }
+  .decision > p { color: #64748b; font-size: 13px; margin-bottom: 16px; }
+  .decision table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .decision th {
+    text-align: left; padding: 10px 12px; background: #f8fafc;
+    color: #64748b; font-weight: 550; font-size: 12px; border-bottom: 1px solid #e8eef5;
+  }
+  .decision td {
+    padding: 12px; border-bottom: 1px solid #eef2f7; color: #334155; vertical-align: top;
+  }
+  .decision tr:last-child td { border-bottom: none; }
+  .decision .name { font-weight: 600; color: #0f172a; }
+  .decision .dot {
+    display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px;
+  }
+  .decision .score {
+    font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #2563eb;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1>候选四强 · 终选对照</h1>
+    <p>
+      从十套比选里留下的四套：墨岩（现行定稿）、云白、石墨、霜钢。
+      本页统一用「KPI + 列表 + 品牌字符」同一骨架呈现，方便直接拍板。
+    </p>
+  </header>
+
+  <div class="matrix">
+    <a class="m-card" href="#s-a">
+      <div class="bar" style="background:linear-gradient(90deg,#0f172a 50%,#3b82f6 50%)"></div>
+      <h3>A · 墨岩</h3>
+      <div class="en">INK ROCK</div>
+      <p>深壳浅台，冷灰专业 SaaS。现行设计文档定稿。</p>
+      <div class="tags"><span>专业</span><span>通用后台</span><span>高对比</span></div>
+    </a>
+    <a class="m-card" href="#s-b">
+      <div class="bar" style="background:linear-gradient(90deg,#fff 50%,#0284c7 50%);border:1px solid #e2e8f0"></div>
+      <h3>B · 云白</h3>
+      <div class="en">CLOUD PAPER</div>
+      <p>全浅轻边界，低压迫办公感，接近 Notion / Linear。</p>
+      <div class="tags"><span>轻量</span><span>低密度</span><span>文档型</span></div>
+    </a>
+    <a class="m-card" href="#s-f">
+      <div class="bar" style="background:linear-gradient(90deg,#18181b 50%,#f4f4f5 50%)"></div>
+      <h3>F · 石墨</h3>
+      <div class="en">GRAPHITE</div>
+      <p>去色单色工具风，小圆角、高密度，像内部装备。</p>
+      <div class="tags"><span>工具感</span><span>数据密集</span><span>去装饰</span></div>
+    </a>
+    <a class="m-card" href="#s-i">
+      <div class="bar" style="background:linear-gradient(90deg,#1e293b 50%,#0369a1 50%)"></div>
+      <h3>I · 霜钢</h3>
+      <div class="en">FROST STEEL</div>
+      <p>钢青灰阶 + 冰蓝指示，工业精密、装备台账感。</p>
+      <div class="tags"><span>工业</span><span>精确</span><span>工程运维</span></div>
+    </a>
+  </div>
+
+  <!-- ========== A 墨岩 ========== -->
+  <section class="scheme" id="s-a">
+    <div class="scheme-head">
+      <div>
+        <h2>A · 墨岩 <span class="code">INK ROCK</span></h2>
+        <div class="tagline">深墨蓝侧栏压住画面，冷灰内容保表格可读，主色蓝作唯一强调。三方案比选后定稿，与 admin-ui-design.md 对齐成本最低。</div>
+      </div>
+      <div class="vote">
+        定位<br />
+        <b style="background:#e0f2fe;color:#075985">现行定稿</b>
+      </div>
+    </div>
+    <div class="scheme-body">
+      <div class="scheme-side">
+        <h3>色板</h3>
+        <div class="swatches">
+          <div class="swatch"><i style="background:#0f172a"></i><div><div class="n">侧栏</div><div class="v">#0f172a</div></div></div>
+          <div class="swatch"><i style="background:#f1f5f9"></i><div><div class="n">内容区</div><div class="v">#f1f5f9</div></div></div>
+          <div class="swatch"><i style="background:#3b82f6"></i><div><div class="n">主色</div><div class="v">#3b82f6</div></div></div>
+          <div class="swatch"><i style="background:#38bdf8"></i><div><div class="n">激活条</div><div class="v">#38bdf8</div></div></div>
+        </div>
+        <h3>字标</h3>
+        <div class="mark-row">
+          <div class="mark" style="background:#0f172a">墨</div>
+          <div class="wm">墨岩管理端<small>INK ROCK</small></div>
+        </div>
+        <h3>字体性格</h3>
+        <div class="type-demo">
+          <div class="big">12,480</div>
+          <div class="mid">本月新增用户</div>
+          <div class="small">几何无衬线 · 标准专业 · 不抢数据</div>
+        </div>
+      </div>
+      <div class="scheme-stage">
+        <div class="rshell s-a" style="--acc:#38bdf8">
+          <div class="side">
+            <div class="brand"><span class="bm">墨</span>用户中心</div>
+            <div class="mi on"><span class="d"></span>首页</div>
+            <div class="grp">系统管理</div>
+            <div class="mi"><span class="d"></span>用户管理</div>
+            <div class="mi"><span class="d"></span>角色管理</div>
+            <div class="mi"><span class="d"></span>菜单管理</div>
+            <div class="grp">审计</div>
+            <div class="mi"><span class="d"></span>操作审计</div>
+          </div>
+          <div class="main">
+            <div class="top"><div class="t">用户中心管理端</div><div class="op">admin · 退出</div></div>
+            <div class="body">
+              <div class="kpi-row">
+                <div class="kpi"><div class="k">用户总数</div><div class="v">12,480</div><div class="d up">+3.2%</div></div>
+                <div class="kpi"><div class="k">今日活跃</div><div class="v">3,206</div><div class="d up">+8.1%</div></div>
+                <div class="kpi"><div class="k">待审批</div><div class="v">18</div><div class="d">超时 2</div></div>
+                <div class="kpi"><div class="k">角色数</div><div class="v">46</div><div class="d">本季 +3</div></div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><h4>角色管理</h4><div><span class="b pri">新建角色</span></div></div>
+                <table class="tt">
+                  <thead><tr><th>名称</th><th>数据范围</th><th>状态</th><th>操作</th></tr></thead>
+                  <tbody>
+                    <tr><td>超级管理员</td><td>全部</td><td><span class="pill on">启用</span></td><td><span class="link">编辑</span><span class="link danger">删除</span></td></tr>
+                    <tr><td>运营专员</td><td>本部门</td><td><span class="pill on">启用</span></td><td><span class="link">编辑</span><span class="link danger">删除</span></td></tr>
+                    <tr><td>只读访客</td><td>仅本人</td><td><span class="pill off">停用</span></td><td><span class="link">编辑</span><span class="link danger">删除</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== B 云白 ========== -->
+  <section class="scheme" id="s-b">
+    <div class="scheme-head">
+      <div>
+        <h2>B · 云白 <span class="code">CLOUD PAPER</span></h2>
+        <div class="tagline">全浅色、轻阴影、大圆角。侧栏与内容同为纸白，靠细分隔分层，天蓝更轻盈。低密度配置台最舒服。</div>
+      </div>
+      <div class="vote">
+        定位<br />
+        <b style="background:#e0f2fe;color:#075985">轻量友好</b>
+      </div>
+    </div>
+    <div class="scheme-body">
+      <div class="scheme-side">
+        <h3>色板</h3>
+        <div class="swatches">
+          <div class="swatch"><i style="background:#fff;border-color:#e4e4e7"></i><div><div class="n">侧栏</div><div class="v">#ffffff</div></div></div>
+          <div class="swatch"><i style="background:#f6f7f9"></i><div><div class="n">内容区</div><div class="v">#f6f7f9</div></div></div>
+          <div class="swatch"><i style="background:#0284c7"></i><div><div class="n">主色</div><div class="v">#0284c7</div></div></div>
+          <div class="swatch"><i style="background:#e4e4e7"></i><div><div class="n">描边</div><div class="v">#e4e4e7</div></div></div>
+        </div>
+        <h3>字标</h3>
+        <div class="mark-row">
+          <div class="mark" style="background:#0284c7;border-radius:12px">云</div>
+          <div class="wm">云白管理端<small>CLOUD PAPER</small></div>
+        </div>
+        <h3>字体性格</h3>
+        <div class="type-demo" style="border-radius:14px">
+          <div class="big" style="color:#0284c7">+18.4%</div>
+          <div class="mid">本周配置变更</div>
+          <div class="small">几何无衬线 · 圆角即性格 · 留白当层次</div>
+        </div>
+      </div>
+      <div class="scheme-stage">
+        <div class="rshell s-b" style="--acc:#0284c7">
+          <div class="side">
+            <div class="brand"><span class="bm" style="border-radius:8px">云</span>用户中心</div>
+            <div class="mi on"><span class="d"></span>首页</div>
+            <div class="grp">系统管理</div>
+            <div class="mi"><span class="d"></span>用户管理</div>
+            <div class="mi"><span class="d"></span>角色管理</div>
+            <div class="mi"><span class="d"></span>菜单管理</div>
+            <div class="grp">审计</div>
+            <div class="mi"><span class="d"></span>操作审计</div>
+          </div>
+          <div class="main">
+            <div class="top"><div class="t">用户中心管理端</div><div class="op">admin · 退出</div></div>
+            <div class="body">
+              <div class="kpi-row">
+                <div class="kpi"><div class="k">用户总数</div><div class="v" style="color:#0e7490">12,480</div><div class="d up">+3.2%</div></div>
+                <div class="kpi"><div class="k">今日活跃</div><div class="v" style="color:#0e7490">3,206</div><div class="d up">+8.1%</div></div>
+                <div class="kpi"><div class="k">待审批</div><div class="v" style="color:#0e7490">18</div><div class="d">超时 2</div></div>
+                <div class="kpi"><div class="k">角色数</div><div class="v" style="color:#0e7490">46</div><div class="d">本季 +3</div></div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><h4>角色管理</h4><div><span class="b pri">新建角色</span></div></div>
+                <table class="tt">
+                  <thead><tr><th>名称</th><th>数据范围</th><th>状态</th><th>操作</th></tr></thead>
+                  <tbody>
+                    <tr><td>超级管理员</td><td>全部</td><td><span class="pill on">启用</span></td><td><span class="link">编辑</span><span class="link danger">删除</span></td></tr>
+                    <tr><td>运营专员</td><td>本部门</td><td><span class="pill on">启用</span></td><td><span class="link">编辑</span><span class="link danger">删除</span></td></tr>
+                    <tr><td>只读访客</td><td>仅本人</td><td><span class="pill off">停用</span></td><td><span class="link">编辑</span><span class="link danger">删除</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== F 石墨 ========== -->
+  <section class="scheme" id="s-f">
+    <div class="scheme-head">
+      <div>
+        <h2>F · 石墨 <span class="code">GRAPHITE</span></h2>
+        <div class="tagline">去色、近单色、小圆角。侧栏近黑，按钮也走黑。信息密度优先，像工具而不是品牌页——内部装备气质。</div>
+      </div>
+      <div class="vote">
+        定位<br />
+        <b style="background:#e4e4e7;color:#27272a">极简工具</b>
+      </div>
+    </div>
+    <div class="scheme-body">
+      <div class="scheme-side">
+        <h3>色板</h3>
+        <div class="swatches">
+          <div class="swatch"><i style="background:#18181b"></i><div><div class="n">侧栏</div><div class="v">#18181b</div></div></div>
+          <div class="swatch"><i style="background:#f4f4f5"></i><div><div class="n">内容区</div><div class="v">#f4f4f5</div></div></div>
+          <div class="swatch"><i style="background:#18181b"></i><div><div class="n">主色</div><div class="v">#18181b</div></div></div>
+          <div class="swatch"><i style="background:#a1a1aa"></i><div><div class="n">次级</div><div class="v">#a1a1aa</div></div></div>
+        </div>
+        <h3>字标</h3>
+        <div class="mark-row">
+          <div class="mark" style="background:#18181b;border-radius:3px">石</div>
+          <div class="wm">石墨数据台<small>GRAPHITE</small></div>
+        </div>
+        <h3>字体性格</h3>
+        <div class="type-demo" style="border-radius:3px">
+          <div class="big" style="font-variant-numeric:tabular-nums">12,480</div>
+          <div class="mid">元数据条目</div>
+          <div class="small">等宽倾向 · 下划线链接 · 无装饰强调</div>
+        </div>
+      </div>
+      <div class="scheme-stage">
+        <div class="rshell s-f" style="--acc:#fafafa">
+          <div class="side">
+            <div class="brand"><span class="bm" style="border-radius:2px">石</span>数据台</div>
+            <div class="mi on"><span class="d"></span>总览</div>
+            <div class="grp">资产</div>
+            <div class="mi"><span class="d"></span>数据集</div>
+            <div class="mi"><span class="d"></span>任务队列</div>
+            <div class="mi"><span class="d"></span>血缘图</div>
+            <div class="grp">治理</div>
+            <div class="mi"><span class="d"></span>权限审计</div>
+          </div>
+          <div class="main">
+            <div class="top"><div class="t">数据治理控制台</div><div class="op">analyst · 退出</div></div>
+            <div class="body">
+              <div class="kpi-row">
+                <div class="kpi"><div class="k">数据集</div><div class="v">1,248</div><div class="d up">+24</div></div>
+                <div class="kpi"><div class="k">今日任务</div><div class="v">306</div><div class="d up">成功率 99%</div></div>
+                <div class="kpi"><div class="k">延迟任务</div><div class="v">7</div><div class="d down">需处理</div></div>
+                <div class="kpi"><div class="k">权限审计</div><div class="v">52</div><div class="d">本周</div></div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><h4>数据集</h4><div><span class="b pri">导入元数据</span></div></div>
+                <table class="tt">
+                  <thead><tr><th>名称</th><th>负责人</th><th>状态</th><th>操作</th></tr></thead>
+                  <tbody>
+                    <tr><td>orders_daily</td><td>li.hua</td><td><span class="pill on">正常</span></td><td><span class="link">打开</span><span class="link danger">停用</span></td></tr>
+                    <tr><td>user_profile</td><td>chen.ao</td><td><span class="pill on">正常</span></td><td><span class="link">打开</span><span class="link danger">停用</span></td></tr>
+                    <tr><td>ops_metric</td><td>wang.yi</td><td><span class="pill off">延迟</span></td><td><span class="link">打开</span><span class="link danger">停用</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== I 霜钢 ========== -->
+  <section class="scheme" id="s-i">
+    <div class="scheme-head">
+      <div>
+        <h2>I · 霜钢 <span class="code">FROST STEEL</span></h2>
+        <div class="tagline">钢青灰阶 + 冰蓝指示。小圆角、重秩序，像装备台账或工控上位机的现代版，偏精确与可靠。</div>
+      </div>
+      <div class="vote">
+        定位<br />
+        <b style="background:#e0f2fe;color:#0c4a6e">工业精密</b>
+      </div>
+    </div>
+    <div class="scheme-body">
+      <div class="scheme-side">
+        <h3>色板</h3>
+        <div class="swatches">
+          <div class="swatch"><i style="background:#1e293b"></i><div><div class="n">侧栏</div><div class="v">#1e293b</div></div></div>
+          <div class="swatch"><i style="background:#e2e8f0"></i><div><div class="n">内容区</div><div class="v">#e2e8f0</div></div></div>
+          <div class="swatch"><i style="background:#0369a1"></i><div><div class="n">主色</div><div class="v">#0369a1</div></div></div>
+          <div class="swatch"><i style="background:#7dd3fc"></i><div><div class="n">激活条</div><div class="v">#7dd3fc</div></div></div>
+        </div>
+        <h3>字标</h3>
+        <div class="mark-row">
+          <div class="mark" style="background:#0369a1;border-radius:3px">霜</div>
+          <div class="wm">霜钢工程台<small>FROST STEEL</small></div>
+        </div>
+        <h3>字体性格</h3>
+        <div class="type-demo" style="border-radius:3px">
+          <div class="big" style="font-variant-numeric:tabular-nums">99.2%</div>
+          <div class="mid">巡检完成率</div>
+          <div class="small">等宽数字 · 小圆角 · 冰蓝只作指示</div>
+        </div>
+      </div>
+      <div class="scheme-stage">
+        <div class="rshell s-i" style="--acc:#7dd3fc">
+          <div class="side">
+            <div class="brand"><span class="bm">霜</span>工程台</div>
+            <div class="mi on"><span class="d"></span>总览</div>
+            <div class="grp">设备</div>
+            <div class="mi"><span class="d"></span>机组台账</div>
+            <div class="mi"><span class="d"></span>巡检任务</div>
+            <div class="mi"><span class="d"></span>缺陷跟踪</div>
+            <div class="grp">工单</div>
+            <div class="mi"><span class="d"></span>派工记录</div>
+          </div>
+          <div class="main">
+            <div class="top"><div class="t">设备运维端</div><div class="op">eng.zhang · 退出</div></div>
+            <div class="body">
+              <div class="kpi-row">
+                <div class="kpi"><div class="k">在册设备</div><div class="v">2,840</div><div class="d up">+12</div></div>
+                <div class="kpi"><div class="k">巡检完成</div><div class="v">99.2%</div><div class="d up">SLO 达标</div></div>
+                <div class="kpi"><div class="k">缺陷未闭</div><div class="v">15</div><div class="d down">超期 3</div></div>
+                <div class="kpi"><div class="k">今日工单</div><div class="v">48</div><div class="d">已结 36</div></div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><h4>巡检任务</h4><div><span class="b pri">新建巡检</span></div></div>
+                <table class="tt">
+                  <thead><tr><th>设备</th><th>区域</th><th>状态</th><th>操作</th></tr></thead>
+                  <tbody>
+                    <tr><td>P-204</td><td>A 区</td><td><span class="pill on">完成</span></td><td><span class="link">查看</span><span class="link danger">跳过</span></td></tr>
+                    <tr><td>P-205</td><td>B 区</td><td><span class="pill on">完成</span></td><td><span class="link">查看</span><span class="link danger">跳过</span></td></tr>
+                    <tr><td>P-206</td><td>C 区</td><td><span class="pill off">待检</span></td><td><span class="link">查看</span><span class="link danger">跳过</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- decision -->
+  <section class="decision">
+    <h2>四强对照与取舍</h2>
+    <p>同一骨架（侧栏 + KPI + 列表）下看差异。选定后只改色板与质感层，不改页面模式。</p>
+    <table>
+      <thead>
+        <tr>
+          <th>方案</th>
+          <th>壳明暗</th>
+          <th>主色</th>
+          <th>气质</th>
+          <th>最适合</th>
+          <th>要留意</th>
+          <th>与现行文档</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="name"><span class="dot" style="background:#0f172a"></span>A 墨岩</td>
+          <td>深侧栏 + 浅内容</td>
+          <td>#3b82f6</td>
+          <td>专业 SaaS</td>
+          <td>通用多系统管理端</td>
+          <td>冷色理性，暖业务略疏离</td>
+          <td class="score">一致 · 成本最低</td>
+        </tr>
+        <tr>
+          <td class="name"><span class="dot" style="background:#0284c7"></span>B 云白</td>
+          <td>全浅</td>
+          <td>#0284c7</td>
+          <td>轻办公</td>
+          <td>低密度配置 / 文档型</td>
+          <td>大数据表略平</td>
+          <td class="score">需改 token</td>
+        </tr>
+        <tr>
+          <td class="name"><span class="dot" style="background:#18181b"></span>F 石墨</td>
+          <td>近黑侧栏 + 锌白</td>
+          <td>#18181b</td>
+          <td>极简工具</td>
+          <td>数据密集 / 内部工具</td>
+          <td>情绪冷，对外门面不合适</td>
+          <td class="score">需改 token</td>
+        </tr>
+        <tr>
+          <td class="name"><span class="dot" style="background:#0369a1"></span>I 霜钢</td>
+          <td>钢青侧栏 + 灰阶</td>
+          <td>#0369a1</td>
+          <td>工业精密</td>
+          <td>工程 / 资产 / 工控</td>
+          <td>与墨岩同属冷系，差异在圆角灰阶</td>
+          <td class="score">需改 token</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+</body>
+</html>

@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>墨岩 · 管理端页面风格样张</title>
+<style>
+  :root {
+    --bg-page: #f1f5f9;
+    --bg-surface: #ffffff;
+    --bg-sidebar: #0f172a;
+    --bg-sidebar-active: rgba(56, 189, 248, 0.12);
+    --text-primary: #0f172a;
+    --text-regular: #334155;
+    --text-secondary: #64748b;
+    --text-on-dark: #e2e8f0;
+    --text-on-dark-muted: #94a3b8;
+    --border: #e2e8f0;
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --accent-bar: #38bdf8;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --page-radius: 8px;
+    --font: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font);
+    background: var(--bg-page);
+    color: var(--text-primary);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .sample-page {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+  }
+
+  /* ---------- Cover ---------- */
+  .cover {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 36px 40px;
+    background: var(--bg-sidebar);
+    border-radius: 12px;
+    color: var(--text-on-dark);
+    margin-bottom: 40px;
+  }
+  .cover h1 {
+    margin: 0 0 8px;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .cover p {
+    margin: 0;
+    color: var(--text-on-dark-muted);
+    font-size: 14px;
+  }
+  .cover .badge {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 999px;
+    color: var(--accent-bar);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .cover-swatch {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+  }
+  .cover-swatch span {
+    width: 36px;
+    height: 8px;
+    border-radius: 999px;
+  }
+
+  /* ---------- Section ---------- */
+  .section {
+    margin-bottom: 48px;
+  }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .section-head h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .section-head .code {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: #e2e8f0;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .section-desc {
+    margin: -8px 0 16px;
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+
+  .card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--page-radius);
+    padding: 20px;
+  }
+  .card + .card { margin-top: 12px; }
+
+  /* ---------- Tokens ---------- */
+  .token-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .token {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-surface);
+  }
+  .token .chip {
+    height: 56px;
+    border-bottom: 1px solid var(--border);
+  }
+  .token .meta {
+    padding: 10px 12px;
+  }
+  .token .name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .token .val {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    margin-top: 2px;
+  }
+  .token .use {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  .type-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 120px;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .type-row:last-child { border-bottom: none; }
+  .type-row .label {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .type-row .spec {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    text-align: right;
+  }
+
+  .space-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 8px;
+  }
+  .space-item {
+    min-width: 140px;
+  }
+  .space-item .bar {
+    height: 10px;
+    background: var(--primary);
+    border-radius: 2px;
+    margin-bottom: 6px;
+    opacity: 0.85;
+  }
+  .space-item .cap {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  /* ---------- Shell mockup ---------- */
+  .shell {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    height: 520px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--bg-page);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  }
+  .shell-side {
+    background: var(--bg-sidebar);
+    color: var(--text-on-dark);
+    display: flex;
+    flex-direction: column;
+    padding: 16px 0;
+  }
+  .shell-brand {
+    padding: 8px 20px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #f8fafc;
+  }
+  .shell-brand small {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-on-dark-muted);
+    letter-spacing: 0;
+  }
+  .shell-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .shell-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px 10px 17px;
+    font-size: 13px;
+    color: var(--text-on-dark-muted);
+    border-left: 3px solid transparent;
+  }
+  .shell-item.active {
+    background: var(--bg-sidebar-active);
+    color: #f8fafc;
+    border-left-color: var(--accent-bar);
+  }
+  .shell-item .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.55;
+  }
+  .shell-item.active .dot {
+    background: var(--accent-bar);
+    opacity: 1;
+  }
+  .shell-group {
+    margin: 10px 20px 4px;
+    font-size: 11px;
+    color: #64748b;
+    letter-spacing: 0.06em;
+  }
+
+  .shell-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .shell-top {
+    height: 56px;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    flex-shrink: 0;
+  }
+  .shell-top .title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .shell-top .operator {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-regular);
+  }
+  .shell-top .logout {
+    color: var(--primary);
+    font-size: 13px;
+    text-decoration: none;
+  }
+  .shell-content {
+    flex: 1;
+    padding: 16px;
+    overflow: hidden;
+  }
+  .page-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--page-radius);
+    padding: 16px;
+  }
+  .page-title {
+    margin: 0 0 4px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .page-sub {
+    margin: 0 0 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+    align-items: center;
+  }
+  .toolbar .spacer { flex: 1; }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid transparent;
+    cursor: default;
+    user-select: none;
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: #fff;
+  }
+  .btn-default {
+    background: var(--bg-surface);
+    color: var(--text-regular);
+    border-color: var(--border);
+  }
+  .btn-danger {
+    background: var(--danger);
+    color: #fff;
+  }
+  .btn-link {
+    background: transparent;
+    color: var(--primary);
+    padding: 0 6px;
+    height: 28px;
+    font-weight: 400;
+  }
+  .btn-link.danger { color: var(--danger); }
+
+  /* ---------- Table mock ---------- */
+  .mock-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .mock-table th {
+    background: #f8fafc;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 12px;
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mock-table td {
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-regular);
+  }
+  .mock-table tr:last-child td { border-bottom: none; }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .status-on {
+    background: #dcfce7;
+    color: #166534;
+  }
+  .status-off {
+    background: #fef3c7;
+    color: #92400e;
+  }
+  .status-bad {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .pager {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .pager .p {
+    min-width: 28px;
+    height: 28px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-surface);
+  }
+  .pager .p.on {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+
+  /* ---------- Pattern cards ---------- */
+  .pattern-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .pattern {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--bg-surface);
+  }
+  .pattern-head {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .pattern-head h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .pattern-head .tag {
+    font-size: 11px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--text-secondary);
+    background: var(--bg-page);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .pattern-body {
+    padding: 16px;
+    background: var(--bg-page);
+    min-height: 220px;
+  }
+  .pattern-note {
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--border);
+    line-height: 1.6;
+  }
+
+  /* mini shell for patterns */
+  .mini-frame {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    height: 100%;
+    min-height: 188px;
+  }
+  .mini-bar {
+    height: 28px;
+    background: var(--bg-sidebar);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 6px;
+  }
+  .mini-bar i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #475569;
+  }
+
+  /* ---------- Form / Dialog mock ---------- */
+  .dialog-mock {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    overflow: hidden;
+  }
+  .dialog-title {
+    padding: 14px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+  }
+  .dialog-body {
+    padding: 18px;
+  }
+  .form-row {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .form-row label {
+    text-align: right;
+    font-size: 13px;
+    color: var(--text-regular);
+  }
+  .fake-input {
+    height: 32px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg-surface);
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .dialog-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 18px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ---------- Login ---------- */
+  .login-stage {
+    height: 360px;
+    background: var(--bg-sidebar);
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #1e293b;
+  }
+  .login-card {
+    width: 380px;
+    background: var(--bg-surface);
+    border-radius: 8px;
+    padding: 32px 28px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  }
+  .login-card h3 {
+    margin: 0 0 6px;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+  }
+  .login-card .sub {
+    margin: 0 0 24px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: center;
+  }
+  .login-card .field {
+    margin-bottom: 12px;
+  }
+  .login-card .field label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-regular);
+    margin-bottom: 6px;
+  }
+  .login-card .btn-primary {
+    width: 100%;
+    height: 36px;
+    margin-top: 8px;
+    border-radius: 6px;
+  }
+  .login-card .link {
+    display: block;
+    margin-top: 16px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--primary);
+    text-decoration: none;
+  }
+
+  /* ---------- Rules ---------- */
+  .rules {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .rule-box {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    background: var(--bg-surface);
+  }
+  .rule-box h4 {
+    margin: 0 0 12px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .rule-box.do h4 { color: #166534; }
+  .rule-box.dont h4 { color: #991b1b; }
+  .rule-box ul {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--text-regular);
+    font-size: 13px;
+  }
+  .rule-box li { margin-bottom: 6px; }
+
+  .footnote {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  /* tree indent mock */
+  .tree-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-regular);
+    padding: 6px 0;
+  }
+  .tree-line.l1 { padding-left: 0; }
+  .tree-line.l2 { padding-left: 18px; }
+  .tree-line.l3 { padding-left: 36px; }
+  .tree-caret {
+    width: 0;
+    height: 0;
+    border-left: 5px solid var(--text-secondary);
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+  }
+
+  .chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .spec-table th {
+    text-align: left;
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-bottom: 1px solid var(--border);
+  }
+  .spec-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-regular);
+  }
+  .spec-table tr:last-child td { border-bottom: none; }
+  .spec-table code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    background: var(--bg-page);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+<div class="sample-page">
+
+  <!-- Cover -->
+  <header class="cover">
+    <div>
+      <h1>墨岩 · 管理端页面风格样张</h1>
+      <p>方案 B：深色侧栏 · 现代 SaaS · 多系统统一视觉　｜　对应 docs/template/admin-ui-design.md</p>
+      <div class="cover-swatch">
+        <span style="background:#0f172a"></span>
+        <span style="background:#3b82f6"></span>
+        <span style="background:#38bdf8"></span>
+        <span style="background:#f1f5f9"></span>
+        <span style="background:#22c55e"></span>
+        <span style="background:#f59e0b"></span>
+        <span style="background:#ef4444"></span>
+      </div>
+    </div>
+    <div class="badge">风格定稿 · 可视化样张</div>
+  </header>
+
+  <!-- 1. Tokens -->
+  <section class="section">
+    <div class="section-head">
+      <h2>1. 视觉基线 Design Tokens</h2>
+      <span class="code">§1 墨岩</span>
+    </div>
+    <p class="section-desc">深壳浅台：侧栏深墨蓝，主内容冷灰白面。主色 #3b82f6，禁止各系统私自换肤。</p>
+
+    <div class="card">
+      <div class="token-grid">
+        <div class="token">
+          <div class="chip" style="background:#0f172a"></div>
+          <div class="meta">
+            <div class="name">--bg-sidebar</div>
+            <div class="val">#0f172a</div>
+            <div class="use">侧栏底 · 深墨蓝</div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="chip" style="background:#f1f5f9"></div>
+          <div class="meta">
+            <div class="name">--bg-page</div>
+            <div class="val">#f1f5f9</div>
+            <div class="use">主内容区底 · 冷灰</div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="chip" style="background:#ffffff; border-bottom:1px solid #e2e8f0"></div>
+          <div class="meta">
+            <div class="name">--bg-surface</div>
+            <div class="val">#ffffff</div>
+            <div class="use">卡片 / 表格 / 顶栏</div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="chip" style="background:#3b82f6"></div>
+          <div class="meta">
+            <div class="name">--primary</div>
+            <div class="val">#3b82f6</div>
+            <div class="use">主按钮 / 链接 / 激活</div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="chip" style="background:#38bdf8"></div>
+          <div class="meta">
+            <div class="name">--accent-bar</div>
+            <div class="val">#38bdf8</div>
+            <div class="use">侧栏激活竖条 3px</div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="chip" style="background:#0f172a"></div>
+          <div class="meta">
+            <div class="name">--text-primary</div>
+            <div class="val">#0f172a</div>
+            <div class="use">标题、正文</div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="chip" style="background:#e2e8f0"></div>
+          <div class="meta">
+            <div class="name">--border</div>
+            <div class="val">#e2e8f0</div>
+            <div class="use">分割线 / 表格边框</div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="chip" style="background:linear-gradient(90deg,#22c55e 0 33%,#f59e0b 33% 66%,#ef4444 66% 100%)"></div>
+          <div class="meta">
+            <div class="name">success / warning / danger</div>
+            <div class="val">#22c55e · #f59e0b · #ef4444</div>
+            <div class="use">启用 / 停用 / 危险</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 8px; font-size:14px; font-weight:600;">字体与字号</h3>
+      <div class="type-row">
+        <div class="label">字族</div>
+        <div style="font-size:15px">Inter, PingFang SC, Microsoft YaHei</div>
+        <div class="spec">sans-serif</div>
+      </div>
+      <div class="type-row">
+        <div class="label">页面标题</div>
+        <div style="font-size:20px; font-weight:600; color:#0f172a">用户管理</div>
+        <div class="spec">18–20px / 600</div>
+      </div>
+      <div class="type-row">
+        <div class="label">卡片标题</div>
+        <div style="font-size:16px; font-weight:600">角色列表</div>
+        <div class="spec">16px / 600</div>
+      </div>
+      <div class="type-row">
+        <div class="label">正文 / 表格</div>
+        <div style="font-size:14px; color:#334155">创建时间　2026-09-25 10:30:00</div>
+        <div class="spec">14px / 400</div>
+      </div>
+      <div class="type-row">
+        <div class="label">表头 / 辅助</div>
+        <div style="font-size:12px; color:#64748b">操作 · 状态 · 备注</div>
+        <div class="spec">12–13px / 500</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 4px; font-size:14px; font-weight:600;">间距 · 圆角 · 密度</h3>
+      <div class="space-row">
+        <div class="space-item">
+          <div class="bar" style="width:16px"></div>
+          <div class="cap">页边距 16px</div>
+        </div>
+        <div class="space-item">
+          <div class="bar" style="width:20px"></div>
+          <div class="cap">卡片内边距 16–20px</div>
+        </div>
+        <div class="space-item">
+          <div class="bar" style="width:8px"></div>
+          <div class="cap">工具栏间距 8px</div>
+        </div>
+        <div class="space-item">
+          <div class="bar" style="width:96px; height:8px; border-radius:4px"></div>
+          <div class="cap">表单 label 宽 90–100px</div>
+        </div>
+        <div class="space-item">
+          <div class="bar" style="width:48px; height:16px; border-radius:8px"></div>
+          <div class="cap">卡片圆角 8px</div>
+        </div>
+      </div>
+      <p style="margin:16px 0 0; font-size:12px; color:#64748b">
+        密度：紧凑偏标准；一屏优先主表；筛选/工具栏 ≤ 2 行。列表无投影，仅弹窗 <code style="font-size:11px;background:#f1f5f9;padding:1px 6px;border-radius:3px">0 8px 24px rgba(15,23,42,.12)</code>。
+      </p>
+    </div>
+  </section>
+
+  <!-- 2. App Shell -->
+  <section class="section">
+    <div class="section-head">
+      <h2>2. 应用壳 App Shell</h2>
+      <span class="code">§2 深壳浅台</span>
+    </div>
+    <p class="section-desc">侧栏 240px 深墨蓝 · 顶栏 56px 白底 · 主内容冷灰 + page-card 白面。最低宽 1280px，不做移动端重排。</p>
+
+    <div class="shell" aria-label="应用壳示意">
+      <aside class="shell-side">
+        <div class="shell-brand">
+          用户中心
+          <small>USER CENTER</small>
+        </div>
+        <div class="shell-menu">
+          <div class="shell-item active"><span class="dot"></span>首页</div>
+          <div class="shell-group">系统管理</div>
+          <div class="shell-item"><span class="dot"></span>用户管理</div>
+          <div class="shell-item"><span class="dot"></span>角色管理</div>
+          <div class="shell-item"><span class="dot"></span>菜单管理</div>
+          <div class="shell-group">安全审计</div>
+          <div class="shell-item"><span class="dot"></span>操作审计</div>
+          <div class="shell-item"><span class="dot"></span>登录记录</div>
+        </div>
+      </aside>
+      <div class="shell-main">
+        <div class="shell-top">
+          <div class="title">用户中心管理端</div>
+          <div class="operator">
+            <span>admin</span>
+            <a class="logout" href="#">退出</a>
+          </div>
+        </div>
+        <div class="shell-content">
+          <div class="page-card">
+            <h3 class="page-title">角色管理</h3>
+            <p class="page-sub">维护系统角色、数据范围与菜单授权</p>
+            <div class="toolbar">
+              <span class="btn btn-primary">新建角色</span>
+              <span class="btn btn-default">启用</span>
+              <span class="btn btn-default">停用</span>
+              <div class="spacer"></div>
+              <div class="fake-input" style="width:180px">搜索名称 / 编码</div>
+            </div>
+            <table class="mock-table">
+              <thead>
+                <tr>
+                  <th style="width:72px">ID</th>
+                  <th>编码</th>
+                  <th>名称</th>
+                  <th>数据范围</th>
+                  <th>状态</th>
+                  <th style="width:160px">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1001</td>
+                  <td>admin</td>
+                  <td>超级管理员</td>
+                  <td>全部</td>
+                  <td><span class="status-pill status-on">启用</span></td>
+                  <td>
+                    <span class="btn btn-link">编辑</span>
+                    <span class="btn btn-link">授权</span>
+                    <span class="btn btn-link danger">删除</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>1002</td>
+                  <td>operator</td>
+                  <td>运营专员</td>
+                  <td>本部门</td>
+                  <td><span class="status-pill status-on">启用</span></td>
+                  <td>
+                    <span class="btn btn-link">编辑</span>
+                    <span class="btn btn-link">授权</span>
+                    <span class="btn btn-link danger">删除</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>1003</td>
+                  <td>viewer</td>
+                  <td>只读访客</td>
+                  <td>仅本人</td>
+                  <td><span class="status-pill status-off">停用</span></td>
+                  <td>
+                    <span class="btn btn-link">编辑</span>
+                    <span class="btn btn-link">授权</span>
+                    <span class="btn btn-link danger">删除</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="pager">
+              <span>共 3 条</span>
+              <span class="p">‹</span>
+              <span class="p on">1</span>
+              <span class="p">2</span>
+              <span class="p">›</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Page patterns -->
+  <section class="section">
+    <div class="section-head">
+      <h2>3. 页面布局模式（4 种）</h2>
+      <span class="code">§3</span>
+    </div>
+    <p class="section-desc">新业务页只允许落在下列模式，禁止每页自创骨架。</p>
+
+    <div class="pattern-grid">
+      <!-- P-List -->
+      <div class="pattern">
+        <div class="pattern-head">
+          <h3>列表页 P-List</h3>
+          <span class="tag">toolbar + table + paging</span>
+        </div>
+        <div class="pattern-body">
+          <div class="mini-frame">
+            <div class="mini-bar"><i></i><i></i><i></i></div>
+            <div style="padding:12px">
+              <div class="toolbar" style="margin-bottom:10px">
+                <span class="btn btn-primary" style="height:26px; font-size:12px; padding:0 10px">新建</span>
+                <div class="fake-input" style="height:26px; width:100px; font-size:11px">筛选</div>
+                <div class="fake-input" style="height:26px; width:100px; font-size:11px">状态</div>
+              </div>
+              <table class="mock-table" style="font-size:11px">
+                <thead>
+                  <tr><th>名称</th><th>状态</th><th>操作</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>示例行 A</td>
+                    <td><span class="status-pill status-on" style="height:18px; font-size:10px; padding:0 8px">启用</span></td>
+                    <td><span class="btn btn-link" style="font-size:11px">编辑</span></td>
+                  </tr>
+                  <tr>
+                    <td>示例行 B</td>
+                    <td><span class="status-pill status-off" style="height:18px; font-size:10px; padding:0 8px">停用</span></td>
+                    <td><span class="btn btn-link" style="font-size:11px">编辑</span></td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="pager" style="margin-top:8px">
+                <span class="p on" style="width:22px; height:22px; font-size:11px">1</span>
+                <span class="p" style="width:22px; height:22px; font-size:11px">2</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="pattern-note">主操作靠左 <code>type=primary</code>；行内用 link；危险操作 confirm；操作列宽固定。</div>
+      </div>
+
+      <!-- P-Tree -->
+      <div class="pattern">
+        <div class="pattern-head">
+          <h3>树管理页 P-Tree</h3>
+          <span class="tag">toolbar + tree table</span>
+        </div>
+        <div class="pattern-body">
+          <div class="mini-frame">
+            <div class="mini-bar"><i></i><i></i><i></i></div>
+            <div style="padding:12px">
+              <div class="toolbar" style="margin-bottom:10px">
+                <span class="btn btn-primary" style="height:26px; font-size:12px; padding:0 10px">新建</span>
+              </div>
+              <div class="tree-line l1"><span class="tree-caret"></span><strong>系统管理</strong><span class="status-pill status-on" style="height:18px;font-size:10px;padding:0 8px;margin-left:4px">目录</span></div>
+              <div class="tree-line l2"><span class="tree-caret"></span>菜单管理<span style="color:#64748b;margin-left:6px">/system/menu</span></div>
+              <div class="tree-line l3"><span style="width:5px;height:5px;border-radius:50%;background:#94a3b8;display:inline-block"></span>新建菜单<span class="status-pill status-on" style="height:18px;font-size:10px;padding:0 8px;margin-left:4px">按钮</span></div>
+              <div class="tree-line l2"><span class="tree-caret"></span>角色管理<span style="color:#64748b;margin-left:6px">/system/role</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="pattern-note">树层级即缩进，不并排第二棵树；删除仅叶子；根级新建 <code>parentId=0</code>。</div>
+      </div>
+
+      <!-- D-Form -->
+      <div class="pattern">
+        <div class="pattern-head">
+          <h3>表单弹窗 D-Form</h3>
+          <span class="tag">el-dialog + el-form</span>
+        </div>
+        <div class="pattern-body">
+          <div class="dialog-mock">
+            <div class="dialog-title">新建角色</div>
+            <div class="dialog-body">
+              <div class="form-row">
+                <label>编码</label>
+                <div class="fake-input">role_code</div>
+              </div>
+              <div class="form-row">
+                <label>名称</label>
+                <div class="fake-input">运营专员</div>
+              </div>
+              <div class="form-row">
+                <label>数据范围</label>
+                <div class="fake-input">本部门 ▾</div>
+              </div>
+            </div>
+            <div class="dialog-foot">
+              <span class="btn btn-default">取消</span>
+              <span class="btn btn-primary">保存</span>
+            </div>
+          </div>
+        </div>
+        <div class="pattern-note">宽 560–640；label 右对齐 90–100px；不暴露 id；提交中按钮 loading。</div>
+      </div>
+
+      <!-- D-Panel -->
+      <div class="pattern">
+        <div class="pattern-head">
+          <h3>授权弹窗 D-Panel</h3>
+          <span class="tag">el-tree checkbox</span>
+        </div>
+        <div class="pattern-body">
+          <div class="dialog-mock">
+            <div class="dialog-title">角色菜单授权</div>
+            <div class="dialog-body" style="min-height:140px">
+              <div class="tree-line l1">☑ <strong>系统管理</strong></div>
+              <div class="tree-line l2">☑ 菜单管理</div>
+              <div class="tree-line l3">☑ 新建菜单</div>
+              <div class="tree-line l3">☐ 删除菜单</div>
+              <div class="tree-line l1">☐ 业务域</div>
+            </div>
+            <div class="dialog-foot">
+              <span class="btn btn-default">取消</span>
+              <span class="btn btn-primary">保存</span>
+            </div>
+          </div>
+        </div>
+        <div class="pattern-note">node-key=id；回显 role.menuIds；节点多时 max-height 滚动。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Components -->
+  <section class="section">
+    <div class="section-head">
+      <h2>4. 组件与状态约定</h2>
+      <span class="code">§5</span>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 12px; font-size:14px; font-weight:600;">按钮</h3>
+      <div class="chip-row">
+        <span class="btn btn-primary">新建用户</span>
+        <span class="btn btn-default">重置</span>
+        <span class="btn btn-danger">删除</span>
+        <span class="btn btn-link">编辑</span>
+        <span class="btn btn-link">授权</span>
+        <span class="btn btn-link danger">删除</span>
+      </div>
+      <p style="margin:12px 0 0; font-size:12px; color:#64748b">主操作 primary 靠左；无权限整钮不渲染；危险操作 danger + confirm。</p>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 12px; font-size:14px; font-weight:600;">状态软胶囊 status-pill</h3>
+      <div class="chip-row">
+        <span class="status-pill status-on">启用</span>
+        <span class="status-pill status-off">停用</span>
+        <span class="status-pill status-bad">失败</span>
+        <span class="status-pill status-bad">禁用</span>
+      </div>
+      <div style="margin-top:16px">
+        <table class="spec-table">
+          <thead>
+            <tr><th>状态</th><th>背景</th><th>文字</th><th>用途</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="status-pill status-on">启用</span></td>
+              <td><code>#dcfce7</code></td>
+              <td><code>#166534</code></td>
+              <td>成功 / 启用</td>
+            </tr>
+            <tr>
+              <td><span class="status-pill status-off">停用</span></td>
+              <td><code>#fef3c7</code></td>
+              <td><code>#92400e</code></td>
+              <td>警告 / 停用</td>
+            </tr>
+            <tr>
+              <td><span class="status-pill status-bad">禁用</span></td>
+              <td><code>#fee2e2</code></td>
+              <td><code>#991b1b</code></td>
+              <td>危险 / 失败</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 12px; font-size:14px; font-weight:600;">页面容器与表格</h3>
+      <table class="spec-table">
+        <thead>
+          <tr><th>场景</th><th>组件</th><th>要点</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>页面容器</td>
+            <td><code>.page-card</code></td>
+            <td>margin 16 + padding 16–20 + 圆角 8 + 白底 + 1px 边框，<strong>无投影</strong></td>
+          </tr>
+          <tr>
+            <td>工具栏</td>
+            <td><code>.toolbar</code></td>
+            <td>flex / gap 8 / margin-bottom 12</td>
+          </tr>
+          <tr>
+            <td>表格</td>
+            <td><code>el-table</code></td>
+            <td>border；表头 <code>#f8fafc</code>；树表 row-key + expand</td>
+          </tr>
+          <tr>
+            <td>弹窗</td>
+            <td><code>el-dialog</code></td>
+            <td>圆角 8；阴影仅弹窗使用</td>
+          </tr>
+          <tr>
+            <td>分页</td>
+            <td><code>el-pagination</code></td>
+            <td>total, prev, pager, next（可含 sizes）</td>
+          </tr>
+          <tr>
+            <td>图标</td>
+            <td>Element 内置 / 菜单 icon</td>
+            <td>不引第三方图标包；侧栏单色浅色</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 5. Login -->
+  <section class="section">
+    <div class="section-head">
+      <h2>5. 登录页 auth-portal</h2>
+      <span class="code">§4.5</span>
+    </div>
+    <p class="section-desc">唯一账密门面。管理端 *-admin 禁止再放登录框，401 统一跳转本页。</p>
+    <div class="login-stage">
+      <div class="login-card">
+        <h3>统一认证中心</h3>
+        <p class="sub">请使用企业账号登录管理端</p>
+        <div class="field">
+          <label>用户名</label>
+          <div class="fake-input">请输入用户名</div>
+        </div>
+        <div class="field">
+          <label>密码</label>
+          <div class="fake-input">请输入密码</div>
+        </div>
+        <div class="btn btn-primary">登录</div>
+        <a class="link" href="#">统一登出</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Rules -->
+  <section class="section">
+    <div class="section-head">
+      <h2>6. 落地自检</h2>
+      <span class="code">§7</span>
+    </div>
+    <div class="rules">
+      <div class="rule-box do">
+        <h4>应当</h4>
+        <ul>
+          <li>新页面只选 P-List / P-Tree / D-Form / D-Panel</li>
+          <li>色/字/距用墨岩 token，主色 #3b82f6</li>
+          <li>壳布局：侧栏 240 深墨蓝 / 顶栏 56 白 / 冷灰主内容</li>
+          <li>状态用软胶囊，不用随意 el-tag 配色</li>
+          <li>按钮权限走 hasPermission，布局层不特判角色</li>
+          <li>登录只在 auth-portal，白卡片 + 同族底色</li>
+        </ul>
+      </div>
+      <div class="rule-box dont">
+        <h4>禁止</h4>
+        <ul>
+          <li>大面积渐变、毛玻璃、重阴影、装饰插画</li>
+          <li>列表投影、侧栏彩色图标 / emoji</li>
+          <li>各系统私自换主色或另起视觉方言</li>
+          <li>自定义 UI 框架、第三方图标包</li>
+          <li>状态用纯文字无样式或大面积色块行</li>
+          <li>管理端内嵌账密表单</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="footnote">
+    本样张为 <strong>docs/template/admin-ui-design.md</strong>（墨岩）的可视化对照，用于评审与前端落地对齐，不替代契约文档。<br />
+    效力顺序：rbac-design.md（契约） &gt; admin-ui-design.md（视觉基线） &gt; 本样张（示意）。
+    跨系统只换系统名与菜单数据，不换色板与壳。
+  </div>
+</div>
+</body>
+</html>

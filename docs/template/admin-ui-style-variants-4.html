@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>管理端页面风格 · 第四轮（完整设计语言）</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #e8edf4;
+    color: #0f172a;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 40px 28px 72px; }
+
+  .hero { margin-bottom: 22px; }
+  .hero h1 { font-size: 28px; font-weight: 650; letter-spacing: -0.02em; }
+  .hero p { margin-top: 8px; color: #64748b; font-size: 14px; max-width: 720px; }
+
+  .gap {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    margin: 18px 0 22px;
+  }
+  .gap-item {
+    background: #fff; border: 1px solid #d7e0ec; border-radius: 10px; padding: 12px 14px;
+  }
+  .gap-item strong {
+    display: block; font-size: 12px; color: #2563eb; margin-bottom: 4px;
+  }
+  .gap-item span { font-size: 12px; color: #64748b; line-height: 1.5; }
+
+  .keep-note {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    padding: 12px 16px; margin-bottom: 18px;
+    background: #fff; border: 1px dashed #c9d3e1; border-radius: 10px;
+    font-size: 13px; color: #475569;
+  }
+  .keep-note strong { color: #0f172a; }
+  .keep-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 28px; padding: 0 12px; border-radius: 999px;
+    background: #f1f5f9; border: 1px solid #e2e8f0; font-size: 12px;
+  }
+  .keep-chip .sw { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  .toc { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+  .toc a {
+    text-decoration: none; height: 32px; padding: 0 14px; border-radius: 999px;
+    border: 1px solid #c9d3e1; background: #fff; color: #334155; font-size: 13px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .toc a:hover { border-color: #3b82f6; color: #2563eb; }
+  .toc .sw { width: 10px; height: 10px; border-radius: 50%; }
+
+  .scheme {
+    background: #fff; border: 1px solid #d7e0ec; border-radius: 14px;
+    overflow: hidden; margin-bottom: 26px;
+  }
+  .scheme-head {
+    padding: 22px 24px 16px; border-bottom: 1px solid #e8eef5;
+  }
+  .scheme-head h2 {
+    font-size: 20px; font-weight: 650;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .scheme-head h2 .code {
+    font-size: 11px; font-weight: 500; color: #64748b;
+    background: #f1f5f9; padding: 3px 8px; border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .scheme-head .tagline { margin-top: 6px; color: #475569; font-size: 13.5px; }
+  .sign {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;
+  }
+  .sign b {
+    display: inline-flex; align-items: center; height: 24px; padding: 0 10px;
+    border-radius: 999px; font-size: 11px; font-weight: 550;
+    background: #f8fafc; border: 1px solid #e2e8f0; color: #334155;
+  }
+
+  .scheme-body { display: grid; grid-template-columns: 270px 1fr; }
+  .scheme-side {
+    padding: 18px 20px; border-right: 1px solid #e8eef5; background: #fafbfc;
+  }
+  .scheme-side h3 {
+    font-size: 11px; font-weight: 600; color: #64748b;
+    letter-spacing: 0.05em; margin: 14px 0 10px; text-transform: uppercase;
+  }
+  .scheme-side h3:first-child { margin-top: 0; }
+  .swatches { display: grid; gap: 8px; }
+  .swatch { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: center; }
+  .swatch i {
+    width: 34px; height: 26px; border-radius: 5px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+  }
+  .swatch .n { font-size: 12px; font-weight: 550; color: #0f172a; }
+  .swatch .v {
+    font-size: 11px; color: #64748b;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .type-demo {
+    padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;
+  }
+  .type-demo .big {
+    font-size: 28px; font-weight: 650; line-height: 1.15; letter-spacing: -0.02em;
+  }
+  .type-demo .mid { font-size: 13px; margin-top: 4px; }
+  .type-demo .small { font-size: 11px; color: #64748b; margin-top: 4px; }
+  .mark-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;
+  }
+  .mark {
+    width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center;
+    color: #fff; font-size: 14px; font-weight: 700;
+  }
+  .mark-row .wm { font-size: 13px; font-weight: 650; }
+  .mark-row .wm small {
+    display: block; font-size: 10px; font-weight: 400;
+    color: #94a3b8; letter-spacing: 0.08em;
+  }
+
+  .scheme-stage { padding: 16px; }
+
+  /* shared rich shell */
+  .rshell {
+    border-radius: 12px; overflow: hidden;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    font-size: 12px; height: 420px;
+    display: grid; grid-template-columns: 160px 1fr;
+    background: var(--bg);
+  }
+  .rshell .side {
+    background: var(--side); color: var(--side-muted);
+    display: flex; flex-direction: column; padding: 14px 0;
+  }
+  .rshell .brand {
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 14px 16px; font-weight: 650; font-size: 12.5px;
+  }
+  .rshell .brand .bm {
+    width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center;
+    font-size: 10px; color: #fff; background: var(--pri); flex-shrink: 0;
+  }
+  .rshell .mi {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-left: 3px solid transparent;
+  }
+  .rshell .mi .d {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: currentColor; opacity: 0.45;
+  }
+  .rshell .mi.on { border-left-color: var(--acc); color: var(--side-on); background: var(--side-active); }
+  .rshell .mi.on .d { background: var(--acc); opacity: 1; }
+  .rshell .grp {
+    padding: 12px 14px 4px; font-size: 10px;
+    letter-spacing: 0.06em; opacity: 0.55;
+  }
+  .rshell .main { display: flex; flex-direction: column; min-width: 0; }
+  .rshell .top {
+    height: 44px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 14px; background: var(--top); border-bottom: 1px solid var(--line);
+  }
+  .rshell .top .t { font-weight: 600; font-size: 12.5px; }
+  .rshell .top .op { font-size: 11px; opacity: 0.7; }
+  .rshell .body { flex: 1; padding: 12px; overflow: hidden; background: var(--bg); }
+
+  .kpi-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px;
+  }
+  .kpi {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 8px; padding: 10px 12px;
+  }
+  .kpi .k { font-size: 10px; opacity: 0.65; margin-bottom: 4px; }
+  .kpi .v {
+    font-size: 20px; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em;
+  }
+  .kpi .d { font-size: 10px; margin-top: 4px; opacity: 0.7; }
+  .kpi .d.up { color: var(--up, #16a34a); opacity: 1; }
+  .kpi .d.down { color: var(--down, #dc2626); opacity: 1; }
+  .spark {
+    margin-top: 6px; height: 22px; display: flex; align-items: flex-end; gap: 2px;
+  }
+  .spark i {
+    flex: 1; border-radius: 1px 1px 0 0; background: var(--acc); opacity: 0.55;
+  }
+
+  .panel {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 8px; overflow: hidden;
+  }
+  .panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; border-bottom: 1px solid var(--line);
+  }
+  .panel-head h4 { font-size: 12.5px; font-weight: 650; }
+  .b {
+    height: 26px; padding: 0 10px; border-radius: 5px; font-size: 11px; font-weight: 550;
+    display: inline-flex; align-items: center; border: 1px solid transparent;
+  }
+  .b.pri { background: var(--pri); color: var(--pri-ink, #fff); }
+  .b.ghost {
+    background: var(--surface); border-color: var(--line); color: var(--ink-2);
+  }
+  table.tt { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .tt th {
+    text-align: left; font-weight: 550; padding: 7px 10px;
+    border-bottom: 1px solid var(--line); color: var(--ink-3);
+    background: var(--head);
+  }
+  .tt td {
+    padding: 8px 10px; border-bottom: 1px solid var(--line); color: var(--ink-2);
+  }
+  .tt tr:last-child td { border-bottom: none; }
+  .pill {
+    display: inline-flex; height: 18px; align-items: center;
+    padding: 0 8px; border-radius: 999px; font-size: 10px; font-weight: 550;
+  }
+  .link { color: var(--pri); font-weight: 500; margin-right: 8px; }
+  .link.danger { color: var(--danger); }
+
+  /* ===== M 焦墨 ===== */
+  .s-m {
+    --bg: #f4f0e8;
+    --surface: #fffdf8;
+    --side: #171412;
+    --side-muted: #a8a29e;
+    --side-on: #fafaf9;
+    --side-active: rgba(220, 38, 38, 0.12);
+    --acc: #dc2626;
+    --pri: #1c1917;
+    --pri-ink: #fafaf9;
+    --line: #e7e0d4;
+    --head: #f7f2ea;
+    --ink-2: #1c1917;
+    --ink-3: #78716c;
+    --danger: #b91c1c;
+    --up: #15803d; --down: #b45309;
+  }
+  .s-m .rshell { border-radius: 2px; }
+  .s-m .kpi, .s-m .panel, .s-m .b { border-radius: 2px; }
+  .s-m .kpi .v { font-family: "Songti SC", "SimSun", Georgia, serif; }
+  .s-m .pill { border-radius: 2px; }
+  .s-m .pill.on { background: #1c1917; color: #fafaf9; }
+  .s-m .pill.off { background: #e7e5e4; color: #57534e; }
+  .s-m .spark i { background: #a8a29e; opacity: 0.45; border-radius: 0; }
+
+  /* ===== N 潮汐 ===== */
+  .s-n {
+    --bg: #f0f9ff;
+    --surface: #ffffff;
+    --side: #0e7490;
+    --side-muted: #a5f3fc;
+    --side-on: #ecfeff;
+    --side-active: rgba(255, 255, 255, 0.14);
+    --acc: #f0f9ff;
+    --pri: #0891b2;
+    --line: #e0f2fe;
+    --head: #f8fafc;
+    --ink-2: #0f172a;
+    --ink-3: #64748b;
+    --danger: #e11d48;
+    --up: #0f766e; --down: #c2410c;
+  }
+  .s-n .rshell { border-radius: 16px; }
+  .s-n .kpi, .s-n .panel { border-radius: 14px; border: none; box-shadow: 0 1px 2px rgba(8, 45, 72, 0.05); }
+  .s-n .b { border-radius: 999px; }
+  .s-n .b.ghost { border: 1px solid #bae6fd; }
+  .s-n .pill { border-radius: 999px; }
+  .s-n .pill.on { background: #cffafe; color: #0e7490; }
+  .s-n .pill.off { background: #fef3c7; color: #92400e; }
+  .s-n .kpi .v { color: #0e7490; }
+  .s-n .spark i { border-radius: 99px 99px 2px 2px; }
+
+  /* ===== O 磐石 ===== */
+  .s-o {
+    --bg: #e7e5e4;
+    --surface: #fafaf9;
+    --side: #292524;
+    --side-muted: #a8a29e;
+    --side-on: #fafaf9;
+    --side-active: rgba(180, 83, 9, 0.18);
+    --acc: #d97706;
+    --pri: #9a3412;
+    --line: #d6d3d1;
+    --head: #f5f5f4;
+    --ink-2: #1c1917;
+    --ink-3: #78716c;
+    --danger: #9f1239;
+    --up: #3f6212; --down: #9a3412;
+  }
+  .s-o .rshell { border-radius: 6px; }
+  .s-o .kpi {
+    border-radius: 4px; border-width: 1px;
+    box-shadow: 2px 2px 0 #d6d3d1;
+  }
+  .s-o .panel { border-radius: 4px; box-shadow: 2px 2px 0 #d6d3d1; }
+  .s-o .b { border-radius: 3px; }
+  .s-o .kpi .v { font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+  .s-o .pill { border-radius: 3px; }
+  .s-o .pill.on { background: #d6d3d1; color: #1c1917; }
+  .s-o .pill.off { background: #fde68a; color: #92400e; }
+  .s-o .spark i { background: #d97706; opacity: 0.7; }
+
+  /* ===== P 信号 ===== */
+  .s-p {
+    --bg: #0b1220;
+    --surface: #111827;
+    --side: #020617;
+    --side-muted: #94a3b8;
+    --side-on: #e2e8f0;
+    --side-active: rgba(52, 211, 153, 0.1);
+    --acc: #34d399;
+    --pri: #34d399;
+    --pri-ink: #022c22;
+    --line: #1f2a3d;
+    --head: #0f172a;
+    --ink-2: #d1fae5;
+    --ink-3: #6ee7b7;
+    --danger: #f87171;
+    --up: #34d399; --down: #fbbf24;
+  }
+  .s-p .rshell { border-radius: 8px; border-color: #1f2a3d; }
+  .s-p .kpi { border-radius: 6px; }
+  .s-p .panel { border-radius: 6px; }
+  .s-p .b { border-radius: 4px; }
+  .s-p .kpi .v { color: #6ee7b7; }
+  .s-p .pill { border-radius: 4px; }
+  .s-p .pill.on { background: rgba(52, 211, 153, 0.16); color: #6ee7b7; }
+  .s-p .pill.off { background: rgba(251, 191, 36, 0.16); color: #fcd34d; }
+  .s-p .spark i { background: #34d399; opacity: 0.75; }
+  .s-p .top .t { color: #e2e8f0; }
+  .s-p .body { background: var(--bg); }
+
+  .compare {
+    background: #fff; border: 1px solid #d7e0ec; border-radius: 14px; overflow: hidden;
+  }
+  .compare h2 { padding: 20px 24px 8px; font-size: 18px; font-weight: 650; }
+  .compare .hint { padding: 0 24px 16px; color: #64748b; font-size: 13px; }
+  .compare table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .compare th {
+    text-align: left; padding: 12px 16px; background: #f8fafc;
+    color: #64748b; font-weight: 550; font-size: 12px; border-bottom: 1px solid #e8eef5;
+  }
+  .compare td {
+    padding: 14px 16px; border-bottom: 1px solid #eef2f7;
+    color: #334155; vertical-align: top;
+  }
+  .compare tr:last-child td { border-bottom: none; }
+  .compare .name { font-weight: 600; color: #0f172a; }
+  .compare .dot {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; margin-right: 8px;
+  }
+
+  .note {
+    margin-top: 28px; padding: 18px 20px;
+    background: #fff; border: 1px solid #d7e0ec; border-radius: 12px;
+    color: #64748b; font-size: 12.5px; line-height: 1.75;
+  }
+  .note strong { color: #0f172a; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1>第四轮 · 完整设计语言</h1>
+    <p>
+      前三轮样张偏「换色的壳 + 表格」，气质差在表面。本轮每套补上
+      <strong>品牌字符、签名时刻、KPI 节奏、数据表达</strong>，让风格立得住，而不只是改 token。
+    </p>
+  </header>
+
+  <div class="gap">
+    <div class="gap-item">
+      <strong>缺签名时刻</strong>
+      <span>只有侧栏竖条太弱。需要一眼能记住的锚点：印章、硬投影、胶囊、荧光数据条。</span>
+    </div>
+    <div class="gap-item">
+      <strong>缺品牌字符</strong>
+      <span>无字标、无图形记号、无字体性格。应有 mark + 字重对比，像产品而不像主题皮肤。</span>
+    </div>
+    <div class="gap-item">
+      <strong>缺页面节奏</strong>
+      <span>全是列表页会平。应有 KPI 横条、卡片疏密、图表呼吸，形成首屏节奏。</span>
+    </div>
+    <div class="gap-item">
+      <strong>缺数据表达</strong>
+      <span>数字、趋势、状态该成为视觉主角，而不是表格里的灰字。</span>
+    </div>
+  </div>
+
+  <div class="keep-note">
+    <strong>当前候选：</strong>
+    <span class="keep-chip"><span class="sw" style="background:#0f172a"></span>墨岩</span>
+    <span class="keep-chip"><span class="sw" style="background:#0284c7"></span>云白</span>
+    <span class="keep-chip"><span class="sw" style="background:#18181b"></span>石墨</span>
+    <span class="keep-chip"><span class="sw" style="background:#0369a1"></span>霜钢</span>
+    <span style="color:#94a3b8">+ 本轮可再入选</span>
+  </div>
+
+  <nav class="toc">
+    <a href="#s-m"><span class="sw" style="background:#dc2626"></span>M · 焦墨</a>
+    <a href="#s-n"><span class="sw" style="background:#0891b2"></span>N · 潮汐</a>
+    <a href="#s-o"><span class="sw" style="background:#9a3412"></span>O · 磐石</a>
+    <a href="#s-p"><span class="sw" style="background:#34d399"></span>P · 信号</a>
+  </nav>
+
+  <!-- ========== M 焦墨 ========== -->
+  <section class="scheme" id="s-m">
+    <div class="scheme-head">
+      <h2>M · 焦墨 <span class="code">Burnt Ink</span></h2>
+      <div class="tagline">
+        水墨纸本气质：玄黑侧栏、宣纸台面、朱红印章作唯一彩色。字体带衬线，数字像账册。
+        适合制度、审计、公文类后台——安静、可信、有东方文脉。
+      </div>
+      <div class="sign">
+        <b>签名 · 朱印红点</b>
+        <b>衬线数字</b>
+        <b>直角纸本</b>
+        <b>账册密度</b>
+      </div>
+    </div>
+    <div class="scheme-body">
+      <div class="scheme-side">
+        <h3>色板</h3>
+        <div class="swatches">
+          <div class="swatch"><i style="background:#171412"></i><div><div class="n">玄墨侧栏</div><div class="v">#171412</div></div></div>
+          <div class="swatch"><i style="background:#f4f0e8"></i><div><div class="n">宣纸台面</div><div class="v">#f4f0e8</div></div></div>
+          <div class="swatch"><i style="background:#dc2626"></i><div><div class="n">朱印点睛</div><div class="v">#dc2626</div></div></div>
+        </div>
+        <h3>字标</h3>
+        <div class="mark-row">
+          <div class="mark" style="background:#1c1917; border-radius:2px">焦</div>
+          <div class="wm">焦墨文控<small>BURNT INK</small></div>
+        </div>
+        <h3>字体性格</h3>
+        <div class="type-demo" style="border-radius:2px">
+          <div class="big" style="font-family:'Songti SC',Georgia,serif">12,480</div>
+          <div class="mid" style="font-family:'Songti SC',Georgia,serif">本月生效制度</div>
+          <div class="small">衬线标题 / 黑体正文 · 对比来自字重与字面</div>
+        </div>
+      </div>
+      <div class="scheme-stage">
+        <div class="rshell s-m" style="--acc:#dc2626">
+          <div class="side">
+            <div class="brand"><span class="bm" style="border-radius:2px">焦</span>焦墨文控</div>
+            <div class="mi on"><span class="d"></span>总览</div>
+            <div class="grp">公文</div>
+            <div class="mi"><span class="d"></span>制度库</div>
+            <div class="mi"><span class="d"></span>用印审批</div>
+            <div class="mi"><span class="d"></span>归档借阅</div>
+            <div class="grp">审计</div>
+            <div class="mi"><span class="d"></span>操作留痕</div>
+          </div>
+          <div class="main">
+            <div class="top"><div class="t">文控总览</div><div class="op">admin · 退出</div></div>
+            <div class="body">
+              <div class="kpi-row">
+                <div class="kpi">
+                  <div class="k">生效制度</div>
+                  <div class="v">12,480</div>
+                  <div class="d up">较上月 +3.2%</div>
+                </div>
+                <div class="kpi">
+                  <div class="k">待用印</div>
+                  <div class="v">36</div>
+                  <div class="d">今日到期 4</div>
+                </div>
+                <div class="kpi">
+                  <div class="k">借阅中</div>
+                  <div class="v">128</div>
+                  <div class="d up">回收率 96%</div>
+                </div>
+                <div class="kpi">
+                  <div class="k">风险提示</div>
+                  <div class="v">7</div>
+                  <div class="d down">需人工复核</div>
+                  <div class="spark">
+                    <i style="height:40%"></i><i style="height:55%"></i><i style="height:35%"></i>
+                    <i style="height:70%"></i><i style="height:50%"></i><i style="height:85%"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head">
+                  <h4>用印审批</h4>
+                  <div><span class="b pri">发起用印</span></div>
+                </div>
+                <table class="tt">
+                  <thead><tr><th>文号</th><th>事项</th><th>状态</th><th>操作</th></tr></thead>
+                  <tbody>
+                    <tr><td>焦文〔2026〕12号</td><td>采购管理办法</td><td><span class="pill on">已用印</span></td><td><span class="link">查看</span><span class="link danger">作废</span></td></tr>
+                    <tr><td>焦文〔2026〕13号</td><td>差旅报销细则</td><td><span class="pill on">审批中</span></td><td><span class="link">查看</span><span class="link danger">作废</span></td></tr>
+                    <tr><td>焦文〔2026〕14号</td><td>信息安全规范</td><td><span class="pill off">待提交</span></td><td><span class="link">查看</span><span class="link danger">作废</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== N 潮汐 ========== -->
+  <section class="scheme" id="s-n">
+    <div class="scheme-head">
+      <h2>N · 潮汐 <span class="code">Tide</span></h2>
+      <div class="tagline">
+        现代产品 SaaS：深潮侧栏、气泡白台面、大圆角与胶囊按钮。KPI 用色块数字，
+        疏朗、轻快，像增长/运营看板，而不是传统 OA。
+      </div>
+      <div class="sign">
+        <b>签名 · 大圆角胶囊</b>
+        <b>色块巨数字</b>
+        <b>轻投影卡片</b>
+        <b>松节奏留白</b>
+      </div>
+    </div>
+    <div class="scheme-body">
+      <div class="scheme-side">
+        <h3>色板</h3>
+        <div class="swatches">
+          <div class="swatch"><i style="background:#0e7490"></i><div><div class="n">深潮侧栏</div><div class="v">#0e7490</div></div></div>
+          <div class="swatch"><i style="background:#f0f9ff"></i><div><div class="n">气泡台面</div><div class="v">#f0f9ff</div></div></div>
+          <div class="swatch"><i style="background:#0891b2"></i><div><div class="n">潮汐青</div><div class="v">#0891b2</div></div></div>
+        </div>
+        <h3>字标</h3>
+        <div class="mark-row">
+          <div class="mark" style="background:#0891b2; border-radius:12px">潮</div>
+          <div class="wm">潮汐增长台<small>TIDE GROWTH</small></div>
+        </div>
+        <h3>字体性格</h3>
+        <div class="type-demo" style="border-radius:14px">
+          <div class="big" style="color:#0e7490">+18.4%</div>
+          <div class="mid">本周活跃用户</div>
+          <div class="small">几何无衬线 · 圆角即性格 · 数字是英雄元素</div>
+        </div>
+      </div>
+      <div class="scheme-stage">
+        <div class="rshell s-n" style="--acc:#f0f9ff">
+          <div class="side">
+            <div class="brand"><span class="bm" style="border-radius:8px">潮</span>潮汐增长台</div>
+            <div class="mi on"><span class="d"></span>总览</div>
+            <div class="grp">增长</div>
+            <div class="mi"><span class="d"></span>渠道分析</div>
+            <div class="mi"><span class="d"></span>转化漏斗</div>
+            <div class="mi"><span class="d"></span>活动编排</div>
+            <div class="grp">用户</div>
+            <div class="mi"><span class="d"></span>分群运营</div>
+          </div>
+          <div class="main">
+            <div class="top"><div class="t">增长总览</div><div class="op">pm.li · 退出</div></div>
+            <div class="body">
+              <div class="kpi-row">
+                <div class="kpi">
+                  <div class="k">活跃用户</div>
+                  <div class="v">86,240</div>
+                  <div class="d up">周环比 +18.4%</div>
+                </div>
+                <div class="kpi">
+                  <div class="k">转化率</div>
+                  <div class="v">4.7%</div>
+                  <div class="d up">+0.3pt</div>
+                </div>
+                <div class="kpi">
+                  <div class="k">获客成本</div>
+                  <div class="v">¥26</div>
+                  <div class="d down">较上周 +2</div>
+                </div>
+                <div class="kpi">
+                  <div class="k">留存 D7</div>
+                  <div class="v">41%</div>
+                  <div class="spark">
+                    <i style="height:30%"></i><i style="height:45%"></i><i style="height:40%"></i>
+                    <i style="height:60%"></i><i style="height:55%"></i><i style="height:80%"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head">
+                  <h4>渠道分析</h4>
+                  <div><span class="b pri">新建报告</span></div>
+                </div>
+                <table class="tt">
+                  <thead><tr><th>渠道</th><th>成本</th><th>状态</th><th>操作</th></tr></thead>
+                  <tbody>
+                    <tr><td>信息流 A</td><td>¥12,400</td><td><span class="pill on">投放中</span></td><td><span class="link">查看</span><span class="link danger">暂停</span></td></tr>
+                    <tr><td>搜索 B</td><td>¥8,260</td><td><span class="pill on">投放中</span></td><td><span class="link">查看</span><span class="link danger">暂停</span></td></tr>
+                    <tr><td>私域 C</td><td>¥2,100</td><td><span class="pill off">观察</span></td><td><span class="link">查看</span><span class="link danger">暂停</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== O 磐石 ========== -->
+  <section class="scheme" id="s-o">
+    <div class="scheme-head">
+      <h2>O · 磐石 <span class="code">Bedrock</span></h2>
+      <div class="tagline">
+        重型企业感：岩黑侧栏、石纸台面、铜橙强调。卡片带硬投影（2px 位移），
+        数字等宽表格数字，像审计底稿或资本台账，压得住场面。
+      </div>
+      <div class="sign">
+        <b>签名 · 硬投影块</b>
+        <b>等宽数字</b>
+        <b>铜橙强调</b>
+        <b>账本质感</b>
+      </div>
+    </div>
+    <div class="scheme-body">
+      <div class="scheme-side">
+        <h3>色板</h3>
+        <div class="swatches">
+          <div class="swatch"><i style="background:#292524"></i><div><div class="n">岩黑侧栏</div><div class="v">#292524</div></div></div>
+          <div class="swatch"><i style="background:#e7e5e4"></i><div><div class="n">石纸台面</div><div class="v">#e7e5e4</div></div></div>
+          <div class="swatch"><i style="background:#9a3412"></i><div><div class="n">赤陶主色</div><div class="v">#9a3412</div></div></div>
+          <div class="swatch"><i style="background:#d97706"></i><div><div class="n">铜橙点睛</div><div class="v">#d97706</div></div></div>
+        </div>
+        <h3>字标</h3>
+        <div class="mark-row">
+          <div class="mark" style="background:#9a3412; border-radius:4px">磐</div>
+          <div class="wm">磐石资本台<small>BEDROCK LEDGER</small></div>
+        </div>
+        <h3>字体性格</h3>
+        <div class="type-demo" style="border-radius:4px; box-shadow:2px 2px 0 #d6d3d1">
+          <div class="big" style="font-variant-numeric:tabular-nums; letter-spacing:-0.03em">¥ 248,560,000</div>
+          <div class="mid">在管资产规模</div>
+          <div class="small">等宽数字 + 硬投影 · 信息压得住</div>
+        </div>
+      </div>
+      <div class="scheme-stage">
+        <div class="rshell s-o" style="--acc:#d97706">
+          <div class="side">
+            <div class="brand"><span class="bm">磐</span>磐石资本台</div>
+            <div class="mi on"><span class="d"></span>总览</div>
+            <div class="grp">台账</div>
+            <div class="mi"><span class="d"></span>资产卡片</div>
+            <div class="mi"><span class="d"></span>变更审批</div>
+            <div class="mi"><span class="d"></span>减值评估</div>
+            <div class="grp">披露</div>
+            <div class="mi"><span class="d"></span>报表包</div>
+          </div>
+          <div class="main">
+            <div class="top"><div class="t">资本台账总览</div><div class="op">cfo · 退出</div></div>
+            <div class="body">
+              <div class="kpi-row">
+                <div class="kpi">
+                  <div class="k">在管规模</div>
+                  <div class="v">¥2.49亿</div>
+                  <div class="d up">年增 +12%</div>
+                </div>
+                <div class="kpi">
+                  <div class="k">待审批</div>
+                  <div class="v">18</div>
+                  <div class="d">超时 2</div>
+                </div>
+                <div class="kpi">
+                  <div class="k">减值预警</div>
+                  <div class="v">5</div>
+                  <div class="d down">需复核</div>
+                </div>
+                <div class="kpi">
+                  <div class="k">披露进度</div>
+                  <div class="v">86%</div>
+                  <div class="spark">
+                    <i style="height:35%"></i><i style="height:50%"></i><i style="height:55%"></i>
+                    <i style="height:65%"></i><i style="height:75%"></i><i style="height:90%"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head">
+                  <h4>变更审批</h4>
+                  <div><span class="b pri">发起变更</span></div>
+                </div>
+                <table class="tt">
+                  <thead><tr><th>资产</th><th>变更类型</th><th>状态</th><th>操作</th></tr></thead>
+                  <tbody>
+                    <tr><td>AS-2041</td><td>重分类</td><td><span class="pill on">已通过</span></td><td><span class="link">查看</span><span class="link danger">作废</span></td></tr>
+                    <tr><td>AS-2088</td><td>减值计提</td><td><span class="pill on">审批中</span></td><td><span class="link">查看</span><span class="link danger">作废</span></td></tr>
+                    <tr><td>AS-2102</td><td>处置申请</td><td><span class="pill off">草稿</span></td><td><span class="link">查看</span><span class="link danger">作废</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== P 信号 ========== -->
+  <section class="scheme" id="s-p">
+    <h2 style="display:none">P</h2>
+    <div class="scheme-head">
+      <h2>P · 信号 <span class="code">Signal</span></h2>
+      <div class="tagline">
+        值守数据台：全暗底 + 荧光绿信号色。KPI 与迷你柱图是主角，表格退居其次。
+        适合发布、SRE、实时告警——夜班看得清，白天也不刺眼（低亮青绿）。
+      </div>
+      <div class="sign">
+        <b>签名 · 荧光数据条</b>
+        <b>暗台发光数字</b>
+        <b>网格分区</b>
+        <b>值守密度</b>
+      </div>
+    </div>
+    <div class="scheme-body">
+      <div class="scheme-side">
+        <h3>色板</h3>
+        <div class="swatches">
+          <div class="swatch"><i style="background:#020617"></i><div><div class="n">午夜侧栏</div><div class="v">#020617</div></div></div>
+          <div class="swatch"><i style="background:#0b1220"></i><div><div class="n">深空台面</div><div class="v">#0b1220</div></div></div>
+          <div class="swatch"><i style="background:#34d399"></i><div><div class="n">信号绿</div><div class="v">#34d399</div></div></div>
+        </div>
+        <h3>字标</h3>
+        <div class="mark-row">
+          <div class="mark" style="background:#34d399; color:#022c22; border-radius:6px">讯</div>
+          <div class="wm">信号值守台<small>SIGNAL WATCH</small></div>
+        </div>
+        <h3>字体性格</h3>
+        <div class="type-demo" style="border-radius:6px; background:#111827; border-color:#1f2a3d">
+          <div class="big" style="color:#6ee7b7">99.97%</div>
+          <div class="mid" style="color:#d1fae5">可用性</div>
+          <div class="small" style="color:#94a3b8">等宽编号 + 发光数字 · 图表即装饰</div>
+        </div>
+      </div>
+      <div class="scheme-stage">
+        <div class="rshell s-p" style="--acc:#34d399">
+          <div class="side">
+            <div class="brand"><span class="bm">讯</span>信号值守台</div>
+            <div class="mi on"><span class="d"></span>总览</div>
+            <div class="grp">服务</div>
+            <div class="mi"><span class="d"></span>实例状态</div>
+            <div class="mi"><span class="d"></span>发布流</div>
+            <div class="mi"><span class="d"></span>配置推送</div>
+            <div class="grp">告警</div>
+            <div class="mi"><span class="d"></span>实时告警</div>
+          </div>
+          <div class="main">
+            <div class="top"><div class="t">值守总览</div><div class="op">oncall · 退出</div></div>
+            <div class="body">
+              <div class="kpi-row">
+                <div class="kpi">
+                  <div class="k">可用性</div>
+                  <div class="v">99.97%</div>
+                  <div class="d up">SLO 达标</div>
+                </div>
+                <div class="kpi">
+                  <div class="k">在途发布</div>
+                  <div class="v">3</div>
+                  <div class="d">灰度 2</div>
+                </div>
+                <div class="kpi">
+                  <div class="k">未恢复告警</div>
+                  <div class="v">2</div>
+                  <div class="d down">P1 · 1</div>
+                </div>
+                <div class="kpi">
+                  <div class="k">QPS</div>
+                  <div class="v">12.4k</div>
+                  <div class="spark">
+                    <i style="height:45%"></i><i style="height:60%"></i><i style="height:50%"></i>
+                    <i style="height:75%"></i><i style="height:70%"></i><i style="height:95%"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head">
+                  <h4>发布流</h4>
+                  <div><span class="b pri">发起发布</span></div>
+                </div>
+                <table class="tt">
+                  <thead><tr><th>服务</th><th>版本</th><th>状态</th><th>操作</th></tr></thead>
+                  <tbody>
+                    <tr><td>gateway</td><td>v1.24.3</td><td><span class="pill on">成功</span></td><td><span class="link">详情</span><span class="link danger">回滚</span></td></tr>
+                    <tr><td>user-service</td><td>v0.19.1</td><td><span class="pill on">灰度中</span></td><td><span class="link">详情</span><span class="link danger">回滚</span></td></tr>
+                    <tr><td>blog-service</td><td>v0.8.0</td><td><span class="pill off">排队</span></td><td><span class="link">详情</span><span class="link danger">回滚</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- compare -->
+  <section class="compare">
+    <h2>第四轮横向对照</h2>
+    <div class="hint">本轮比的不只是颜色，而是「完整设计语言」：签名时刻 + 品牌字符 + 首屏节奏。</div>
+    <table>
+      <thead>
+        <tr>
+          <th>方案</th>
+          <th>签名时刻</th>
+          <th>品牌字符</th>
+          <th>首屏节奏</th>
+          <th>优先场景</th>
+          <th>风险</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="name"><span class="dot" style="background:#dc2626"></span>M 焦墨</td>
+          <td>朱印红点</td>
+          <td>衬线数字 / 纸本</td>
+          <td>账册密表</td>
+          <td>公文 / 制度 / 审计</td>
+          <td>过于克制，业务后台可能显冷清</td>
+        </tr>
+        <tr>
+          <td class="name"><span class="dot" style="background:#0891b2"></span>N 潮汐</td>
+          <td>大圆角胶囊</td>
+          <td>几何无衬线 / 巨数字</td>
+          <td>KPI 疏朗</td>
+          <td>增长 / 运营 / 活动</td>
+          <td>不适合严肃审批型系统</td>
+        </tr>
+        <tr>
+          <td class="name"><span class="dot" style="background:#9a3412"></span>O 磐石</td>
+          <td>硬投影块</td>
+          <td>等宽数字 / 账本</td>
+          <td>资本台账感</td>
+          <td>财务 / 资产 / 披露</td>
+          <td>硬投影用多会显旧式印刷</td>
+        </tr>
+        <tr>
+          <td class="name"><span class="dot" style="background:#34d399"></span>P 信号</td>
+          <td>荧光数据条</td>
+          <td>发光数字 / 暗台</td>
+          <td>监控密度</td>
+          <td>SRE / 发布 / 告警</td>
+          <td>日间强光下对比下降</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="note">
+    <strong>候选池：</strong>A 墨岩 · B 云白 · F 石墨 · I 霜钢（+ M–P 可入选）。<br />
+    <strong>本轮补的维度：</strong>每套都带字标 mark、字体性格、KPI 横条与签名组件，不再只是「侧栏换色」。<br />
+    下一步可选：① 把候选收成三强做登录页/弹窗终选；② 为某一套画 Dashboard / 详情页完整节奏；③ 直接指定主风格并整理 CSS 变量回填设计文档。
+  </div>
+</div>
+</body>
+</html>

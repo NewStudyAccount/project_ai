@@ -21,7 +21,7 @@
         <template #default="{ row }">
           <el-button v-if="hasPermission('user:user:update')" link @click="openEdit(row)">编辑</el-button>
           <el-button v-if="hasPermission('user:user:status')" link @click="toggleStatus(row)">
-            {{ row.status === 1 ? '停用' : '启用' }}
+            <span :class="['status-pill', row.status === 1 ? 'is-on' : 'is-off']">{{ row.status === 1 ? '启用' : '停用' }}</span>
           </el-button>
         </template>
       </el-table-column>

@@ -27,6 +27,6 @@
 |------|------|
 | `docs/template/object-storage-design.md` | MinIO/预签名/逻辑删除唯一裁剪源 |
 | `docs/template/rbac-design.md` | 权限标识与菜单短号 |
-| `docs/template/admin-ui-design.md` | 管理端视觉（墨岩） |
+| `docs/template/admin-ui-design.md` | 管理端视觉（云白） |
 | `openspec/changes/scaffold-blog-system/` | 骨架横切能力（已落地边界） |
 | `deploy/db/migration/blog_db/` | 既有表 SQL；内容表 SQL 落此处（实施时） |
