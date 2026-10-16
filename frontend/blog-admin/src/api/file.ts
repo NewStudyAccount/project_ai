@@ -14,9 +14,11 @@ export function getFile(id: string) {
   return http.get<FileMeta>(`/files/${id}`)
 }
 
-export function uploadFile(file: File) {
+export function uploadFile(file: File, bizType?: string, bizId?: string) {
   const form = new FormData()
   form.append('file', file)
+  if (bizType) form.append('bizType', bizType)
+  if (bizId) form.append('bizId', bizId)
   return request<FileMeta>({ method: 'POST', url: '/files', data: form })
 }
 

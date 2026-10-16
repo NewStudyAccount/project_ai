@@ -22,6 +22,21 @@ public enum BlogErrorCodeEnum implements ErrorCode {
     FILE_TYPE_NOT_ALLOWED(203031, "文件类型不在白名单"),
     FILE_TOO_LARGE(203032, "文件超过大小限制"),
     FILE_UPLOAD_FAILED(203033, "文件上传失败"),
+    CATEGORY_NOT_FOUND(203040, "分类不存在"),
+    CATEGORY_IN_USE(203041, "分类下存在子类或文章"),
+    CATEGORY_NAME_DUPLICATE(203042, "同级分类名已存在"),
+    CATEGORY_DEPTH_EXCEEDED(203043, "分类层级最多 2 级"),
+    TAG_NOT_FOUND(203050, "标签不存在"),
+    TAG_IN_USE(203051, "标签已被文章引用"),
+    TAG_NAME_DUPLICATE(203052, "标签名已存在"),
+    ARTICLE_NOT_FOUND(203060, "文章不存在"),
+    ARTICLE_PUBLISHED(203061, "已发布文章须先下架再删除"),
+    CONTENT_REQUIRED(203062, "无正文可发布"),
+    CONTENT_TOO_LARGE(203063, "正文超过大小限制"),
+    CONTENT_FORMAT_INVALID(203064, "正文格式非法"),
+    DRAFT_NOT_FOUND(203065, "无未发布草稿"),
+    SLUG_DUPLICATE(203066, "slug 已存在"),
+    SITE_CONFIG_KEY_INVALID(203070, "站点配置键非法"),
     DUPLICATE_REQUEST_IN_PROGRESS(203900, "请求处理中，请勿重复提交");
 
     private final int code;

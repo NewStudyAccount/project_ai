@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,8 +28,10 @@ public class FileController {
     private final FileService fileService;
 
     @PostMapping
-    public Result<FileVO> upload(@RequestPart("file") MultipartFile file) {
-        return Result.ok(fileService.upload(file));
+    public Result<FileVO> upload(@RequestPart("file") MultipartFile file,
+                                 @RequestParam(required = false) String bizType,
+                                 @RequestParam(required = false) Long bizId) {
+        return Result.ok(fileService.upload(file, bizType, bizId));
     }
 
     @GetMapping

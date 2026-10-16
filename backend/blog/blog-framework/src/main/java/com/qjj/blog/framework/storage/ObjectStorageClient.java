@@ -38,6 +38,19 @@ public class ObjectStorageClient {
         }
     }
 
+    /** 读取对象内容为字节（业务正文等小对象） */
+    public byte[] getBytes(String objectKey) {
+        try (InputStream in = minioClient.getObject(io.minio.GetObjectArgs.builder()
+                .bucket(properties.getBucket())
+                .object(objectKey)
+                .build())) {
+            return in.readAllBytes();
+        } catch (Exception e) {
+            log.error("MinIO getObject failed bucket={} key={}", properties.getBucket(), objectKey, e);
+            throw new IllegalStateException("对象读取失败", e);
+        }
+    }
+
     /** 预签名 GET，TTL 受配置约束 */
     public String presignGet(String objectKey, Duration ttl) {
         Duration effective = ttl == null ? properties.getPresignTtl() : ttl;
