@@ -121,7 +121,7 @@ onMounted(load)
     <div class="editor-bar">
       <span class="label">Markdown（md-editor-v3）</span>
       <span class="muted size" :class="{ danger: overSize }">
-        {{ (byteSize / 1024).toFixed(1) }}KB / 500KB · 保存 Markdown 源文 · 图片上传后为 /api/v1/public/files/{id}
+        {{ (byteSize / 1024).toFixed(1) }}KB / 500KB · 保存 Markdown 源文 · 图片插入稳定公开 URL
       </span>
     </div>
     <MdEditor v-model="content" placeholder="Markdown 正文源码…" height="560px" :biz-id="articleId" />

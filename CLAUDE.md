@@ -66,6 +66,7 @@
 
 - 组件版本基线的**唯一取用处**是 `docs/version-baseline.md`（固定登记、不可删除）；各系统父 `pom.xml` 的 `dependencyManagement` 按其锁定落地，禁止各系统各锁各的版本；版本号**不在本文件**复制。
 - **落点原则（与 5.4 一致）：** 需连接中间件或额外配置才能工作的依赖（ORM、Redis/Redisson、Feign、JWT、MQ/MinIO 客户端、限流/幂等等），**只**在 `{system}-framework` 封装一次；纯编译期工具（Lombok、MapStruct）可随模块引入。
+  - **例外（对象存储 SDK）：** 采用独立模块 `{system}-object-storage` 时，MinIO/S3 客户端依赖**唯一落点**为该模块（object-storage-design.md §3.1；已采用：blog）；此时 `{system}-framework` **不再**引入对象存储 SDK，可改为依赖 object-storage 做装配/横切接线。未采用独立模块的存量系统可暂保持 framework 内封装，但多服务商与配置能力仍以 object-storage-design 为准。
 - `common` **禁止**依赖 MyBatis-Plus、Redis/Redisson、数据源、Actuator、MQ/MinIO 客户端、JWT 库、Hutool。
 - **网关模块（`{system}-gateway`）凡使用 `lb://` 路由，必须显式声明 Spring Cloud LoadBalancer**，禁止依赖 Gateway starter 的偶然传递；本地联调若见网关对已注册服务仍 503，优先查该依赖（见 `docs/template/fixbug/2026-09-25-unify-login-sso-gateway.md` §5.1）。
 - 禁止同类平行选型、禁止业务自建横切实现；反模式**唯一清单**见 **7.1**，明确不引入的组件**唯一清单**见 **2.2**。
@@ -333,6 +334,7 @@ cd backend/<system> && mvn -q compile
 |------|------|------|
 | `{system}-common` | **必须** | 返回体、错误码、异常、分页契约、通用枚举/常量/工具/注解 |
 | `{system}-framework` | **必须** | 需配置组件统一装配与横切实现（见 2.1 / 6.4 / 6.11） |
+| `{system}-object-storage` | 按需 | 对象存储能力独立模块：S3 多服务商适配/客户端/配置解析/连通性探测；**SDK 唯一落点**（object-storage-design.md §3.1；已采用：blog） |
 | `{system}-gateway` | 建议有 | 仅 5.2 边缘治理 |
 | `{system}-{domain}-service` | 按需 | 本域 Entity/Mapper；业务规则 |
 | `{system}-{domain}-api` | 按需 | DTO/VO、Feign、Fallback、常量；**无** Entity/Mapper/实现 |

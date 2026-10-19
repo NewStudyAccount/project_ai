@@ -86,11 +86,22 @@ OIDC RP（unify-login-facade）：
 
 ### 2.4 对象存储 / 镜像仓库（如有）
 
-> **取值真相源：** 以各系统 `application-local.yml` 中 `*.minio` 配置为准同步本表；生产密钥走 Nacos / 密钥管理，**禁止入仓**。
+> **取值真相源：** 以各系统 `application-local.yml` 中 `blog.object-storage.providers[]` 配置为准同步本表；生产密钥走 Nacos / 密钥管理，**禁止入仓**。
 
 | 类型 | 地址 | 项目/Bucket | 用户名（AccessKey） | 密码/密钥（SecretKey） | 备注 |
 |------|------|-------------|---------------------|------------------------|------|
-| OSS/MinIO | http://192.168.99.100:9000 | blog | minio_admin | minio123456（测试用可写；生产密钥禁止） | blog 系统（`blog.minio`）；与 `application-local.yml` 一致；已验证 put/get/delete |
+| OSS/MinIO | http://192.168.99.100:9000 | blog | minio_admin | minio123456（测试用可写；生产密钥禁止） | blog 系统（`blog.object-storage.providers[code=minio-local]`）；与 `application-local.yml` / `application-test.yml` 一致；已验证 put/get/delete。**公开读基址** `public-base-url=http://192.168.99.100:9000/blog`（桶 `blog` 需**公共读**，匿名 GET 200 / 匿名 PUT 失败；无生产密钥） |
+
+**SK 加密主密钥（blog 对象存储多服务商）：**
+
+| 项 | 值 | 说明 |
+|----|----|------|
+| 主密钥来源 | 环境变量 `OBJECT_STORAGE_SK_KEY` | Base64 编码的 16/24/32 字节 AES 密钥；**懒加载**——首次加解密 DB 服务商密文 SK 时读取（本地仅用 yml 引导明文 SK 时可不设，应用正常启动） |
+| 生成命令（示例） | `openssl rand -base64 32` | 生成 32 字节随机密钥并 Base64 编码 |
+| 保管 | 本地/测试：写入 shell 启动脚本或 IDE Run Config；生产：Nacos / 密钥管理 | 主密钥本身**禁止入仓**（§6.7）；丢失则密文不可恢复，需经管理端重录 SK |
+| 变更通道 | 管理端 `/api/v1/storage/providers/{id}`（PUT） | 唯一变更通道；直接改库 `sys_storage_provider` 不保证客户端缓存失效（运维约束） |
+
+---
 
 ---
 

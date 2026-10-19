@@ -25,24 +25,29 @@
 
 ## 对象存储裁剪取值（blog 登记）
 
-> 通用策略、封装、生命周期与安全红线唯一裁剪源：`docs/template/object-storage-design.md`（§9）。  
-> **此处只登记 blog 取值与差异**，不复制通用条文。连接信息真相源：`docs/test-env.md` §2.4（与 `application-local.yml` 的 `blog.minio` 一致）。
+> 通用策略、封装、生命周期与安全红线唯一裁剪源：`docs/object-storage-design/object-storage-design.md`（§9）。  
+> **此处只登记 blog 取值与差异**，不复制通用条文。连接信息真相源：`docs/test-env.md` §2.4（与 `application-local.yml` 的 `blog.object-storage.providers[]` 一致）。
 
 | 项 | blog 取值 | 相对默认/模板的差异 |
 |----|-----------|---------------------|
-| 配置前缀 | `blog.minio` | 结构对齐设计 §6 |
+| 模块形态 | **独立模块** `blog-object-storage`（SDK 唯一落点） | 对齐设计 §3.1；已采用独立模块，framework 不再持 SDK |
+| 配置前缀 | `blog.object-storage` | 结构对齐设计 §6.2；`providers[]` + `default-provider` + `secret-crypto` |
+| 引导默认服务商 | `minio-local`（is_default=1、MINIO、path_style=1） | 运行时以 `sys_storage_provider` 库表为准，DB 优先 |
 | 桶（bucket） | `blog` | 模板示意为 `example` |
 | 附件 MIME 白名单 | `image/png`、`image/jpeg`、`image/gif`、`application/pdf` | 与默认一致；**禁止空=全放行** |
-| 正文 MIME | `text/markdown`（仅 Markdown） | **业务路径 put**（`ArticleContentStorageService`），**不过**附件白名单；单篇 ≤ **500KB** |
+| 正文 MIME | `text/markdown`（仅 Markdown） | **业务路径 put**（`ArticleContentStorageService` 走默认服务商），**不过**附件白名单；单篇 ≤ **500KB** |
 | 正文对象键 | `blog-content/{articleId}/draft\|live/{uuid}.md` | blog 专有前缀；**无**格式字段（唯一 Markdown） |
 | Markdown 编写 | 源码 + 分栏预览；禁 HTML 结构；约定见 `business-design.md` §E | 写正文页唯一编写口径 |
 | 附件对象键 | UUID（含扩展名） | 与默认一致 |
 | 单文件上限 | 10MB（附件） | 与 `CLAUDE.md` §6.11 一致 |
-| 预签名 TTL | `10m` | 与默认一致；响应 `{ url, expireAt }` |
+| 公开永久 URL | 无过期 | `publicBaseUrl` + objectKey（按文件 `storage_code` 回源）；响应 `{ url }` |
+| 上传入参 | `POST /api/v1/files`：file + 可选 `bizType`/`bizId`/`storageCode` | `storageCode` 空=走默认链路 |
 | 文件权限 | `blog:file:upload` / `list` / `read` / `delete` | 格式 `system:resource:action` |
+| 服务商权限 | `blog:storage-provider:list` / `create` / `update` / `delete` / `test` | 服务商配置 CRUD + 连通测试 |
 | 删除语义 | `sys_file.deleted=1` 逻辑删除 | 不另设 status；物理清理走运维脚本，**不建定时** |
+| SK 加密 | AES-GCM；主密钥来自环境变量 `OBJECT_STORAGE_SK_KEY` | 出参 `secretKeyMasked`（****）；明文不回显、不入日志/审计 |
 | MinIO SDK | **8.5.17**（父 POM） | 基线 `docs/version-baseline.md` 为 9.0.3、可退 8.5.17；blog 现用退档 |
-| 裁剪源引用 | `object-storage-design.md` | 封装只在 `blog-framework` `ObjectStorageClient` |
+| 裁剪源引用 | `object-storage-design.md` | 封装只在 `blog-object-storage` `ObjectStorageClient` |
 
 **运维清理/补偿：** 契约见 `object-storage-design.md` §4.5（dry-run、保留窗口、失败清单）；blog 侧脚本入口与执行人**待登记**（见该文 §8.1）。
 
@@ -52,7 +57,7 @@
 
 | 路径 | 关系 |
 |------|------|
-| `docs/template/object-storage-design.md` | MinIO/预签名/逻辑删除唯一裁剪源 |
+| `docs/object-storage-design/object-storage-design.md` | MinIO/公开 URL/逻辑删除唯一裁剪源 |
 | `docs/template/rbac-design.md` | 权限标识与菜单短号 |
 | `docs/template/admin-ui-design.md` | 管理端视觉（云白） |
 | `docs/template/fixbug/2026-10-19-minio-signature-object-storage.md` | MinIO `SignatureDoesNotMatch` 排查与配置对齐 |

@@ -73,12 +73,14 @@
 |------|------|----|------|------|
 | biz_type | VARCHAR(32) | N | 'FILE' | 对象用途：`FILE` / `ARTICLE_COVER` / `ARTICLE_LIVE` / `ARTICLE_DRAFT` |
 | biz_id | BIGINT | N | 0 | 业务 id（如 article_id）；非业务为 0 |
+| storage_code | VARCHAR(64) | N | '' | 服务商编码（指向 `sys_storage_provider.code`）；回源用 |
 
 **索引（在现有 ≤5 约束内调整）：**
 
 - 保留 `uk_sys_file_object_key (object_key)`
 - 保留 `idx_sys_file_create_time (create_time)`
 - **新增** `idx_sys_file_biz (biz_type, biz_id)`
+- **新增** `idx_sys_file_storage_code (storage_code)`
 
 **上传信息登记时机（强制）：**
 
@@ -91,9 +93,15 @@
 
 - 禁止只写 MinIO 不落 `sys_file`；禁止业务表只存裸 `object_key` 而无 `sys_file` 行
 - 逻辑删除 `deleted=1` 即文件删除语义（对象清理运维脚本，不建定时）
-- 文件管理列表可按 `biz_type` 过滤；预签名/下载经 file_id 解析
-- **既有上传接口** `POST /api/v1/files` 需补可选入参 `bizType`/`bizId`（缺省 `FILE`/`0`）；权限仍为 `blog:file:upload`
-- **DDL 增量边界**：仅补 `biz_type`/`biz_id` 两列 + `idx_sys_file_biz`；**不改**既有列与 `deleted` 语义（对齐 business-design §1.2 例外条款）
+- 文件管理列表可按 `biz_type` / `storage_code` 过滤；下载/预览用稳定公开 `url`（file_id → sys_file → storage_code 对应服务商 `publicBaseUrl`）
+- **既有上传接口** `POST /api/v1/files` 需补可选入参 `bizType`/`bizId`/`storageCode`（缺省 `FILE`/`0`/默认服务商）；权限仍为 `blog:file:upload`
+- **DDL 增量边界**：补 `biz_type`/`biz_id`/`storage_code` 三列 + `idx_sys_file_biz`/`idx_sys_file_storage_code`；**不改**既有列与 `deleted` 语义（对齐 business-design §1.2 例外条款）
+
+### 2.0.1 `sys_storage_provider`（新增）· 对象存储服务商配置
+
+> 通用形态见 `object-storage-design.md` §5.2。库表真相源：服务启停、默认项、SK 加密落库。
+> DDL：`deploy/db/migration/blog_db/06_sys_storage_provider.sql`；种子：`deploy/db/seed/2026-10-20-blog-storage-provider.sql`。
+> **SK 加密主密钥**：环境变量 `OBJECT_STORAGE_SK_KEY`（Base64 32 字节）；部署步骤与生成命令见 `docs/test-env.md` §2.4；主密钥本身禁止入仓。
 
 ### 2.1 `blog_category` 文章分类
 
@@ -287,9 +295,9 @@ blog_site_config     独立
 |------|------|------|
 | 主表 / 详细表拆分 | 拆 | 列表不碰正文元数据与 SEO 字段；OSS 只存全文 |
 | 正文进 OSS 不进 DB | OSS | 用户明确要求；大字段拖垮列表与备份 |
-| 封面进 `sys_file` | 复用 | 已有文件管理与预签名；`biz_type=ARTICLE_COVER` |
+| 封面进 `sys_file` | 复用 | 已有文件管理与公开 URL；`biz_type=ARTICLE_COVER`；删除前引用检查 |
 | **正文/草稿进 `sys_file`** | **登记** | OSS 上传信息统一表；detail 只持 `content_file_id`/`draft_file_id` |
-| 不建平行 OSS 表 | 复用 `sys_file` | 对齐 `object-storage-design.md` §5；避免双源 |
+| 不建平行 OSS 表 | 复用 `sys_file` + `sys_storage_provider` | 对齐 `object-storage-design.md` §5；多服务商配置集中在 `sys_storage_provider`，避免双源 |
 | 作者快照 author_name | 快照 | 避免列表 Feign 用户中心；换名不追溯 |
 | `view_count` 预留 | 预留 | 本期不做统计；避免后续加列 |
 | 无评论/点赞表 | 不做 | 项目边界；需要时另开变更 |
@@ -321,7 +329,7 @@ blog_site_config     独立
 | 2 | `blog_site_config.site.about` 是否也上 OSS | 先 VARCHAR；超长再挂对象 |
 | 3 | 是否允许未分类发布 | 允许，`category_id=0` |
 | 4 | 同步更新 tag 冗余计数 | 不做 |
-| 5 | 正文读取：服务端组装 vs 预签名直连 | 默认服务端组装（≤500KB）；可选 `content-url` |
+| 5 | 正文读取：服务端组装 vs 公开 URL | 默认服务端组装（≤500KB）；可选 `content-url` 返回稳定公开 `url` |
 | 6 | 用户端 RSS / 站点地图 | 本期不做 |
 | 7 | 密码保护文章 / 转载链接 | 本期不做 |
 | 8 | 对外产品名 / 用户端域名 | 待 `CLAUDE.md` §9 裁决后回填 |

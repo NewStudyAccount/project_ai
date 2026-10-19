@@ -2,7 +2,7 @@
 /**
  * md-editor-v3 薄封装（adopt-markdown-editor / 图片与链接完善）
  * - v-model = Markdown 源文（禁止把预览 HTML 提交给父组件）
- * - 图片：上传到 /api/v1/files（ARTICLE_IMAGE），插入稳定 URL `/api/v1/public/files/{id}`
+ * - 图片：上传到 /api/v1/files（ARTICLE_IMAGE），插入稳定公开 URL（VO.url）
  * - 链接：仅允许 http(s)/相对站内路径；过滤 javascript: 等
  */
 import { computed, ref } from 'vue'
@@ -84,9 +84,9 @@ const value = computed({
   set: (v: string) => emit('update:modelValue', sanitize(v)),
 })
 
-/** 公开稳定图片地址（不随预签名过期） */
-function publicFileUrl(id: string): string {
-  return `/api/v1/public/files/${id}`
+/** 稳定公开图片地址（publicBaseUrl + objectKey，无过期） */
+function publicFileUrl(meta: { url?: string; id: string }): string {
+  return meta.url || `/api/v1/public/files/${meta.id}`
 }
 
 /**
@@ -113,12 +113,13 @@ async function onUploadImg(files: File[], callback: UploadImgCallBack) {
         continue
       }
       const meta = await uploadFile(file, 'ARTICLE_IMAGE', props.bizId || undefined)
-      if (!isSafeUrl(publicFileUrl(meta.id))) {
+      const imgSrc = publicFileUrl(meta)
+      if (!isSafeUrl(imgSrc)) {
         continue
       }
       const alt = meta.originalName || file.name
       results.push({
-        url: publicFileUrl(meta.id),
+        url: imgSrc,
         alt,
         title: alt,
       })

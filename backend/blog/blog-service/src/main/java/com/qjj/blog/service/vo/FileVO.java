@@ -5,8 +5,11 @@ import lombok.Data;
 @Data
 public class FileVO {
     private String id;
+    private String storageCode;
     private String bucket;
     private String objectKey;
+    /** 稳定公开 URL（publicBaseUrl + objectKey） */
+    private String url;
     private String originalName;
     private String contentType;
     private Long sizeBytes;

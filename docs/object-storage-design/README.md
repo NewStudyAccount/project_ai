@@ -29,6 +29,6 @@
 ## 关联文档
 
 - `docs/template/admin-ui-design.md` — 管理端视觉 / P-List 布局
-- `docs/template/gateway-design.md` — 预签名与不经网关中转 body
+- `docs/template/gateway-design.md` — 不经网关中转 body
 - `docs/test-env.md` — 测试环境对象存储连接
 - `docs/version-baseline.md` — S3/MinIO SDK 版本

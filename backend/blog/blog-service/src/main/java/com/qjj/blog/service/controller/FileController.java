@@ -5,7 +5,7 @@ import com.qjj.blog.common.result.Result;
 import com.qjj.blog.service.dto.FilePageQuery;
 import com.qjj.blog.service.service.FileService;
 import com.qjj.blog.service.vo.FileVO;
-import com.qjj.blog.service.vo.PresignVO;
+import com.qjj.blog.service.vo.FileUrlVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,8 +30,9 @@ public class FileController {
     @PostMapping
     public Result<FileVO> upload(@RequestPart("file") MultipartFile file,
                                  @RequestParam(required = false) String bizType,
-                                 @RequestParam(required = false) Long bizId) {
-        return Result.ok(fileService.upload(file, bizType, bizId));
+                                 @RequestParam(required = false) Long bizId,
+                                 @RequestParam(required = false) String storageCode) {
+        return Result.ok(fileService.upload(file, bizType, bizId, storageCode));
     }
 
     @GetMapping
@@ -45,8 +46,8 @@ public class FileController {
     }
 
     @GetMapping("/{id}/url")
-    public Result<PresignVO> presign(@PathVariable String id) {
-        return Result.ok(fileService.presign(id));
+    public Result<FileUrlVO> fileUrl(@PathVariable String id) {
+        return Result.ok(fileService.getFileUrl(id));
     }
 
     @DeleteMapping("/{id}")

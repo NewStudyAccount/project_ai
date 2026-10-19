@@ -11,7 +11,7 @@
 
     <artifactId>blog-framework</artifactId>
     <name>blog-framework</name>
-    <description>基础设施统一装配（ORM/Redis/Feign/MinIO/审计/发号/幂等/限流/异常/序列化）</description>
+    <description>基础设施统一装配（ORM/Redis/Feign/审计/发号/幂等/限流/异常/序列化；对象存储走 blog-object-storage 独立模块）</description>
 
     <dependencies>
         <dependency>
@@ -62,11 +62,7 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-tracing-bridge-brave</artifactId>
         </dependency>
-        <!-- MinIO SDK 唯一封装落点（object-storage-design.md §3） -->
-        <dependency>
-            <groupId>io.minio</groupId>
-            <artifactId>minio</artifactId>
-        </dependency>
+        <!-- MinIO SDK 已迁独立模块 blog-object-storage（object-storage-design.md §3.1） -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class FileMetaVO {
     private String id;
+    private String storageCode;
     private String bucket;
     private String objectKey;
     private String originalName;

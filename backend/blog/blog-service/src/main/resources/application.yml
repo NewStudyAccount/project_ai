@@ -37,15 +37,22 @@ blog:
   rate-limit:
     upload: 10/min/user
     query: 60/min/user
-  minio:
-    bucket: blog
+  object-storage:
+    # 引导默认服务商（运行时以 sys_storage_provider 库表为准；公共 yml 不放密钥）
+    default-provider: "MIMO"
+    providers: []
     upload-max-bytes: 10485760
     allowed-content-types:
       - image/png
       - image/jpeg
       - image/gif
       - application/pdf
-    presign-ttl: 10m
+    connect-timeout: 5s
+    read-timeout: 30s
+    secret-crypto:
+      # SK 加密主密钥来源：环境变量；主密钥本身禁止入仓
+      key-source: env
+      key-env: OBJECT_STORAGE_SK_KEY
   feign:
     connect-timeout: 1s
     read-timeout: 3s

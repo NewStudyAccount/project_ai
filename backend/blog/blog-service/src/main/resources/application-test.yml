@@ -20,3 +20,18 @@ user:
   feign:
     user-center:
       base-url: http://user-service:8081
+
+blog:
+  object-storage:
+    # 引导默认服务商（冷启动用；运行时以 sys_storage_provider 库表为准）
+    default-provider: minio-local
+    providers:
+      - code: minio-local
+        provider-type: MINIO
+        endpoint: http://192.168.99.100:9000
+        region: ""
+        bucket: blog
+        access-key: minio_admin
+        secret-key: minio123456
+        path-style: 1
+        public-base-url: http://192.168.99.100:9000/blog

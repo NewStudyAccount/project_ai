@@ -26,6 +26,12 @@ public final class BlogPermissionConstants {
 
     public static final String AUDIT_LIST = "user:audit:list";
 
+    public static final String STORAGE_PROVIDER_LIST = "blog:storage-provider:list";
+    public static final String STORAGE_PROVIDER_CREATE = "blog:storage-provider:create";
+    public static final String STORAGE_PROVIDER_UPDATE = "blog:storage-provider:update";
+    public static final String STORAGE_PROVIDER_DELETE = "blog:storage-provider:delete";
+    public static final String STORAGE_PROVIDER_TEST = "blog:storage-provider:test";
+
     private BlogPermissionConstants() {
     }
 }

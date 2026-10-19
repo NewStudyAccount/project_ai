@@ -610,17 +610,17 @@
 
 ---
 
-### 6.5 正文预签名（可选）
+### 6.5 正文公开地址（可选）
 
 | 项 | 内容 |
 |----|------|
-| **接口名** | 正文预签名 URL |
+| **接口名** | 正文公开 URL |
 | **方法/路径** | `GET /api/v1/public/articles/{idOrSlug}/content-url` |
 | **权限** | 公开 |
 
-**出参**：`{ url: string, expiresAt: string }`
+**出参**：`{ url: string }`（稳定公开，无 expireAt）
 
-**逻辑**：仅已发布 + `content_file_id` → `presignGet` 短 TTL（配置项）；寻址同 6.4
+**逻辑**：仅已发布 + `content_file_id` → 稳定公开 `{url}`（`publicBaseUrl` + objectKey，无 expireAt）；寻址同 6.4
 
 ---
 
@@ -631,7 +631,7 @@
 | **方法/路径** | `GET /api/v1/public/files/{id}` |
 | **权限** | 公开（网关放行 `/api/v1/public/**`） |
 | **逻辑** | 读 `sys_file` → 仅 `content_type` 为 `image/*` → 返回对象字节 + 对应 MIME；`Cache-Control: public, max-age=86400` |
-| **用途** | Markdown `![](/api/v1/public/files/{id})` 稳定地址（不随预签名过期） |
+| **用途** | Markdown 优先直接写公开 `url`；本路径兼容 302 跳转稳定公开 URL（无预签名） |
 | **上传** | 管理端编辑器 → `POST /api/v1/files`（`bizType=ARTICLE_IMAGE`）→ 得 id 后拼上述 URL |
 
 **使用表**：`blog_article`、`blog_article_detail`、`sys_file` + **MinIO**

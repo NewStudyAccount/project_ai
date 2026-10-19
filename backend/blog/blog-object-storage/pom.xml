@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.qjj</groupId>
+        <artifactId>blog-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>blog-object-storage</artifactId>
+    <name>blog-object-storage</name>
+    <description>对象存储能力独立模块（S3 多服务商适配/客户端/配置解析/连通性探测；SDK 唯一落点，object-storage-design.md §3.1）</description>
+
+    <!-- 边界：禁止依赖 framework / MyBatis-Plus / 数据源 / Redis（能力层不持业务 Entity） -->
+    <dependencies>
+        <dependency>
+            <groupId>com.qjj</groupId>
+            <artifactId>blog-common</artifactId>
+        </dependency>
+        <!-- MinIO SDK 唯一落点（object-storage-design.md §3.1；版本取 docs/version-baseline.md） -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

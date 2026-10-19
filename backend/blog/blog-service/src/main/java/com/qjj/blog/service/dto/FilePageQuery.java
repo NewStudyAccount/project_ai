@@ -9,6 +9,7 @@ public class FilePageQuery {
     private String keyword;
     private String contentType;
     private String bizType;
+    private String storageCode;
     private String orderBy;
     private String order;
 }

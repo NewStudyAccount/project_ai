@@ -58,8 +58,9 @@ flowchart TB
     AT[blog_article_tag<br/>文章-标签]
   end
 
-  subgraph oss [对象存储 MinIO]
+  subgraph oss [对象存储（S3 多服务商）]
     OBJ[正文对象<br/>content/{articleId}.md]
+    PROV[sys_storage_provider<br/>服务商配置真相源]
   end
 
   CAT -->|1:N 分类| A
@@ -250,7 +251,7 @@ GET /api/v1/public/articles/{idOrSlug}
   → 旧对象记审计，留给运维清理（不建定时）
 ```
 
-策略与红线裁剪源 = `object-storage-design.md`（MIME/预签名 TTL/禁止业务直绑 SDK/禁止网关中转大包 body）。
+策略与红线裁剪源 = `object-storage-design.md`（MIME/公开永久 URL/Content-Disposition/删除前引用检查/禁止业务直绑 SDK/禁止网关中转大包 body）。
 正文 ≤500KB 经业务 JSON 接口写入后由服务端 put，属「小文件经业务接口」；封面等附件走既有 `/api/v1/files` multipart。
 
 #### E. Markdown 编写约定（写正文页）
@@ -294,7 +295,7 @@ GET /api/v1/public/articles/{idOrSlug}
 | 入参 | `content` = **Markdown 源文**（JSON 字符串）；无格式字段 |
 | 服务端 | 校验非空 + ≤500KB → put `…/{uuid}.md`（MIME `text/markdown`）→ `INSERT sys_file` → 回填轨 |
 | 前端 | 保存前可提示字数/大小；**禁止**把 HTML 渲染结果当 content 提交 |
-| 失败 | 超限/空内容返回业务/校验码；MinIO 失败记 error 含 objectKey（对象存储补偿见 `object-storage-design.md`） |
+| 失败 | 超限/空内容返回业务/校验码；对象存储失败记 error 含 providerCode/objectKey（对象存储补偿见 `object-storage-design.md`） |
 
 **5. 与用户端渲染边界**
 
@@ -445,7 +446,7 @@ GET /api/v1/public/articles/{idOrSlug}
 | GET | `/public/tags` | 启用标签（可带文章数） |
 | GET | `/public/articles` | 分页：`categoryId` / `tagId` / `keyword`；仅 `status=1`；排序 `is_top DESC, publish_time DESC` |
 | GET | `/public/articles/{idOrSlug}` | 详情：主表+正文 content+标签；仅已发布；**id 或 slug 均可**（见下） |
-| GET | `/public/articles/{idOrSlug}/content-url` | 预签名 GET（可选，短 TTL） |
+| GET | `/public/articles/{idOrSlug}/content-url` | 稳定公开 `{url}`（无 expireAt） |
 | GET | `/public/site-config` | 站点配置（站名/关于/备案） |
 
 **寻址约定：** 路径参数接受 `id`（16 位发号）或 `slug`；服务端先按 id 精确匹配，未命中再按 `slug` 唯一匹配；两者皆无 → 按「不存在」处理。路由示例 `/articles/:idOrSlug`。
@@ -527,7 +528,7 @@ blog-gateway    放行 /api/v1/public/**；其余鉴权不变
 
 1. SQL：`deploy/db/migration/blog_db/03_blog_content_tables.sql`（人工执行，`CLAUDE.md` §2.2）
 2. 种子：可选默认「未分类」；菜单/权限种子随管理端实施
-3. MinIO：确认桶与 `blog-content/` 前缀；预签名 TTL 沿用配置
+3. MinIO：确认桶**公共读**与 `public-base-url`；删除前引用检查已接 Article Checker
 4. Nginx：用户端静态托管 + `/api` 反代（与 admin 同网关前缀或独立 location，实施时登记 `docs/port-registry.md`）
 5. 回滚：下线服务；表可保留（无破坏性 migration）
 

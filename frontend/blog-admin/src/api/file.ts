@@ -1,5 +1,5 @@
 import { http, request } from '@/api/request'
-import type { FileMeta, PageResult, PresignResult } from '@/types'
+import type { FileMeta, FileUrlResult, PageResult } from '@/types'
 
 export function pageFiles(params: {
   current?: number
@@ -22,8 +22,8 @@ export function uploadFile(file: File, bizType?: string, bizId?: string) {
   return request<FileMeta>({ method: 'POST', url: '/files', data: form })
 }
 
-export function presignFile(id: string) {
-  return http.get<PresignResult>(`/files/${id}/url`)
+export function getFileUrl(id: string) {
+  return http.get<FileUrlResult>(`/files/${id}/url`)
 }
 
 export function deleteFile(id: string) {

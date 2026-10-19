@@ -12,6 +12,9 @@ import lombok.Setter;
 @TableName("sys_file")
 public class SysFile extends BaseEntity {
 
+    /** 服务商编码（指向 sys_storage_provider.code）；回源用 */
+    private String storageCode;
+
     private String bucket;
 
     private String objectKey;

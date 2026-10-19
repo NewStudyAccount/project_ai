@@ -12,12 +12,11 @@ import com.qjj.blog.service.service.TagService;
 import com.qjj.blog.service.vo.ArticleDetailVO;
 import com.qjj.blog.service.vo.ArticleVO;
 import com.qjj.blog.service.vo.CategoryVO;
-import com.qjj.blog.service.vo.PublicImageVO;
 import com.qjj.blog.service.vo.SiteConfigVO;
 import com.qjj.blog.service.vo.TagVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -78,20 +77,14 @@ public class PublicController {
     }
 
     /**
-     * 正文插图稳定地址（Markdown `![](/api/v1/public/files/{id})`）；仅 image/*。
+     * 正文插图兼容地址：302 跳转稳定公开 URL，不经业务中转对象 body。
+     * 建议正文/Markdown 直接写入公开 `url`（object-storage-design §4.2）。
      */
     @GetMapping("/files/{id}")
-    public ResponseEntity<byte[]> publicFile(@PathVariable String id) {
-        PublicImageVO image = fileService.readPublicImage(id);
-        MediaType mediaType;
-        try {
-            mediaType = MediaType.parseMediaType(image.getContentType());
-        } catch (Exception e) {
-            mediaType = MediaType.APPLICATION_OCTET_STREAM;
-        }
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
-                .contentType(mediaType)
-                .body(image.getContent());
+    public ResponseEntity<Void> publicFile(@PathVariable String id) {
+        String url = fileService.publicImageUrl(id);
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header(HttpHeaders.LOCATION, url)
+                .build();
     }
 }

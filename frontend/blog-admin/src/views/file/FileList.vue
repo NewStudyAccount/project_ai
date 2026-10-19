@@ -7,7 +7,7 @@
       </el-card>
       <el-card shadow="never" class="stat">
         <div class="stat-label">策略</div>
-        <div class="stat-sub">单文件 ≤10MB · png/jpeg/gif/pdf · 预签名 10min</div>
+        <div class="stat-sub">单文件 ≤10MB · png/jpeg/gif/pdf · 公开永久 URL</div>
       </el-card>
     </div>
 
@@ -88,7 +88,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox, type UploadFile } from 'element-plus'
-import { deleteFile, pageFiles, presignFile, uploadFile } from '@/api/file'
+import { deleteFile, getFileUrl, pageFiles, uploadFile } from '@/api/file'
 import type { FileMeta } from '@/types'
 
 const MAX_BYTES = 10 * 1024 * 1024
@@ -168,7 +168,7 @@ async function doUpload() {
 }
 
 async function preview(row: FileMeta, asDownload: boolean) {
-  const res = await presignFile(row.id)
+  const res = await getFileUrl(row.id)
   if (asDownload) {
     const a = document.createElement('a')
     a.href = res.url

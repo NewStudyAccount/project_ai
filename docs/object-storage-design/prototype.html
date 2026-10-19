@@ -107,6 +107,16 @@
   td{padding:12px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
   .name{font-size:13px;color:var(--text-primary);font-weight:500}
   .key{font-size:11px;color:#a1a1aa;margin-top:2px}
+  .thumb{
+    width:40px;height:40px;border-radius:6px;overflow:hidden;
+    border:1px solid var(--border);background:#f4f4f5;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .thumb svg{display:block;width:100%;height:100%}
+  .thumb-file{
+    font-size:9px;color:#71717a;letter-spacing:.02em;
+    background:#fafafa;text-align:center;line-height:1.2;padding:2px;
+  }
   .pill{
     display:inline-flex;align-items:center;height:22px;padding:0 10px;
     border-radius:999px;font-size:11px;font-weight:500;
@@ -174,7 +184,7 @@
     </div>
     <div class="proto-note">
       对齐 <b>object-storage-design.md</b> §7 · <b>admin-ui-design.md</b> 云白 · 交互仅示意，不连后端。
-      规范：单文件 ≤10MB · MIME 白名单 · 预签名 10min · 逻辑删除 · SK 掩码。
+      规范：单文件 ≤10MB · MIME 白名单 · 公开永久 URL（无过期）· 逻辑删除 · SK 掩码。
     </div>
   </div>
 
@@ -204,7 +214,7 @@
           <div class="page-card">
             <div class="page-head">
               <h2>文件管理</h2>
-              <div class="sub">展示页 · 上传 / 预签名预览下载 / 逻辑删除</div>
+              <div class="sub">展示页 · 上传 / 公开 URL 预览下载 / 逻辑删除</div>
               <div class="spacer"></div>
               <button class="btn btn-primary" onclick="openUpload()">上传</button>
             </div>
@@ -219,7 +229,7 @@
               </div>
               <div class="stat" style="flex:1">
                 <div class="stat-label">策略</div>
-                <div class="stat-sub">单文件 ≤10MB · png/jpeg/gif/pdf · 预签名 10min</div>
+                <div class="stat-sub">单文件 ≤10MB · png/jpeg/gif/pdf · 公开 URL</div>
               </div>
             </div>
             <div class="toolbar">
@@ -242,16 +252,27 @@
             <table>
               <thead>
                 <tr>
-                  <th style="width:24%">文件名</th>
-                  <th style="width:18%">服务商 / 桶</th>
-                  <th style="width:14%">类型</th>
-                  <th style="width:10%">大小</th>
+                  <th style="width:8%">缩略图</th>
+                  <th style="width:22%">文件名</th>
+                  <th style="width:16%">服务商 / 桶</th>
+                  <th style="width:12%">类型</th>
+                  <th style="width:8%">大小</th>
                   <th style="width:18%">上传时间</th>
                   <th style="width:16%">操作</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
+                  <td>
+                    <div class="thumb" title="图片缩略图（稳定公开 URL）">
+                      <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-label="cover.png 缩略图">
+                        <rect width="40" height="40" fill="#0EA5E9"/>
+                        <rect y="22" width="40" height="18" fill="#0369A1"/>
+                        <polygon points="0,28 12,14 20,22 28,10 40,26 40,40 0,40" fill="#0C4A6E"/>
+                        <circle cx="30" cy="10" r="4" fill="#FDE68A"/>
+                      </svg>
+                    </div>
+                  </td>
                   <td>
                     <div class="name">cover.png</div>
                     <div class="key">a3f8c2…e21c.jpg</div>
@@ -261,12 +282,15 @@
                   <td>256 KB</td>
                   <td>2026-10-19 10:21</td>
                   <td>
-                    <button class="btn-link" onclick="toast('预签名 GET · expireAt=epoch 毫秒')">预览</button>
-                    <button class="btn-link" onclick="toast('预签名 GET 下载')">下载</button>
+                    <button class="btn-link" onclick="toast('打开稳定公开 url · 无签名无过期')">预览</button>
+                    <button class="btn-link" onclick="toast('打开稳定公开 url · 无签名无过期')">下载</button>
                     <button class="btn-danger" onclick="confirmDelete()">删除</button>
                   </td>
                 </tr>
                 <tr>
+                  <td>
+                    <div class="thumb thumb-file" title="非图片：类型占位">PDF</div>
+                  </td>
                   <td>
                     <div class="name">manual.pdf</div>
                     <div class="key">9b21d0…0aa4.pdf</div>
@@ -276,12 +300,15 @@
                   <td>1.8 MB</td>
                   <td>2026-10-18 16:02</td>
                   <td>
-                    <button class="btn-link" onclick="toast('预签名 GET · expireAt=epoch 毫秒')">预览</button>
-                    <button class="btn-link" onclick="toast('预签名 GET 下载')">下载</button>
+                    <button class="btn-link" onclick="toast('打开稳定公开 url · 无签名无过期')">预览</button>
+                    <button class="btn-link" onclick="toast('打开稳定公开 url · 无签名无过期')">下载</button>
                     <button class="btn-danger" onclick="confirmDelete()">删除</button>
                   </td>
                 </tr>
                 <tr>
+                  <td>
+                    <div class="thumb thumb-file" title="非图片：类型占位">MD</div>
+                  </td>
                   <td>
                     <div class="name">draft.md</div>
                     <div class="key">c7e0aa…12fd.md</div>
@@ -291,8 +318,8 @@
                   <td>12 KB</td>
                   <td>2026-10-17 09:40</td>
                   <td>
-                    <button class="btn-link" onclick="toast('按 storage_code 回源 aws-sg')">预览</button>
-                    <button class="btn-link" onclick="toast('按 storage_code 回源 aws-sg')">下载</button>
+                    <button class="btn-link" onclick="toast('打开稳定公开 url（aws-sg publicBaseUrl）')">预览</button>
+                    <button class="btn-link" onclick="toast('打开稳定公开 url（aws-sg publicBaseUrl）')">下载</button>
                     <button class="btn-danger" onclick="confirmDelete()">删除</button>
                   </td>
                 </tr>
@@ -306,8 +333,10 @@
               <button class="page">3</button>
             </div>
             <div class="hint">
-              <b>上传：</b>multipart → 校验大小/MIME → put 对象 → 登记 sys_file（含 storage_code）<br/>
-              <b>预览/下载：</b>GET /files/{id}/url → {url, expireAt} 浏览器直连，不经网关中转 body<br/>
+              <b>上传：</b>multipart → 校验大小/MIME → put 对象（写 Content-Disposition）→ 登记 sys_file<br/>
+              <b>缩略图/正文配图：</b>图片用稳定公开 `url` 作 src，写入正文后长期有效；非图片类型占位<br/>
+              <b>预览/下载：</b>业务返回稳定 `{url}`（publicBaseUrl + objectKey），浏览器直连；**公共读、无过期**；inline 预览 / attachment 下载<br/>
+              <b>删除：</b>逻辑删除前**引用检查**（FileReferenceChecker）；被正文/业务占用则拒绝并提示引用摘要<br/>
               <b>删除：</b>逻辑删除 deleted=1；物理清理走运维脚本（dry-run / 保留窗口）<br/>
               <b>多服务商：</b>历史文件按 storage_code 回源；切换默认只影响新上传
             </div>
@@ -510,6 +539,10 @@
         <div class="full">
           <label>endpoint *</label>
           <input class="field" placeholder="https://…" />
+        </div>
+        <div class="full">
+          <label>public_base_url *（公开读基址，http 均可，无尾斜杠）</label>
+          <input class="field" placeholder="http://192.168.1.10:9000/blog" />
         </div>
         <div>
           <label>bucket *</label>

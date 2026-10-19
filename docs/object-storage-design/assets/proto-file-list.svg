@@ -27,7 +27,7 @@
   <!-- Page card -->
   <rect x="256" y="72" width="828" height="628" rx="12" fill="#FFFFFF" stroke="#E4E4E7"/>
   <text x="280" y="112" font-size="18" font-weight="600" fill="#18181B">文件管理</text>
-  <text x="380" y="112" font-size="12" fill="#71717A">展示页 · 上传 / 预签名预览下载 / 逻辑删除</text>
+  <text x="380" y="112" font-size="12" fill="#71717A">展示页 · 上传 / 公开 URL 预览下载 / 逻辑删除</text>
 
   <!-- Stats -->
   <rect x="280" y="132" width="180" height="64" rx="8" fill="#FAFAFA" stroke="#E4E4E7"/>
@@ -38,7 +38,7 @@
   <text x="488" y="180" font-size="13" fill="#0C4A6E">minio-local · 桶 blog</text>
   <rect x="764" y="132" width="296" height="64" rx="8" fill="#FAFAFA" stroke="#E4E4E7"/>
   <text x="780" y="156" font-size="11" fill="#71717A">策略</text>
-  <text x="780" y="180" font-size="12" fill="#3F3F46">单文件 ≤10MB · 白名单 · 预签名 10min</text>
+  <text x="780" y="180" font-size="12" fill="#3F3F46">单文件 ≤10MB · 白名单 · 公开 URL</text>
 
   <!-- Toolbar -->
   <rect x="280" y="216" width="96" height="32" rx="16" fill="#0284C7"/>
@@ -56,43 +56,55 @@
 
   <!-- Table header -->
   <rect x="280" y="268" width="780" height="36" fill="#FAFAFA"/>
-  <text x="292" y="290" font-size="11" fill="#71717A">文件名</text>
-  <text x="520" y="290" font-size="11" fill="#71717A">服务商 / 桶</text>
-  <text x="680" y="290" font-size="11" fill="#71717A">类型</text>
-  <text x="760" y="290" font-size="11" fill="#71717A">大小</text>
-  <text x="830" y="290" font-size="11" fill="#71717A">上传时间</text>
+  <text x="292" y="290" font-size="11" fill="#71717A">缩略图</text>
+  <text x="344" y="290" font-size="11" fill="#71717A">文件名</text>
+  <text x="530" y="290" font-size="11" fill="#71717A">服务商 / 桶</text>
+  <text x="690" y="290" font-size="11" fill="#71717A">类型</text>
+  <text x="770" y="290" font-size="11" fill="#71717A">大小</text>
+  <text x="840" y="290" font-size="11" fill="#71717A">上传时间</text>
   <text x="960" y="290" font-size="11" fill="#71717A">操作</text>
 
   <!-- Rows -->
   <line x1="280" y1="304" x2="1060" y2="304" stroke="#E4E4E7"/>
-  <text x="292" y="328" font-size="12" fill="#18181B">cover.png</text>
-  <text x="292" y="346" font-size="10" fill="#A1A1AA">a3f8…c21e.jpg</text>
-  <text x="520" y="336" font-size="11" fill="#3F3F46">minio-local / blog</text>
-  <text x="680" y="336" font-size="11" fill="#3F3F46">image/png</text>
-  <text x="760" y="336" font-size="11" fill="#3F3F46">256 KB</text>
-  <text x="830" y="336" font-size="11" fill="#71717A">2026-10-19 10:21</text>
+  <!-- Row 1: image thumbnail -->
+  <rect x="288" y="312" width="40" height="40" rx="6" fill="#0EA5E9" stroke="#E4E4E7"/>
+  <rect x="288" y="334" width="40" height="18" fill="#0369A1"/>
+  <polygon points="288,340 300,326 308,334 318,322 328,338 328,352 288,352" fill="#0C4A6E"/>
+  <circle cx="318" cy="322" r="3.5" fill="#FDE68A"/>
+  <text x="344" y="328" font-size="12" fill="#18181B">cover.png</text>
+  <text x="344" y="346" font-size="10" fill="#A1A1AA">a3f8…c21e.jpg</text>
+  <text x="530" y="336" font-size="11" fill="#3F3F46">minio-local / blog</text>
+  <text x="690" y="336" font-size="11" fill="#3F3F46">image/png</text>
+  <text x="770" y="336" font-size="11" fill="#3F3F46">256 KB</text>
+  <text x="840" y="336" font-size="11" fill="#71717A">2026-10-19 10:21</text>
   <text x="960" y="336" font-size="11" fill="#0284C7">预览</text>
   <text x="1000" y="336" font-size="11" fill="#0284C7">下载</text>
   <text x="1038" y="336" font-size="11" fill="#E11D48">删除</text>
   <line x1="280" y1="360" x2="1060" y2="360" stroke="#E4E4E7"/>
 
-  <text x="292" y="384" font-size="12" fill="#18181B">manual.pdf</text>
-  <text x="292" y="402" font-size="10" fill="#A1A1AA">9b21…0aa4.pdf</text>
-  <text x="520" y="392" font-size="11" fill="#3F3F46">minio-local / blog</text>
-  <text x="680" y="392" font-size="11" fill="#3F3F46">application/pdf</text>
-  <text x="760" y="392" font-size="11" fill="#3F3F46">1.8 MB</text>
-  <text x="830" y="392" font-size="11" fill="#71717A">2026-10-18 16:02</text>
+  <!-- Row 2: non-image placeholder -->
+  <rect x="288" y="368" width="40" height="40" rx="6" fill="#FAFAFA" stroke="#E4E4E7"/>
+  <text x="298" y="392" font-size="10" fill="#71717A">PDF</text>
+  <text x="344" y="384" font-size="12" fill="#18181B">manual.pdf</text>
+  <text x="344" y="402" font-size="10" fill="#A1A1AA">9b21…0aa4.pdf</text>
+  <text x="530" y="392" font-size="11" fill="#3F3F46">minio-local / blog</text>
+  <text x="690" y="392" font-size="11" fill="#3F3F46">application/pdf</text>
+  <text x="770" y="392" font-size="11" fill="#3F3F46">1.8 MB</text>
+  <text x="840" y="392" font-size="11" fill="#71717A">2026-10-18 16:02</text>
   <text x="960" y="392" font-size="11" fill="#0284C7">预览</text>
   <text x="1000" y="392" font-size="11" fill="#0284C7">下载</text>
   <text x="1038" y="392" font-size="11" fill="#E11D48">删除</text>
   <line x1="280" y1="416" x2="1060" y2="416" stroke="#E4E4E7"/>
 
-  <text x="292" y="440" font-size="12" fill="#18181B">draft.md</text>
-  <text x="292" y="458" font-size="10" fill="#A1A1AA">c7e0…12fd.md</text>
-  <text x="520" y="448" font-size="11" fill="#3F3F46">aws-sg / assets</text>
-  <text x="680" y="448" font-size="11" fill="#3F3F46">text/markdown</text>
-  <text x="760" y="448" font-size="11" fill="#3F3F46">12 KB</text>
-  <text x="830" y="448" font-size="11" fill="#71717A">2026-10-17 09:40</text>
+  <!-- Row 3: non-image placeholder -->
+  <rect x="288" y="424" width="40" height="40" rx="6" fill="#FAFAFA" stroke="#E4E4E7"/>
+  <text x="300" y="448" font-size="10" fill="#71717A">MD</text>
+  <text x="344" y="440" font-size="12" fill="#18181B">draft.md</text>
+  <text x="344" y="458" font-size="10" fill="#A1A1AA">c7e0…12fd.md</text>
+  <text x="530" y="448" font-size="11" fill="#3F3F46">aws-sg / assets</text>
+  <text x="690" y="448" font-size="11" fill="#3F3F46">text/markdown</text>
+  <text x="770" y="448" font-size="11" fill="#3F3F46">12 KB</text>
+  <text x="840" y="448" font-size="11" fill="#71717A">2026-10-17 09:40</text>
   <text x="960" y="448" font-size="11" fill="#0284C7">预览</text>
   <text x="1000" y="448" font-size="11" fill="#0284C7">下载</text>
   <text x="1038" y="448" font-size="11" fill="#E11D48">删除</text>
@@ -110,10 +122,12 @@
   <text x="500" y="514" font-size="11" fill="#3F3F46">3</text>
 
   <!-- Upload dialog hint -->
-  <rect x="700" y="520" width="340" height="150" rx="8" fill="#FFFFFF" stroke="#E4E4E7" stroke-dasharray="4 3"/>
+  <rect x="700" y="520" width="340" height="164" rx="8" fill="#FFFFFF" stroke="#E4E4E7" stroke-dasharray="4 3"/>
   <text x="716" y="548" font-size="12" font-weight="600" fill="#18181B">上传对话框（示意）</text>
   <text x="716" y="572" font-size="11" fill="#71717A">· 单文件 · 前端即时校验大小/MIME</text>
   <text x="716" y="592" font-size="11" fill="#71717A">· 目标服务商下拉（默认系统默认项）</text>
   <text x="716" y="612" font-size="11" fill="#71717A">· POST /api/v1/files · 可带 Idempotent-Key</text>
-  <text x="716" y="640" font-size="11" fill="#0C4A6E">权限：file:upload / list / read / delete</text>
+  <text x="716" y="632" font-size="11" fill="#71717A">· 公共读稳定 url · 上传写 Content-Disposition</text>
+  <text x="716" y="650" font-size="11" fill="#71717A">· 删除前引用检查（被正文占用则拒绝）</text>
+  <text x="716" y="668" font-size="11" fill="#0C4A6E">权限：file:upload / list / read / delete</text>
 </svg>

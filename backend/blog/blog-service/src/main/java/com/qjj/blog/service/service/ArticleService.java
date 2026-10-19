@@ -362,9 +362,8 @@ public class ArticleService {
         if (detail == null || detail.getContentFileId() == null || detail.getContentFileId() <= 0) {
             throw new BizException(BlogErrorCodeEnum.ARTICLE_NOT_FOUND);
         }
-        String url = contentStorage.presignGet(detail.getContentFileId());
-        return Map.of("url", url,
-                "expiresAt", LocalDateTime.now().plusMinutes(10).format(TIME));
+        String url = contentStorage.publicUrl(detail.getContentFileId());
+        return Map.of("url", url);
     }
 
     private BlogArticle findPublished(String idOrSlug) {

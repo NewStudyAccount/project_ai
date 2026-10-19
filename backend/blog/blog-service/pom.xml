@@ -24,6 +24,10 @@
         </dependency>
         <dependency>
             <groupId>com.qjj</groupId>
+            <artifactId>blog-object-storage</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.qjj</groupId>
             <artifactId>blog-api</artifactId>
         </dependency>
         <dependency>

@@ -15,6 +15,8 @@ export interface FileMeta {
   id: string
   bucket: string
   objectKey: string
+  /** 稳定公开 URL */
+  url?: string
   originalName: string
   contentType: string
   sizeBytes: number
@@ -23,9 +25,8 @@ export interface FileMeta {
   createTime?: string
 }
 
-export interface PresignResult {
+export interface FileUrlResult {
   url: string
-  expireAt: string
 }
 
 export interface MenuVO {
