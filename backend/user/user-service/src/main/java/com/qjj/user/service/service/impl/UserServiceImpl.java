@@ -1,4 +1,4 @@
-package com.qjj.user.service.service;
+package com.qjj.user.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -21,6 +21,8 @@ import com.qjj.user.service.enums.AuditActionEnum;
 import com.qjj.user.service.enums.UserStatusEnum;
 import com.qjj.user.service.mapper.SysUserMapper;
 import com.qjj.user.service.mapper.SysUserProfileMapper;
+import com.qjj.user.service.service.AuditService;
+import com.qjj.user.service.service.UserService;
 import com.qjj.user.service.vo.UserVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
