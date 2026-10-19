@@ -1,4 +1,4 @@
-package com.qjj.blog.service.service;
+package com.qjj.blog.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -14,6 +14,8 @@ import com.qjj.blog.service.entity.SysFile;
 import com.qjj.blog.service.enums.AuditActionEnum;
 import com.qjj.blog.service.enums.BizFileTypeEnum;
 import com.qjj.blog.service.mapper.SysFileMapper;
+import com.qjj.blog.service.service.AuditService;
+import com.qjj.blog.service.service.FileService;
 import com.qjj.blog.service.vo.FileVO;
 import com.qjj.blog.service.vo.PresignVO;
 import lombok.RequiredArgsConstructor;
