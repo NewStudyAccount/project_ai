@@ -13,9 +13,9 @@
       <el-table-column prop="sort" label="排序" width="80" />
       <el-table-column label="操作" width="180">
         <template #default="{ row }">
-          <el-button v-if="hasPermission('user:menu:create')" link @click="openCreate(row.id)">新增子级</el-button>
-          <el-button v-if="hasPermission('user:menu:update')" link @click="openEdit(row)">编辑</el-button>
-          <el-button v-if="hasPermission('user:menu:delete')" link type="danger" @click="remove(row.id)">删除</el-button>
+          <el-button v-if="hasPermission('blog:menu:create')" link @click="openCreate(row.id)">新增子级</el-button>
+          <el-button v-if="hasPermission('blog:menu:update')" link @click="openEdit(row)">编辑</el-button>
+          <el-button v-if="hasPermission('blog:menu:delete')" link type="danger" @click="remove(row.id)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>

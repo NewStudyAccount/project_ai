@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 720" font-family="-apple-system,'PingFang SC','Microsoft YaHei',sans-serif">
+  <rect width="1100" height="720" fill="#F6F7F9"/>
+  <!-- Sidebar 云白 -->
+  <rect width="240" height="720" fill="#FFFFFF"/>
+  <line x1="240" y1="0" x2="240" y2="720" stroke="#E4E4E7"/>
+  <text x="20" y="36" font-size="15" font-weight="600" fill="#18181B">存储管理端</text>
+  <line x1="0" y1="56" x2="240" y2="56" stroke="#E4E4E7"/>
+  <text x="20" y="92" font-size="12" fill="#71717A">内容</text>
+  <text x="28" y="124" font-size="13" fill="#18181B">文章管理</text>
+  <text x="20" y="164" font-size="12" fill="#71717A">存储</text>
+  <rect x="0" y="180" width="3" height="36" fill="#0284C7"/>
+  <rect x="8" y="180" width="224" height="36" rx="6" fill="#F0F9FF"/>
+  <text x="28" y="203" font-size="13" font-weight="500" fill="#0C4A6E">文件管理</text>
+  <text x="28" y="243" font-size="13" fill="#18181B">存储服务商</text>
+  <text x="20" y="288" font-size="12" fill="#71717A">系统</text>
+  <text x="28" y="320" font-size="13" fill="#18181B">菜单管理</text>
+  <text x="28" y="356" font-size="13" fill="#18181B">角色管理</text>
+  <text x="28" y="392" font-size="13" fill="#18181B">审计日志</text>
+
+  <!-- Topbar -->
+  <rect x="240" y="0" width="860" height="56" fill="#FFFFFF"/>
+  <line x1="240" y1="56" x2="1100" y2="56" stroke="#E4E4E7"/>
+  <text x="264" y="34" font-size="15" font-weight="600" fill="#18181B">对象存储</text>
+  <text x="980" y="34" font-size="12" fill="#71717A">操作员</text>
+  <text x="1048" y="34" font-size="12" fill="#0284C7">退出</text>
+
+  <!-- Page card -->
+  <rect x="256" y="72" width="828" height="628" rx="12" fill="#FFFFFF" stroke="#E4E4E7"/>
+  <text x="280" y="112" font-size="18" font-weight="600" fill="#18181B">文件管理</text>
+  <text x="380" y="112" font-size="12" fill="#71717A">展示页 · 上传 / 预签名预览下载 / 逻辑删除</text>
+
+  <!-- Stats -->
+  <rect x="280" y="132" width="180" height="64" rx="8" fill="#FAFAFA" stroke="#E4E4E7"/>
+  <text x="296" y="156" font-size="11" fill="#71717A">有效文件</text>
+  <text x="296" y="180" font-size="20" font-weight="600" fill="#18181B">128</text>
+  <rect x="472" y="132" width="280" height="64" rx="8" fill="#FAFAFA" stroke="#E4E4E7"/>
+  <text x="488" y="156" font-size="11" fill="#71717A">默认服务商</text>
+  <text x="488" y="180" font-size="13" fill="#0C4A6E">minio-local · 桶 blog</text>
+  <rect x="764" y="132" width="296" height="64" rx="8" fill="#FAFAFA" stroke="#E4E4E7"/>
+  <text x="780" y="156" font-size="11" fill="#71717A">策略</text>
+  <text x="780" y="180" font-size="12" fill="#3F3F46">单文件 ≤10MB · 白名单 · 预签名 10min</text>
+
+  <!-- Toolbar -->
+  <rect x="280" y="216" width="96" height="32" rx="16" fill="#0284C7"/>
+  <text x="304" y="236" font-size="12" fill="#FFFFFF">上传</text>
+  <rect x="388" y="216" width="180" height="32" rx="8" fill="#FFFFFF" stroke="#E4E4E7"/>
+  <text x="400" y="236" font-size="12" fill="#A1A1AA">原始文件名关键字</text>
+  <rect x="580" y="216" width="150" height="32" rx="8" fill="#FFFFFF" stroke="#E4E4E7"/>
+  <text x="592" y="236" font-size="12" fill="#A1A1AA">服务商：全部</text>
+  <rect x="742" y="216" width="130" height="32" rx="8" fill="#FFFFFF" stroke="#E4E4E7"/>
+  <text x="754" y="236" font-size="12" fill="#A1A1AA">类型：全部</text>
+  <rect x="884" y="216" width="64" height="32" rx="8" fill="#FFFFFF" stroke="#0284C7"/>
+  <text x="900" y="236" font-size="12" fill="#0284C7">查询</text>
+  <rect x="956" y="216" width="64" height="32" rx="8" fill="#FFFFFF" stroke="#E4E4E7"/>
+  <text x="972" y="236" font-size="12" fill="#3F3F46">重置</text>
+
+  <!-- Table header -->
+  <rect x="280" y="268" width="780" height="36" fill="#FAFAFA"/>
+  <text x="292" y="290" font-size="11" fill="#71717A">文件名</text>
+  <text x="520" y="290" font-size="11" fill="#71717A">服务商 / 桶</text>
+  <text x="680" y="290" font-size="11" fill="#71717A">类型</text>
+  <text x="760" y="290" font-size="11" fill="#71717A">大小</text>
+  <text x="830" y="290" font-size="11" fill="#71717A">上传时间</text>
+  <text x="960" y="290" font-size="11" fill="#71717A">操作</text>
+
+  <!-- Rows -->
+  <line x1="280" y1="304" x2="1060" y2="304" stroke="#E4E4E7"/>
+  <text x="292" y="328" font-size="12" fill="#18181B">cover.png</text>
+  <text x="292" y="346" font-size="10" fill="#A1A1AA">a3f8…c21e.jpg</text>
+  <text x="520" y="336" font-size="11" fill="#3F3F46">minio-local / blog</text>
+  <text x="680" y="336" font-size="11" fill="#3F3F46">image/png</text>
+  <text x="760" y="336" font-size="11" fill="#3F3F46">256 KB</text>
+  <text x="830" y="336" font-size="11" fill="#71717A">2026-10-19 10:21</text>
+  <text x="960" y="336" font-size="11" fill="#0284C7">预览</text>
+  <text x="1000" y="336" font-size="11" fill="#0284C7">下载</text>
+  <text x="1038" y="336" font-size="11" fill="#E11D48">删除</text>
+  <line x1="280" y1="360" x2="1060" y2="360" stroke="#E4E4E7"/>
+
+  <text x="292" y="384" font-size="12" fill="#18181B">manual.pdf</text>
+  <text x="292" y="402" font-size="10" fill="#A1A1AA">9b21…0aa4.pdf</text>
+  <text x="520" y="392" font-size="11" fill="#3F3F46">minio-local / blog</text>
+  <text x="680" y="392" font-size="11" fill="#3F3F46">application/pdf</text>
+  <text x="760" y="392" font-size="11" fill="#3F3F46">1.8 MB</text>
+  <text x="830" y="392" font-size="11" fill="#71717A">2026-10-18 16:02</text>
+  <text x="960" y="392" font-size="11" fill="#0284C7">预览</text>
+  <text x="1000" y="392" font-size="11" fill="#0284C7">下载</text>
+  <text x="1038" y="392" font-size="11" fill="#E11D48">删除</text>
+  <line x1="280" y1="416" x2="1060" y2="416" stroke="#E4E4E7"/>
+
+  <text x="292" y="440" font-size="12" fill="#18181B">draft.md</text>
+  <text x="292" y="458" font-size="10" fill="#A1A1AA">c7e0…12fd.md</text>
+  <text x="520" y="448" font-size="11" fill="#3F3F46">aws-sg / assets</text>
+  <text x="680" y="448" font-size="11" fill="#3F3F46">text/markdown</text>
+  <text x="760" y="448" font-size="11" fill="#3F3F46">12 KB</text>
+  <text x="830" y="448" font-size="11" fill="#71717A">2026-10-17 09:40</text>
+  <text x="960" y="448" font-size="11" fill="#0284C7">预览</text>
+  <text x="1000" y="448" font-size="11" fill="#0284C7">下载</text>
+  <text x="1038" y="448" font-size="11" fill="#E11D48">删除</text>
+  <line x1="280" y1="472" x2="1060" y2="472" stroke="#E4E4E7"/>
+
+  <!-- Pagination -->
+  <text x="280" y="512" font-size="11" fill="#71717A">共 128 条</text>
+  <rect x="360" y="496" width="32" height="28" rx="4" fill="#FFFFFF" stroke="#E4E4E7"/>
+  <text x="368" y="514" font-size="11" fill="#71717A">10</text>
+  <rect x="420" y="496" width="28" height="28" rx="4" fill="#0284C7"/>
+  <text x="428" y="514" font-size="11" fill="#FFFFFF">1</text>
+  <rect x="456" y="496" width="28" height="28" rx="4" fill="#FFFFFF" stroke="#E4E4E7"/>
+  <text x="464" y="514" font-size="11" fill="#3F3F46">2</text>
+  <rect x="492" y="496" width="28" height="28" rx="4" fill="#FFFFFF" stroke="#E4E4E7"/>
+  <text x="500" y="514" font-size="11" fill="#3F3F46">3</text>
+
+  <!-- Upload dialog hint -->
+  <rect x="700" y="520" width="340" height="150" rx="8" fill="#FFFFFF" stroke="#E4E4E7" stroke-dasharray="4 3"/>
+  <text x="716" y="548" font-size="12" font-weight="600" fill="#18181B">上传对话框（示意）</text>
+  <text x="716" y="572" font-size="11" fill="#71717A">· 单文件 · 前端即时校验大小/MIME</text>
+  <text x="716" y="592" font-size="11" fill="#71717A">· 目标服务商下拉（默认系统默认项）</text>
+  <text x="716" y="612" font-size="11" fill="#71717A">· POST /api/v1/files · 可带 Idempotent-Key</text>
+  <text x="716" y="640" font-size="11" fill="#0C4A6E">权限：file:upload / list / read / delete</text>
+</svg>

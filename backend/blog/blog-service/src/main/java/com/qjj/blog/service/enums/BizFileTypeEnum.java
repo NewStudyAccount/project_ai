@@ -11,6 +11,7 @@ public enum BizFileTypeEnum implements BaseEnum<String> {
 
     FILE("FILE", "通用附件"),
     ARTICLE_COVER("ARTICLE_COVER", "文章封面"),
+    ARTICLE_IMAGE("ARTICLE_IMAGE", "正文插图"),
     ARTICLE_LIVE("ARTICLE_LIVE", "线上正文"),
     ARTICLE_DRAFT("ARTICLE_DRAFT", "草稿正文");
 

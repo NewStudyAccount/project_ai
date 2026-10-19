@@ -10,6 +10,8 @@
 |------|------|
 | [2026-09-24-startup-auth-oidc.md](2026-09-24-startup-auth-oidc.md) | 启动配置、鉴权模型、MapperScan、OIDC/Token、权限装载 |
 | [2026-09-25-unify-login-sso-gateway.md](2026-09-25-unify-login-sso-gateway.md) | 唯一登录门面、SSO Cookie/过滤器顺序、token CORS、统一登出/RT、网关 lb 503、RBAC `/me/*` 空与 menu component |
+| [2026-10-19-minio-signature-object-storage.md](2026-10-19-minio-signature-object-storage.md) | MinIO `SignatureDoesNotMatch`、账密/桶文档对齐、对象存储上传排查顺序 |
+| [2026-10-19-idgen-segment-tx-sys-file.md](2026-10-19-idgen-segment-tx-sys-file.md) | 发号段与业务事务同回滚导致 `sys_file` 主键冲突；REQUIRES_NEW 取段 |
 
 **关联种子 SQL（冒烟）：**
 

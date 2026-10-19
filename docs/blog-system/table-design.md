@@ -188,9 +188,7 @@
 | article_id | BIGINT | N | | 1:1 主表 |
 | content_file_id | BIGINT | N | 0 | **线上正文** → `sys_file.id`（biz_type=ARTICLE_LIVE） |
 | draft_file_id | BIGINT | N | 0 | **草稿正文** → `sys_file.id`（biz_type=ARTICLE_DRAFT）；0=无草稿 |
-| content_format | VARCHAR(16) | N | 'markdown' | 线上正文格式 |
 | word_count | INT | N | 0 | 线上正文字数 |
-| draft_content_format | VARCHAR(16) | N | 'markdown' | 草稿格式 |
 | draft_word_count | INT | N | 0 | 草稿字数 |
 | seo_title | VARCHAR(200) | N | '' | 线上 SEO（发布时生效） |
 | seo_description | VARCHAR(300) | N | '' | 线上 SEO |
@@ -199,6 +197,8 @@
 | create_time / update_time / create_by / update_by / deleted | | | | 审计 |
 
 **索引：** `uk_blog_article_detail_article_id (article_id)`
+
+**正文格式（已锁定）：** 一律 **Markdown**；**不设** `content_format` / `draft_content_format`（保证唯一格式）。对象 MIME `text/markdown`，对象键后缀 `.md`。
 
 **与 `sys_file` 的关系（正文双轨）：**
 

@@ -19,7 +19,6 @@ import com.qjj.blog.service.entity.BlogTag;
 import com.qjj.blog.service.enums.ArticleStatusEnum;
 import com.qjj.blog.service.enums.AuditActionEnum;
 import com.qjj.blog.service.enums.BizFileTypeEnum;
-import com.qjj.blog.service.enums.ContentFormatEnum;
 import com.qjj.blog.service.mapper.BlogArticleDetailMapper;
 import com.qjj.blog.service.mapper.BlogArticleMapper;
 import com.qjj.blog.service.mapper.BlogArticleTagMapper;
@@ -93,21 +92,18 @@ public class ArticleService {
         BlogArticleDetail detail = loadDetail(article.getId());
         String content = "";
         String contentFrom = "none";
-        String format = ContentFormatEnum.MARKDOWN.getCode();
         Integer wordCount = 0;
         String seoTitle = "";
         String seoDescription = "";
         if (detail != null && detail.getDraftFileId() != null && detail.getDraftFileId() > 0) {
             content = nullToEmpty(contentStorage.readContent(detail.getDraftFileId()));
             contentFrom = "draft";
-            format = detail.getDraftContentFormat();
             wordCount = detail.getDraftWordCount();
             seoTitle = detail.getDraftSeoTitle();
             seoDescription = detail.getDraftSeoDescription();
         } else if (detail != null && detail.getContentFileId() != null && detail.getContentFileId() > 0) {
             content = nullToEmpty(contentStorage.readContent(detail.getContentFileId()));
             contentFrom = "live";
-            format = detail.getContentFormat();
             wordCount = detail.getWordCount();
             seoTitle = detail.getSeoTitle();
             seoDescription = detail.getSeoDescription();
@@ -116,7 +112,6 @@ public class ArticleService {
         copyArticle(article, vo, detail, loadTags(article.getId()), loadCategoryName(article.getCategoryId()));
         vo.setContent(content);
         vo.setContentFrom(contentFrom);
-        vo.setContentFormat(format);
         vo.setWordCount(wordCount == null ? 0 : wordCount);
         vo.setSeoTitle(seoTitle == null ? "" : seoTitle);
         vo.setSeoDescription(seoDescription == null ? "" : seoDescription);
@@ -154,9 +149,7 @@ public class ArticleService {
         detail.setArticleId(article.getId());
         detail.setContentFileId(0L);
         detail.setDraftFileId(0L);
-        detail.setContentFormat(ContentFormatEnum.MARKDOWN.getCode());
         detail.setWordCount(0);
-        detail.setDraftContentFormat(ContentFormatEnum.MARKDOWN.getCode());
         detail.setDraftWordCount(0);
         detail.setSeoTitle("");
         detail.setSeoDescription("");
@@ -195,12 +188,9 @@ public class ArticleService {
         if (!"draft".equals(mode) && !"publish".equals(mode)) {
             throw new BizException(BlogErrorCodeEnum.CONTENT_FORMAT_INVALID);
         }
-        String format = request.getContentFormat() == null || request.getContentFormat().isBlank()
-                ? ContentFormatEnum.MARKDOWN.getCode() : request.getContentFormat().trim();
-        Long newDraftFileId = contentStorage.putContent(article.getId(), true, request.getContent(), format);
+        Long newDraftFileId = contentStorage.putContent(article.getId(), true, request.getContent());
         Long oldDraft = detail.getDraftFileId();
         detail.setDraftFileId(newDraftFileId);
-        detail.setDraftContentFormat(format);
         detail.setDraftWordCount(countWords(request.getContent()));
         detail.setDraftSeoTitle(request.getSeoTitle() == null ? "" : request.getSeoTitle());
         detail.setDraftSeoDescription(request.getSeoDescription() == null ? "" : request.getSeoDescription());
@@ -224,7 +214,6 @@ public class ArticleService {
         }
         contentStorage.logicalDeleteFile(detail.getDraftFileId());
         detail.setDraftFileId(0L);
-        detail.setDraftContentFormat(ContentFormatEnum.MARKDOWN.getCode());
         detail.setDraftWordCount(0);
         detail.setDraftSeoTitle("");
         detail.setDraftSeoDescription("");
@@ -248,17 +237,15 @@ public class ArticleService {
             if (draftContent == null) {
                 throw new BizException(BlogErrorCodeEnum.CONTENT_REQUIRED);
             }
-            Long newLive = contentStorage.putContent(article.getId(), false, draftContent, detail.getDraftContentFormat());
+            Long newLive = contentStorage.putContent(article.getId(), false, draftContent);
             Long oldLive = detail.getContentFileId();
             detail.setContentFileId(newLive);
-            detail.setContentFormat(detail.getDraftContentFormat());
             detail.setWordCount(detail.getDraftWordCount());
             detail.setSeoTitle(detail.getDraftSeoTitle());
             detail.setSeoDescription(detail.getDraftSeoDescription());
             contentStorage.logicalDeleteFile(detail.getDraftFileId());
             contentStorage.logicalDeleteFile(oldLive);
             detail.setDraftFileId(0L);
-            detail.setDraftContentFormat(ContentFormatEnum.MARKDOWN.getCode());
             detail.setDraftWordCount(0);
             detail.setDraftSeoTitle("");
             detail.setDraftSeoDescription("");
@@ -361,7 +348,6 @@ public class ArticleService {
         copyArticle(article, vo, detail, loadTags(article.getId()), loadCategoryName(article.getCategoryId()));
         vo.setContent(content);
         vo.setContentFrom(detail != null && detail.getContentFileId() != null && detail.getContentFileId() > 0 ? "live" : "none");
-        vo.setContentFormat(detail == null ? ContentFormatEnum.MARKDOWN.getCode() : detail.getContentFormat());
         vo.setWordCount(detail == null || detail.getWordCount() == null ? 0 : detail.getWordCount());
         vo.setSeoTitle(detail == null || detail.getSeoTitle() == null || detail.getSeoTitle().isBlank()
                 ? article.getTitle() : detail.getSeoTitle());
@@ -481,9 +467,7 @@ public class ArticleService {
             detail.setArticleId(articleId);
             detail.setContentFileId(0L);
             detail.setDraftFileId(0L);
-            detail.setContentFormat(ContentFormatEnum.MARKDOWN.getCode());
             detail.setWordCount(0);
-            detail.setDraftContentFormat(ContentFormatEnum.MARKDOWN.getCode());
             detail.setDraftWordCount(0);
             detail.setSeoTitle("");
             detail.setSeoDescription("");

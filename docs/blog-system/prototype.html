@@ -709,10 +709,7 @@
         </div>
         <div class="form-grid" style="max-width:860px">
           <label>正文格式</label>
-          <select class="select">
-            <option>markdown</option>
-            <option>html</option>
-          </select>
+          <div class="input" style="opacity:.7">Markdown（固定，不可切换）</div>
           <label>正文 *</label>
           <div>
             <div class="editor-toolbar">
@@ -723,13 +720,27 @@
               <button class="btn sm">链接</button>
               <button class="btn sm">代码</button>
               <button class="btn sm">图片</button>
-              <span class="muted" style="font-size:11px;margin-left:8px">≤500KB · 保存草稿只写 draft 轨</span>
+              <span class="muted" style="font-size:11px;margin-left:8px">≤500KB · 保存草稿只写 draft 轨 · 仅 Markdown 源码</span>
             </div>
-            <div class="editor-box"># 这是未发布的修改稿
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+              <div>
+                <div class="muted" style="font-size:11px;margin-bottom:4px">源码（左）</div>
+                <div class="editor-box"># 这是未发布的修改稿
 
 已发布文章改这里，点「保存草稿」不会下线线上旧文；
 点「发布 / 更新发布」才把本稿提升为线上版。</div>
+              </div>
+              <div>
+                <div class="muted" style="font-size:11px;margin-bottom:4px">预览（右，与用户端同渲染）</div>
+                <div class="editor-box" style="opacity:.85">
+                  <h3 style="margin:0 0 8px">这是未发布的修改稿</h3>
+                  <p style="margin:0">已发布文章改这里…</p>
+                </div>
+              </div>
+            </div>
             <div class="hint" style="margin-top:8px">
+              <strong>编写约定</strong>（详见 business-design §E）：左源码 / 右预览；工具栏只插 Markdown 语法；
+              禁止 HTML 结构/内联样式；图片走外链或文件上传 URL，禁止 base64；保存的是 Markdown 源文不是预览 HTML<br/>
               保存草稿：put draft 对象 + <strong>登记 sys_file(ARTICLE_DRAFT)</strong> + detail.draft_file_id<br/>
               发布：登记 sys_file(ARTICLE_LIVE) + detail.content_file_id ← 线上；用户端才切换
             </div>

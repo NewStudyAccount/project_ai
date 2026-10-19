@@ -6,6 +6,7 @@ import lombok.Setter;
 
 /**
  * 文章详细表：正文双轨文件引用（content_file_id / draft_file_id），不存正文。
+ * 正文唯一 Markdown，无格式列（article-content-markdown-only）。
  */
 @Getter
 @Setter
@@ -18,11 +19,7 @@ public class BlogArticleDetail extends BaseEntity {
 
     private Long draftFileId;
 
-    private String contentFormat;
-
     private Integer wordCount;
-
-    private String draftContentFormat;
 
     private Integer draftWordCount;
 

@@ -25,7 +25,7 @@ blog 系统骨架已落地（`backend/blog/*`、`frontend/blog-admin`、`blog_db
 | 文章标签 | `blog_tag` + `blog_article_tag` 多对多 |
 | 文章主表 | `blog_article`（列表/摘要/状态/归属） |
 | 文章详细表 | `blog_article_detail`（正文元数据与可检索摘要字段） |
-| 具体信息存 OSS | 正文 Markdown/HTML 对象写 MinIO；业务只持 `content_file_id` / `draft_file_id`，定位经 `sys_file.object_key` |
+| 具体信息存 OSS | 正文 **Markdown** 对象写 MinIO；业务只持 `content_file_id` / `draft_file_id`，定位经 `sys_file.object_key` |
 | 已有管理前端、需建用户前端 | `blog-admin` 扩内容管理页；**新建** `blog-portal` |
 
 ### 1.2 项目边界（Non-goals）
@@ -74,8 +74,8 @@ flowchart TB
 | 表 | 职责 | 读多写少 |
 |----|------|----------|
 | `blog_article` | 列表、筛选、排序、状态、分类、摘要、封面 | 高频读（列表/首页） |
-| `blog_article_detail` | 正文元数据、字数、格式、目录/SEO 等 | 低频读（仅详情页） |
-| OSS 对象 | Markdown/HTML **正文全文**（经 `sys_file` 登记） | 详情读；列表**不**加载 |
+| `blog_article_detail` | 正文元数据、字数、目录/SEO 等 | 低频读（仅详情页） |
+| OSS 对象 | Markdown **正文全文**（经 `sys_file` 登记） | 详情读；列表**不**加载 |
 
 ---
 
@@ -124,17 +124,17 @@ stateDiagram-v2
 
 | 项 | 约定 |
 |----|------|
-| 正文格式 | `content_format`：`markdown`（默认）/ `html` |
+| 正文格式 | **Markdown**（唯一，不设 `content_format`） |
 | 存储 | MinIO 对象，**不进** MySQL 大字段 |
 | **上传登记** | **每个 OSS 对象必须先写 `sys_file`**（bucket/object_key/原始名/MIME/大小/biz_type/biz_id/操作人），业务只持 `file_id` |
 | biz_type | `ARTICLE_LIVE` 线上正文 / `ARTICLE_DRAFT` 草稿 / `ARTICLE_COVER` 封面 / `FILE` 通用 |
 | detail 引用 | `content_file_id` / `draft_file_id` → `sys_file.id` |
 | objectKey | `blog-content/{articleId}/live/{uuid}.md` 或 `.../draft/{uuid}.md` |
-| 详细表 | 只存 file_id 与格式/字数/SEO，**不存正文** |
+| 详细表 | 只存 file_id 与字数/SEO，**不存正文**；正文固定 Markdown |
 | 覆盖更新 | put 新对象 → **INSERT sys_file** → 更新 detail.file_id → 旧 sys_file 行逻辑删 |
 | 列表 | **禁止**拉正文对象 |
 | 详情 | `content_file_id → sys_file → object_key → MinIO` |
-| 大小 | 单篇正文 ≤ **500KB**（`text/markdown` / `text/html`，应用层校验）；封面走 `ARTICLE_COVER` / 通用 `FILE`（既有 MIME 白名单） |
+| 大小 | 单篇正文 ≤ **500KB**（`text/markdown`，应用层校验）；封面走 `ARTICLE_COVER` / 通用 `FILE`（既有 MIME 白名单） |
 
 **写入铁律：** 禁止「只 put MinIO、不登记 `sys_file`」；禁止业务表裸存 object_key 而无 file_id 对应行。
 
@@ -158,7 +158,7 @@ GET /api/v1/public/articles/{idOrSlug}
 | 页 | 内容 | 保存 |
 |----|------|------|
 | **新建主表页** | 标题/slug/分类/标签/摘要/封面/置顶；**无正文框** | `POST /admin/articles` 成功 → **直接跳转写正文页** |
-| **写正文页（详细表）** | Markdown 编辑器 + 格式 + SEO；不改主表字段 | `PUT /admin/articles/{id}/content`（可再发布） |
+| **写正文页（详细表）** | Markdown 编辑器 + SEO；不改主表字段 | `PUT /admin/articles/{id}/content`（可再发布） |
 
 ```
 1) 打开「新建主表页」
@@ -167,7 +167,7 @@ GET /api/v1/public/articles/{idOrSlug}
 
 2) （自动跳转）「写正文页」
    → put 正文到 MinIO + 登记 sys_file
-   → 写/更新 blog_article_detail（content_file_id 或 draft_file_id、format、word_count、seo_*）
+   → 写/更新 blog_article_detail（content_file_id 或 draft_file_id、word_count、seo_*）
    → 主表不在此步更新
 
 3) 「保存正文」或「保存正文并发布」
@@ -209,7 +209,7 @@ GET /api/v1/public/articles/{idOrSlug}
 
 ```
 保存草稿 PUT /admin/articles/{id}/content
-  body: { mode: "draft", content, contentFormat, seo* }
+  body: { mode: "draft", content, seo* }
   → put 草稿对象
   → INSERT sys_file（biz_type=ARTICLE_DRAFT, biz_id=article_id, …）
   → 只更新 detail.draft_file_id / draft_* 
@@ -244,7 +244,7 @@ GET /api/v1/public/articles/{idOrSlug}
 
 ```
 写正文（无论草稿/线上）
-  → 校验大小/格式（≤500KB，markdown|html）
+  → 校验大小（≤500KB，Markdown 正文）
   → put 新对象（draft/ 或 live/ 前缀）
   → UPDATE detail 对应轨指针
   → 旧对象记审计，留给运维清理（不建定时）
@@ -252,6 +252,54 @@ GET /api/v1/public/articles/{idOrSlug}
 
 策略与红线裁剪源 = `object-storage-design.md`（MIME/预签名 TTL/禁止业务直绑 SDK/禁止网关中转大包 body）。
 正文 ≤500KB 经业务 JSON 接口写入后由服务端 put，属「小文件经业务接口」；封面等附件走既有 `/api/v1/files` multipart。
+
+#### E. Markdown 编写约定（写正文页）
+
+> 正文格式**唯一 = Markdown**（不设 `contentFormat`，见 §3.3 / table-design）。本节约定管理端「写正文」如何编写，服务端只收 Markdown 源文。
+
+**1. 编辑器形态**
+
+| 项 | 约定 |
+|----|------|
+| 组件 | **md-editor-v3**（版本见 `docs/version-baseline.md`），经项目薄封装 `MdEditor.vue` |
+| 布局 | **左源码 / 右预览** 分栏（编辑器分屏/编辑+预览；窄屏可切换） |
+| 输入 | Markdown **源码**编辑；**不做**产品级所见即所得（WYSIWYG）提交 |
+| 工具栏 | 加粗、斜体、标题、链接、行内代码、代码块、图片引用、列表等；**只插入 Markdown 语法**，不写 HTML 标签 |
+| 预览 | 编辑器预览仅辅助；对外保存仍是源文。用户端渲染见 §6 portal |
+| 禁止 | 粘贴/输入 **HTML 标签作为正文结构**（`<div>`、`<script>`、内联样式等）；粘贴富文本时**降为纯文本 + Markdown**；关闭直传存储 |
+
+**2. 正文内容与语法范围**
+
+| 项 | 约定 |
+|----|------|
+| 编码 | UTF-8；换行 `\n` |
+| 允许语法 | 标题 `#`–`######`、段落、有序/无序列表、引用、围栏代码块、行内代码、链接、图片、粗体/斜体、分隔线、表格（可选） |
+| 图片 | 仅允许 **http(s) 相对站内/白名单外链**；**推荐**编辑器「上传」→ `POST /api/v1/files`（`bizType=ARTICLE_IMAGE`）后插入稳定地址 `/api/v1/public/files/{id}`；禁止 base64 内嵌大图（防超 500KB） |
+| 链接 | 默认 `http/https`；禁止 `javascript:` 等可执行协议 |
+| HTML | **一律视为文本**（源文可含转义，渲染时不得当 HTML 执行）；用户端渲染必须转义后再生成（与 portal `renderMarkdown` 一致） |
+| 长度 | 单篇源文 **≤500KB**（UTF-8 字节数）；超限拒绝（`CONTENT_TOO_LARGE`），不截断 |
+
+**3. 字数与元信息**
+
+| 项 | 约定 |
+|----|------|
+| `word_count` | **展示用**字数：去 Markdown 标记后的可见字符/词估算（实现可简单按去语法后长度）；**仅**用于管理端展示与 SEO 参考，不参与发布门禁 |
+| 计算时机 | 保存草稿/发布时后端计算并落 `word_count` / `draft_word_count` |
+| 与 SEO | 正文写入不影响 `seo_*`；SEO 仍走 `draft_seo_*` → 发布覆盖（§C） |
+
+**4. 保存与失败**
+
+| 项 | 约定 |
+|----|------|
+| 入参 | `content` = **Markdown 源文**（JSON 字符串）；无格式字段 |
+| 服务端 | 校验非空 + ≤500KB → put `…/{uuid}.md`（MIME `text/markdown`）→ `INSERT sys_file` → 回填轨 |
+| 前端 | 保存前可提示字数/大小；**禁止**把 HTML 渲染结果当 content 提交 |
+| 失败 | 超限/空内容返回业务/校验码；MinIO 失败记 error 含 objectKey（对象存储补偿见 `object-storage-design.md`） |
+
+**5. 与用户端渲染边界**
+
+- 管理端预览、用户端详情共用「Markdown → HTML」策略：**先转义再渲染**，不执行原生 HTML。
+- 用户端不提供「按 HTML 原文展示」；`content` 字段始终是 Markdown 源文。
 
 ---
 
@@ -321,9 +369,7 @@ GET /api/v1/public/articles/{idOrSlug}
 | article_id | BIGINT | N | | 与主表 1:1，`uk` |
 | content_file_id | BIGINT | N | 0 | **线上正文** → `sys_file.id`（biz_type=ARTICLE_LIVE）；0=未发布过 |
 | draft_file_id | BIGINT | N | 0 | **草稿正文** → `sys_file.id`（biz_type=ARTICLE_DRAFT）；0=无草稿 |
-| content_format | VARCHAR(16) | N | 'markdown' | 线上正文格式 `markdown` / `html` |
 | word_count | INT | N | 0 | 线上正文字数 |
-| draft_content_format | VARCHAR(16) | N | 'markdown' | 草稿格式 |
 | draft_word_count | INT | N | 0 | 草稿字数 |
 | seo_title | VARCHAR(200) | N | '' | 线上 SEO（发布时生效） |
 | seo_description | VARCHAR(300) | N | '' | 线上 SEO |
@@ -408,11 +454,11 @@ GET /api/v1/public/articles/{idOrSlug}
 
 **ArticleVO（列表）**：`id, title, slug, summary, coverFileId, categoryId, categoryName, tags[]{id,name}, authorName, status, publishTime, isTop, hasDraft`
 
-**ArticleDetailVO**：`ArticleVO + content, contentFormat, wordCount, seoTitle, seoDescription`（用户端 `content` 只来自 `content_file_id`）
+**ArticleDetailVO**：`ArticleVO + content, wordCount, seoTitle, seoDescription`（用户端 `content` 只来自 `content_file_id`；正文为 Markdown）
 
 **新建主表入参（POST /admin/articles）**：`title, slug?, categoryId?, summary?, coverFileId?, tagIds?, isTop?` → 仅主表；**不含**正文
 
-**保存正文入参（PUT /admin/articles/{id}/content）**：`mode: draft|publish`、`content`（≤500KB）、`contentFormat?`、`seoTitle?`、`seoDescription?`  
+**保存正文入参（PUT /admin/articles/{id}/content）**：`mode: draft|publish`、`content`（Markdown，≤500KB）、`seoTitle?`、`seoDescription?`  
 - `mode=draft` → 只写 draft 轨（已发布不掉线）  
 - `mode=publish` → 写 draft 并立即 `publish`（等价存稿+发布）
 
@@ -455,7 +501,7 @@ GET /api/v1/public/articles/{idOrSlug}
 | 限流 | 用户端列表/详情 `@RateLimit`（维度：IP 或接口）；管理端写接口按需 |
 | 审计日志 | 分类/标签/文章/站点配置关键写记 `blog_audit_log`（`target_type`：CATEGORY/TAG/ARTICLE/SITE_CONFIG） |
 | 身份 | 管理端写用 `UserContext`（网关 `X-User-*`）；用户端匿名 |
-| 校验 | DTO Bean Validation（标题非空、slug 格式、正文大小/格式、status 枚举） |
+| 校验 | DTO Bean Validation（标题非空、slug 格式、正文大小、status 枚举） |
 | 错误码 | 业务 `2xxxxx` = **`203xxx`**（系统号 03，见 `docs/error-code-ranges.md`）；示例语义：分类下存在文章/子分类、标签被引用、非草稿不可删、未写正文不可发布、正文过大、文章不存在或未发布 |
 
 ---

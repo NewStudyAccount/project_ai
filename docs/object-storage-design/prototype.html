@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>对象存储 · 设计原型（文件管理 / 服务商配置）</title>
+<style>
+  /* 云白 Design Tokens · 对齐 docs/template/admin-ui-design.md §1 / tokens-cloud-paper.css */
+  :root{
+    --bg-page:#f6f7f9; --bg-surface:#ffffff; --bg-sidebar:#ffffff;
+    --bg-sidebar-active:#f0f9ff;
+    --text-primary:#18181b; --text-regular:#3f3f46; --text-secondary:#71717a;
+    --text-sidebar-active:#0c4a6e;
+    --border:#e4e4e7;
+    --primary:#0284c7; --primary-hover:#0369a1; --primary-light:#f0f9ff;
+    --accent-bar:#0284c7; --danger:#e11d48; --success:#0f766e; --warning:#c2410c;
+    --shadow-card:0 1px 2px rgba(24,24,27,.04),0 8px 20px rgba(24,24,27,.04);
+    --shadow-dialog:0 8px 24px rgba(15,23,42,.12);
+    --page-radius:12px; --control-radius:8px; --button-radius:999px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:Inter,'PingFang SC','Microsoft YaHei',sans-serif;
+    font-size:14px;color:var(--text-regular);background:var(--bg-page);
+    min-width:1200px;
+  }
+  .proto-bar{
+    background:#0f172a;color:#e2e8f0;padding:12px 20px;
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  }
+  .proto-bar h1{font-size:15px;font-weight:600;color:#f8fafc}
+  .proto-tabs{display:flex;gap:8px}
+  .proto-tab{
+    border:1px solid rgba(148,163,184,.35);background:transparent;
+    color:#94a3b8;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;
+  }
+  .proto-tab.active{background:rgba(56,189,248,.12);color:#38bdf8;border-color:#38bdf8}
+  .proto-note{margin-left:auto;font-size:11px;color:#94a3b8;max-width:520px;line-height:1.5}
+  .panel{display:none}
+  .panel.show{display:block}
+
+  .app{display:flex;min-height:calc(100vh - 52px)}
+  .sidebar{
+    width:240px;flex:none;background:var(--bg-sidebar);
+    border-right:1px solid var(--border);display:flex;flex-direction:column;
+  }
+  .brand{
+    height:56px;display:flex;align-items:center;padding:0 20px;
+    font-size:15px;font-weight:600;color:var(--text-primary);
+    border-bottom:1px solid var(--border);
+  }
+  .nav{padding:12px 0;flex:1}
+  .nav .group{padding:10px 20px 4px;font-size:12px;color:var(--text-secondary)}
+  .nav a{
+    display:flex;align-items:center;gap:10px;padding:9px 20px;
+    color:var(--text-primary);text-decoration:none;font-size:13.5px;
+    border-left:3px solid transparent;cursor:pointer;
+  }
+  .nav a:hover{background:var(--primary-light)}
+  .nav a.active{
+    background:var(--bg-sidebar-active);border-left-color:var(--accent-bar);
+    color:var(--text-sidebar-active);font-weight:500;
+  }
+  .main{flex:1;display:flex;flex-direction:column}
+  .topbar{
+    height:56px;background:var(--bg-surface);border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;padding:0 24px;
+  }
+  .topbar .sys{font-size:15px;font-weight:600}
+  .topbar .op{font-size:13px;color:var(--text-secondary)}
+  .content{padding:16px}
+  .page-card{
+    background:var(--bg-surface);border-radius:12px;box-shadow:var(--shadow-card);
+    padding:20px;
+  }
+  .page-head{display:flex;align-items:baseline;gap:12px;margin-bottom:16px}
+  .page-head h2{font-size:18px;font-weight:600;color:var(--text-primary)}
+  .page-head .sub{font-size:12px;color:var(--text-secondary)}
+  .page-head .spacer{flex:1}
+  .stat-row{display:flex;gap:12px;margin-bottom:16px}
+  .stat{
+    border:1px solid var(--border);border-radius:8px;padding:12px 16px;background:#fafafa;
+  }
+  .stat-label{font-size:11px;color:var(--text-secondary);margin-bottom:4px}
+  .stat-value{font-size:20px;font-weight:600;color:var(--text-primary)}
+  .stat-sub{font-size:12px;color:var(--text-regular)}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+  .btn{
+    border:none;border-radius:999px;padding:8px 16px;font-size:12px;cursor:pointer;
+  }
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-primary:hover{background:var(--primary-hover)}
+  .btn-ghost{background:#fff;color:var(--text-regular);border:1px solid var(--border)}
+  .btn-ghost.primary-ghost{color:var(--primary);border-color:var(--primary)}
+  .btn-danger{background:transparent;color:var(--danger);border:none;padding:0 6px;font-size:12px;cursor:pointer}
+  .btn-link{background:none;border:none;color:var(--primary);cursor:pointer;font-size:12px;padding:0 6px}
+  input,select{
+    height:32px;border:1px solid var(--border);border-radius:8px;padding:0 10px;
+    font-size:12px;color:var(--text-regular);background:#fff;outline:none;
+  }
+  input:focus,select:focus{border-color:var(--primary)}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{
+    text-align:left;background:#fafafa;color:var(--text-secondary);
+    font-weight:500;padding:10px 8px;border-bottom:1px solid var(--border);
+  }
+  td{padding:12px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+  .name{font-size:13px;color:var(--text-primary);font-weight:500}
+  .key{font-size:11px;color:#a1a1aa;margin-top:2px}
+  .pill{
+    display:inline-flex;align-items:center;height:22px;padding:0 10px;
+    border-radius:999px;font-size:11px;font-weight:500;
+  }
+  .pill-on{background:#d1fae5;color:#065f46}
+  .pill-off{background:#fef3c7;color:#92400e}
+  .pill-type{background:#e0f2fe;color:#0369a1}
+  .pill-default{background:#f0f9ff;color:#0c4a6e;border:1px solid var(--primary)}
+  .pager{
+    display:flex;align-items:center;gap:8px;margin-top:14px;font-size:12px;color:var(--text-secondary);
+  }
+  .pager .page{
+    width:28px;height:28px;border-radius:6px;border:1px solid var(--border);
+    background:#fff;color:var(--text-regular);cursor:pointer;font-size:12px;
+  }
+  .pager .page.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .hint{
+    margin-top:16px;padding:12px 14px;border-radius:8px;background:#fafafa;
+    border:1px dashed var(--border);font-size:12px;color:var(--text-secondary);line-height:1.7;
+  }
+  .hint b{color:var(--text-primary)}
+  .dialog-mask{
+    display:none;position:fixed;inset:0;background:rgba(15,23,42,.35);
+    align-items:center;justify-content:center;z-index:20;
+  }
+  .dialog-mask.show{display:flex}
+  .dialog{
+    width:480px;background:#fff;border-radius:12px;box-shadow:var(--shadow-dialog);
+    padding:20px;
+  }
+  .dialog h3{font-size:15px;margin-bottom:14px;color:var(--text-primary)}
+  .dialog .row{margin-bottom:12px}
+  .dialog label{display:block;font-size:12px;color:var(--text-secondary);margin-bottom:6px}
+  .dialog .field{
+    width:100%;height:32px;border:1px solid var(--border);border-radius:8px;padding:0 10px;font-size:12px;
+  }
+  .drop{
+    border:1px dashed var(--border);border-radius:8px;padding:22px;text-align:center;
+    color:var(--text-secondary);font-size:12px;background:#fafafa;
+  }
+  .dialog .foot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+  .form-grid .full{grid-column:1 / -1}
+  .switch{
+    width:44px;height:22px;border-radius:999px;background:var(--primary);position:relative;display:inline-block;
+  }
+  .switch i{
+    position:absolute;top:2px;left:24px;width:18px;height:18px;border-radius:50%;background:#fff;
+  }
+  .switch.off{background:#d4d4d8}
+  .switch.off i{left:2px}
+  .toast{
+    display:none;position:fixed;right:24px;top:72px;background:#18181b;color:#fff;
+    padding:10px 16px;border-radius:8px;font-size:12px;z-index:40;
+  }
+  .toast.show{display:block}
+</style>
+</head>
+<body>
+  <div class="proto-bar">
+    <h1>对象存储 · 设计原型</h1>
+    <div class="proto-tabs">
+      <button class="proto-tab active" data-tab="files">① 文件管理（展示页）</button>
+      <button class="proto-tab" data-tab="providers">② 存储服务商（配置页）</button>
+    </div>
+    <div class="proto-note">
+      对齐 <b>object-storage-design.md</b> §7 · <b>admin-ui-design.md</b> 云白 · 交互仅示意，不连后端。
+      规范：单文件 ≤10MB · MIME 白名单 · 预签名 10min · 逻辑删除 · SK 掩码。
+    </div>
+  </div>
+
+  <!-- ===== 文件管理 ===== -->
+  <div class="panel show" id="panel-files">
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">存储管理端</div>
+        <nav class="nav">
+          <div class="group">内容</div>
+          <a>文章管理</a>
+          <div class="group">存储</div>
+          <a class="active">文件管理</a>
+          <a onclick="switchTab('providers')">存储服务商</a>
+          <div class="group">系统</div>
+          <a>菜单管理</a>
+          <a>角色管理</a>
+          <a>审计日志</a>
+        </nav>
+      </aside>
+      <div class="main">
+        <div class="topbar">
+          <div class="sys">对象存储</div>
+          <div class="op">操作员 · 退出</div>
+        </div>
+        <div class="content">
+          <div class="page-card">
+            <div class="page-head">
+              <h2>文件管理</h2>
+              <div class="sub">展示页 · 上传 / 预签名预览下载 / 逻辑删除</div>
+              <div class="spacer"></div>
+              <button class="btn btn-primary" onclick="openUpload()">上传</button>
+            </div>
+            <div class="stat-row">
+              <div class="stat" style="width:180px">
+                <div class="stat-label">有效文件</div>
+                <div class="stat-value">128</div>
+              </div>
+              <div class="stat" style="width:280px">
+                <div class="stat-label">默认服务商</div>
+                <div class="stat-sub">minio-local · 桶 blog</div>
+              </div>
+              <div class="stat" style="flex:1">
+                <div class="stat-label">策略</div>
+                <div class="stat-sub">单文件 ≤10MB · png/jpeg/gif/pdf · 预签名 10min</div>
+              </div>
+            </div>
+            <div class="toolbar">
+              <input placeholder="原始文件名关键字" style="width:200px" />
+              <select style="width:160px">
+                <option>服务商：全部</option>
+                <option>minio-local</option>
+                <option>aws-sg</option>
+                <option>oss-cn-hz</option>
+              </select>
+              <select style="width:140px">
+                <option>类型：全部</option>
+                <option>image/png</option>
+                <option>image/jpeg</option>
+                <option>application/pdf</option>
+              </select>
+              <button class="btn btn-ghost primary-ghost">查询</button>
+              <button class="btn btn-ghost">重置</button>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:24%">文件名</th>
+                  <th style="width:18%">服务商 / 桶</th>
+                  <th style="width:14%">类型</th>
+                  <th style="width:10%">大小</th>
+                  <th style="width:18%">上传时间</th>
+                  <th style="width:16%">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="name">cover.png</div>
+                    <div class="key">a3f8c2…e21c.jpg</div>
+                  </td>
+                  <td>minio-local / blog</td>
+                  <td>image/png</td>
+                  <td>256 KB</td>
+                  <td>2026-10-19 10:21</td>
+                  <td>
+                    <button class="btn-link" onclick="toast('预签名 GET · expireAt=epoch 毫秒')">预览</button>
+                    <button class="btn-link" onclick="toast('预签名 GET 下载')">下载</button>
+                    <button class="btn-danger" onclick="confirmDelete()">删除</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="name">manual.pdf</div>
+                    <div class="key">9b21d0…0aa4.pdf</div>
+                  </td>
+                  <td>minio-local / blog</td>
+                  <td>application/pdf</td>
+                  <td>1.8 MB</td>
+                  <td>2026-10-18 16:02</td>
+                  <td>
+                    <button class="btn-link" onclick="toast('预签名 GET · expireAt=epoch 毫秒')">预览</button>
+                    <button class="btn-link" onclick="toast('预签名 GET 下载')">下载</button>
+                    <button class="btn-danger" onclick="confirmDelete()">删除</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="name">draft.md</div>
+                    <div class="key">c7e0aa…12fd.md</div>
+                  </td>
+                  <td>aws-sg / assets</td>
+                  <td>text/markdown</td>
+                  <td>12 KB</td>
+                  <td>2026-10-17 09:40</td>
+                  <td>
+                    <button class="btn-link" onclick="toast('按 storage_code 回源 aws-sg')">预览</button>
+                    <button class="btn-link" onclick="toast('按 storage_code 回源 aws-sg')">下载</button>
+                    <button class="btn-danger" onclick="confirmDelete()">删除</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="pager">
+              <span>共 128 条</span>
+              <button class="page" style="width:48px">10</button>
+              <button class="page active">1</button>
+              <button class="page">2</button>
+              <button class="page">3</button>
+            </div>
+            <div class="hint">
+              <b>上传：</b>multipart → 校验大小/MIME → put 对象 → 登记 sys_file（含 storage_code）<br/>
+              <b>预览/下载：</b>GET /files/{id}/url → {url, expireAt} 浏览器直连，不经网关中转 body<br/>
+              <b>删除：</b>逻辑删除 deleted=1；物理清理走运维脚本（dry-run / 保留窗口）<br/>
+              <b>多服务商：</b>历史文件按 storage_code 回源；切换默认只影响新上传
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 存储服务商 ===== -->
+  <div class="panel" id="panel-providers">
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">存储管理端</div>
+        <nav class="nav">
+          <div class="group">内容</div>
+          <a>文章管理</a>
+          <div class="group">存储</div>
+          <a onclick="switchTab('files')">文件管理</a>
+          <a class="active">存储服务商</a>
+          <div class="group">系统</div>
+          <a>菜单管理</a>
+          <a>角色管理</a>
+          <a>审计日志</a>
+        </nav>
+      </aside>
+      <div class="main">
+        <div class="topbar">
+          <div class="sys">对象存储</div>
+          <div class="op">操作员 · 退出</div>
+        </div>
+        <div class="content">
+          <div class="page-card">
+            <div class="page-head">
+              <h2>存储服务商</h2>
+              <div class="sub">配置页 · CRUD / 连通性 / 启停 / 默认项</div>
+              <div class="spacer"></div>
+              <button class="btn btn-primary" onclick="openProviderForm()">新建服务商</button>
+            </div>
+            <div class="toolbar">
+              <input placeholder="编码 / 名称关键字" style="width:200px" />
+              <select style="width:160px">
+                <option>类型：全部</option>
+                <option>MINIO</option>
+                <option>AWS_S3</option>
+                <option>ALIYUN_OSS</option>
+                <option>TENCENT_COS</option>
+                <option>HUAWEI_OBS</option>
+                <option>CUSTOM_S3</option>
+              </select>
+              <select style="width:140px">
+                <option>状态：全部</option>
+                <option>启用</option>
+                <option>停用</option>
+              </select>
+              <button class="btn btn-ghost primary-ghost">查询</button>
+              <button class="btn btn-ghost">重置</button>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:18%">编码 / 名称</th>
+                  <th style="width:12%">类型</th>
+                  <th style="width:28%">endpoint / 桶</th>
+                  <th style="width:12%">密钥</th>
+                  <th style="width:12%">状态</th>
+                  <th style="width:18%">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="name">minio-local</div>
+                    <div class="key">本地 MinIO</div>
+                  </td>
+                  <td><span class="pill pill-type">MINIO</span></td>
+                  <td>
+                    <div>http://192.168.99.100:9000</div>
+                    <div class="key">bucket: blog · path-style</div>
+                  </td>
+                  <td>****2345</td>
+                  <td>
+                    <span class="pill pill-on">启用</span>
+                    <span class="pill pill-default" style="margin-left:4px">默认</span>
+                  </td>
+                  <td>
+                    <button class="btn-link" onclick="toast('测试连通成功：headBucket ok')">测试</button>
+                    <button class="btn-link" onclick="openProviderForm()">编辑</button>
+                    <button class="btn-link" style="color:var(--warning)" onclick="toast('已停用：禁止新上传，存量可读')">停用</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="name">aws-sg</div>
+                    <div class="key">新加坡业务桶</div>
+                  </td>
+                  <td><span class="pill pill-type">AWS_S3</span></td>
+                  <td>
+                    <div>https://s3.ap-southeast-1.amazonaws.com</div>
+                    <div class="key">bucket: assets · region: ap-southeast-1</div>
+                  </td>
+                  <td>****9012</td>
+                  <td><span class="pill pill-on">启用</span></td>
+                  <td>
+                    <button class="btn-link" onclick="toast('测试连通成功')">测试</button>
+                    <button class="btn-link" onclick="openProviderForm()">编辑</button>
+                    <button class="btn-link" onclick="toast('已设为默认：仅影响新上传')">设默认</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="name">oss-cn-hz</div>
+                    <div class="key">华东归档</div>
+                  </td>
+                  <td><span class="pill pill-type">ALIYUN_OSS</span></td>
+                  <td>
+                    <div>https://oss-cn-hangzhou.aliyuncs.com</div>
+                    <div class="key">bucket: archive · virtual-hosted</div>
+                  </td>
+                  <td>****7788</td>
+                  <td><span class="pill pill-off">停用</span></td>
+                  <td>
+                    <button class="btn-link" onclick="toast('测试连通：可连通（停用仅禁新上传）')">测试</button>
+                    <button class="btn-link" onclick="openProviderForm()">编辑</button>
+                    <button class="btn-link" onclick="toast('已启用')">启用</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="pager">
+              <span>共 3 条</span>
+              <button class="page active">1</button>
+            </div>
+            <div class="hint">
+              <b>连通性：</b>POST /storage/providers/{id}/test · 失败原因可读（网络/签名/桶/权限），不回显 SK<br/>
+              <b>密钥：</b>secret_key 密文落库；编辑留空 = 不修改；出参仅掩码<br/>
+              <b>规则：</b>删除仅当无 deleted=0 文件引用；设默认只影响新上传；历史按 storage_code 回源<br/>
+              <b>权限：</b>storage-provider:list / create / update / delete / test
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload dialog -->
+  <div class="dialog-mask" id="uploadDialog">
+    <div class="dialog">
+      <h3>上传文件</h3>
+      <div class="row">
+        <div class="drop">拖拽文件到此处，或点击选择<br/><span style="color:#a1a1aa">PNG / JPEG / GIF / PDF · 单文件 ≤ 10MB</span></div>
+      </div>
+      <div class="row">
+        <label>目标服务商</label>
+        <select class="field">
+          <option>默认（minio-local）</option>
+          <option>aws-sg</option>
+          <option>oss-cn-hz（停用，不可选）</option>
+        </select>
+      </div>
+      <div class="row">
+        <label>业务类型 bizType（可选）</label>
+        <input class="field" placeholder="FILE" />
+      </div>
+      <div class="foot">
+        <button class="btn btn-ghost" onclick="closeDialog('uploadDialog')">取消</button>
+        <button class="btn btn-primary" onclick="closeDialog('uploadDialog');toast('上传成功 · 已登记 sys_file')">上传</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Provider form dialog -->
+  <div class="dialog-mask" id="providerDialog">
+    <div class="dialog" style="width:560px">
+      <h3>新建 / 编辑服务商</h3>
+      <div class="form-grid">
+        <div>
+          <label>编码 code *</label>
+          <input class="field" placeholder="minio-local" />
+        </div>
+        <div>
+          <label>名称 name *</label>
+          <input class="field" placeholder="本地 MinIO" />
+        </div>
+        <div>
+          <label>类型 provider_type *</label>
+          <select class="field">
+            <option>MINIO</option>
+            <option>AWS_S3</option>
+            <option>ALIYUN_OSS</option>
+            <option>TENCENT_COS</option>
+            <option>HUAWEI_OBS</option>
+            <option>CUSTOM_S3</option>
+          </select>
+        </div>
+        <div>
+          <label>region（AWS/OSS/COS/OBS 必填）</label>
+          <input class="field" placeholder="ap-southeast-1" />
+        </div>
+        <div class="full">
+          <label>endpoint *</label>
+          <input class="field" placeholder="https://…" />
+        </div>
+        <div>
+          <label>bucket *</label>
+          <input class="field" placeholder="blog" />
+        </div>
+        <div>
+          <label>path_style</label>
+          <div style="padding-top:4px"><span class="switch"><i></i></span> <span style="font-size:12px;margin-left:8px">path-style</span></div>
+        </div>
+        <div>
+          <label>access_key *</label>
+          <input class="field" placeholder="AK" />
+        </div>
+        <div>
+          <label>secret_key（只写 / 留空不改）</label>
+          <input class="field" type="password" placeholder="••••••••" />
+        </div>
+        <div>
+          <label>状态</label>
+          <div style="padding-top:4px"><span class="switch"><i></i></span> <span style="font-size:12px;margin-left:8px">启用</span></div>
+        </div>
+        <div>
+          <label>默认服务商</label>
+          <div style="padding-top:4px"><span class="switch off"><i></i></span> <span style="font-size:12px;margin-left:8px">仅影响新上传</span></div>
+        </div>
+        <div class="full">
+          <label>备注</label>
+          <input class="field" placeholder="可选" />
+        </div>
+      </div>
+      <div class="foot">
+        <button class="btn btn-ghost" onclick="toast('测试连通：成功 headBucket ok')">测试连通</button>
+        <button class="btn btn-ghost" onclick="closeDialog('providerDialog')">取消</button>
+        <button class="btn btn-primary" onclick="closeDialog('providerDialog');toast('已保存（SK 加密落库）')">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  function switchTab(name) {
+    document.querySelectorAll('.proto-tab').forEach(function (el) {
+      el.classList.toggle('active', el.dataset.tab === name)
+    })
+    document.getElementById('panel-files').classList.toggle('show', name === 'files')
+    document.getElementById('panel-providers').classList.toggle('show', name === 'providers')
+  }
+  document.querySelectorAll('.proto-tab').forEach(function (el) {
+    el.addEventListener('click', function () { switchTab(el.dataset.tab) })
+  })
+  function openUpload() {
+    document.getElementById('uploadDialog').classList.add('show')
+  }
+  function openProviderForm() {
+    document.getElementById('providerDialog').classList.add('show')
+  }
+  function closeDialog(id) {
+    document.getElementById(id).classList.remove('show')
+  }
+  function confirmDelete() {
+    toast('确认逻辑删除：记录删除、对象延后清理（@Idempotent）')
+  }
+  var toastTimer
+  function toast(msg) {
+    var el = document.getElementById('toast')
+    el.textContent = msg
+    el.classList.add('show')
+    clearTimeout(toastTimer)
+    toastTimer = setTimeout(function () { el.classList.remove('show') }, 2600)
+  }
+</script>
+</body>
+</html>

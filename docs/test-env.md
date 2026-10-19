@@ -86,9 +86,11 @@ OIDC RP（unify-login-facade）：
 
 ### 2.4 对象存储 / 镜像仓库（如有）
 
-| 类型 | 地址             | 项目/Bucket | 用户名 | 密码/密钥 | 备注 |
-|------|----------------|-------------|--------|-----------|------|
-| OSS/MinIO | 192.168.99.100:9000 | file-bucket-test | minio-test | minio-test-secret（测试用可写；生产密钥禁止） | file-service 用；生产密钥走 Nacos/密钥管理，禁止入仓 |
+> **取值真相源：** 以各系统 `application-local.yml` 中 `*.minio` 配置为准同步本表；生产密钥走 Nacos / 密钥管理，**禁止入仓**。
+
+| 类型 | 地址 | 项目/Bucket | 用户名（AccessKey） | 密码/密钥（SecretKey） | 备注 |
+|------|------|-------------|---------------------|------------------------|------|
+| OSS/MinIO | http://192.168.99.100:9000 | blog | minio_admin | minio123456（测试用可写；生产密钥禁止） | blog 系统（`blog.minio`）；与 `application-local.yml` 一致；已验证 put/get/delete |
 
 ---
 

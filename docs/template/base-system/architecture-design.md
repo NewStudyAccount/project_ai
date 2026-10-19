@@ -62,7 +62,7 @@ Controller → Service → Mapper
 ```
 
 - **禁止** Controller 直调 Mapper。
-- Service 接口 + 实现分离；**业务规则只在 Service**。
+- Service 接口放 `service/`，实现类放 `service/impl/`（`XxxService` + `service/impl/XxxServiceImpl`），禁止接口与实现混在同一目录；**业务规则只在 Service**。
 - 对象转换只用 MapStruct，且只放 `converter/`（唯一转换落点）。
 - `@Transactional` 只加在 Service；**禁止事务内调 Feign/HTTP**。
 - 只读加 `@Transactional(readOnly = true)`。
@@ -74,7 +74,8 @@ com.qjj.{system}.{module}/
 ├── controller/   # 入口
 ├── dto/          # 入参
 ├── vo/           # 出参
-├── service/      # XxxService + XxxServiceImpl
+├── service/      # XxxService 接口
+│   └── impl/     # XxxServiceImpl 实现类（固定放 service/impl/）
 ├── bo/           # 服务内部对象，不对外
 ├── converter/    # MapStruct 唯一落点
 ├── mapper/
@@ -86,7 +87,7 @@ com.qjj.{system}.{module}/
 └── util/
 ```
 
-小模块可将 `dto/` `vo/` 并入 `controller/` 下，但 **entity / converter / bo 边界不变**。
+小模块可将 `dto/` `vo/` 并入 `controller/` 下，但 **entity / converter / bo / service/impl 边界不变**。
 
 ### 1.4.3 对象职责边界
 

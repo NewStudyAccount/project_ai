@@ -16,9 +16,9 @@ import java.util.List;
 @ConfigurationProperties(prefix = "blog.minio")
 public class BlogMinioProperties {
 
-    private String endpoint = "";
-    private String accessKey = "";
-    private String secretKey = "";
+    private String endpoint;
+    private String accessKey;
+    private String secretKey;
     private String bucket = "blog";
     private long uploadMaxBytes = 10L * 1024 * 1024;
     private List<String> allowedContentTypes = new ArrayList<>(List.of(

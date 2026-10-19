@@ -193,7 +193,7 @@
     <text class="field fk" x="12" y="72">article_id  UK/FK</text>
     <text class="field fk" x="12" y="92">content_file_id  FK→sys_file</text>
     <text class="field fk" x="12" y="112">draft_file_id  FK→sys_file</text>
-    <text class="field" x="12" y="132">content_format / word_count</text>
+    <text class="field" x="12" y="132">word_count / draft_word_count</text>
     <text class="field" x="12" y="152">draft_format / draft_word</text>
     <text class="field" x="12" y="172">seo_* / draft_seo_*</text>
     <text class="note" x="12" y="210">正文对象必登记 sys_file</text>
@@ -209,7 +209,7 @@
     <rect class="box-head-oss" y="16" width="280" height="16" />
     <text class="card-title" x="12" y="21" fill="#ffffff">MinIO / OSS 对象（非表）</text>
     <text class="field" x="12" y="56">blog-content/{articleId}/xxx.md</text>
-    <text class="field" x="12" y="76">blog-content/{articleId}/xxx.html</text>
+    <text class="field" x="12" y="76">正文固定 Markdown · text/markdown</text>
     <text class="note" x="12" y="112">正文全文 · 覆盖写新对象</text>
     <text class="note" x="12" y="130">旧对象运维清理（不建定时）</text>
     <text class="note" x="12" y="148">策略见 object-storage-design.md</text>

@@ -18,6 +18,7 @@ import com.qjj.blog.service.service.AuditService;
 import com.qjj.blog.service.service.FileService;
 import com.qjj.blog.service.vo.FileVO;
 import com.qjj.blog.service.vo.PresignVO;
+import com.qjj.blog.service.vo.PublicImageVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -129,6 +130,25 @@ public class FileServiceImpl implements FileService {
         PresignVO vo = new PresignVO();
         vo.setUrl(url);
         vo.setExpireAt(LocalDateTime.now().plusMinutes(10).format(TIME));
+        return vo;
+    }
+
+    @Override
+    @RateLimit(keyPrefix = "file-public-image", permits = 120, windowSeconds = 60, dimension = RateLimit.Dimension.IP)
+    public PublicImageVO readPublicImage(String id) {
+        SysFile file = require(id);
+        String contentType = file.getContentType() == null ? "" : file.getContentType().toLowerCase();
+        if (!contentType.startsWith("image/")) {
+            throw new BizException(BlogErrorCodeEnum.FILE_TYPE_NOT_ALLOWED);
+        }
+        PublicImageVO vo = new PublicImageVO();
+        vo.setContentType(contentType);
+        vo.setOriginalName(file.getOriginalName());
+        try {
+            vo.setContent(storageClient.getBytes(file.getObjectKey()));
+        } catch (Exception e) {
+            throw new BizException(BlogErrorCodeEnum.FILE_NOT_FOUND);
+        }
         return vo;
     }
 

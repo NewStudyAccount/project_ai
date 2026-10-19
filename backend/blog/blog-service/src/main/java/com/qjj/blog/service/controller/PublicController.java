@@ -6,14 +6,19 @@ import com.qjj.blog.framework.idempotent.RateLimit;
 import com.qjj.blog.service.dto.ArticlePageQuery;
 import com.qjj.blog.service.service.ArticleService;
 import com.qjj.blog.service.service.CategoryService;
+import com.qjj.blog.service.service.FileService;
 import com.qjj.blog.service.service.SiteConfigService;
 import com.qjj.blog.service.service.TagService;
 import com.qjj.blog.service.vo.ArticleDetailVO;
 import com.qjj.blog.service.vo.ArticleVO;
 import com.qjj.blog.service.vo.CategoryVO;
+import com.qjj.blog.service.vo.PublicImageVO;
 import com.qjj.blog.service.vo.SiteConfigVO;
 import com.qjj.blog.service.vo.TagVO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,6 +39,7 @@ public class PublicController {
     private final TagService tagService;
     private final ArticleService articleService;
     private final SiteConfigService siteConfigService;
+    private final FileService fileService;
 
     @GetMapping("/categories")
     @RateLimit(keyPrefix = "public-categories", permits = 60, windowSeconds = 60, dimension = RateLimit.Dimension.IP)
@@ -69,5 +75,23 @@ public class PublicController {
     @RateLimit(keyPrefix = "public-site-config", permits = 60, windowSeconds = 60, dimension = RateLimit.Dimension.IP)
     public Result<SiteConfigVO> siteConfig() {
         return Result.ok(siteConfigService.get());
+    }
+
+    /**
+     * 正文插图稳定地址（Markdown `![](/api/v1/public/files/{id})`）；仅 image/*。
+     */
+    @GetMapping("/files/{id}")
+    public ResponseEntity<byte[]> publicFile(@PathVariable String id) {
+        PublicImageVO image = fileService.readPublicImage(id);
+        MediaType mediaType;
+        try {
+            mediaType = MediaType.parseMediaType(image.getContentType());
+        } catch (Exception e) {
+            mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        }
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
+                .contentType(mediaType)
+                .body(image.getContent());
     }
 }

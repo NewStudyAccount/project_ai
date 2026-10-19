@@ -42,7 +42,6 @@ export interface ArticleVO {
 export interface ArticleDetailVO extends ArticleVO {
   content?: string
   contentFrom?: string
-  contentFormat?: string
   wordCount?: number
   seoTitle?: string
   seoDescription?: string
@@ -115,7 +114,7 @@ export function updateArticle(id: string, body: Record<string, unknown>) {
 
 export function saveArticleContent(
   id: string,
-  body: { mode: string; content: string; contentFormat?: string; seoTitle?: string; seoDescription?: string },
+  body: { mode: string; content: string; seoTitle?: string; seoDescription?: string },
 ) {
   return http.put<ArticleContentResult>(`/admin/articles/${id}/content`, body)
 }

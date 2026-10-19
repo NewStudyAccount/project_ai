@@ -33,7 +33,7 @@
 | 无草稿可放弃 | DRAFT_NOT_FOUND |
 | 已发布不可直接删 | ARTICLE_PUBLISHED |
 
-**正文格式/大小：** `content` 为 JSON 字符串，≤500KB；`contentFormat` ∈ `markdown|html`（服务端 put 对象 MIME `text/markdown` / `text/html`）。封面等附件走既有 `POST /api/v1/files`（multipart，既有 MIME 白名单）。
+**正文格式/大小：** `content` 为 JSON 字符串，≤500KB；正文一律 **Markdown 源文**（服务端 put 对象 MIME `text/markdown`，对象键 `…/{uuid}.md`），**无** `contentFormat` 入参。编写/语法约定见 [business-design.md](./business-design.md) **§E Markdown 编写约定**。封面等附件走既有 `POST /api/v1/files`（multipart，既有 MIME 白名单）。
 
 ---
 
@@ -330,9 +330,8 @@
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | （主表字段） | | 同 ArticleVO |
-| content | string | **当前编辑器内容**：有草稿读草稿正文，否则线上正文，否则空 |
+| content | string | **当前编辑器内容**（Markdown）：有草稿读草稿正文，否则线上正文，否则空 |
 | contentFrom | string | `draft` \| `live` \| `none` |
-| contentFormat | string | |
 | wordCount | number | 对应轨字数 |
 | seoTitle / seoDescription | string | 对应轨 SEO |
 | draftFileId / contentFileId | string | |
@@ -391,8 +390,7 @@
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | mode | string | 是 | `draft` \| `publish` |
-| content | string | 是 | 正文，≤500KB |
-| contentFormat | string | 否 | `markdown` \| `html`，默认 markdown |
+| content | string | 是 | 正文（Markdown），≤500KB |
 | seoTitle | string | 否 | ≤200 |
 | seoDescription | string | 否 | ≤300 |
 
@@ -408,10 +406,10 @@
 **接口逻辑**
 
 1. 文章存在；`content` 非空且 ≤500KB
-2. **put** MinIO 对象（`blog-content/{id}/draft|live/{uuid}.{md|html}`）
+2. **put** MinIO 对象（`blog-content/{id}/draft|live/{uuid}.md`，MIME `text/markdown`）
 3. **INSERT `sys_file`**（biz_type=ARTICLE_DRAFT 或 ARTICLE_LIVE，biz_id=文章 id）
 4. **mode=draft**：
-   - UPDATE detail：`draft_file_id` / `draft_content_format` / `draft_word_count` / `draft_seo_*`
+   - UPDATE detail：`draft_file_id` / `draft_word_count` / `draft_seo_*`
    - **不**改 `content_file_id`、**不**改 `status`
    - 旧 draft sys_file 逻辑删
 5. **mode=publish**：
@@ -598,7 +596,7 @@
 |------|------|------|
 | 主表字段 | | 同 ArticleVO |
 | content | string | **线上正文**（content_file_id → sys_file → MinIO） |
-| contentFormat / wordCount | | |
+| wordCount | | |
 | seoTitle / seoDescription | | 空则回退 title/summary |
 
 **逻辑**
@@ -623,6 +621,18 @@
 **出参**：`{ url: string, expiresAt: string }`
 
 **逻辑**：仅已发布 + `content_file_id` → `presignGet` 短 TTL（配置项）；寻址同 6.4
+
+---
+
+### 7.1 公开图片（正文插图）
+
+| 项 | 内容 |
+|----|------|
+| **方法/路径** | `GET /api/v1/public/files/{id}` |
+| **权限** | 公开（网关放行 `/api/v1/public/**`） |
+| **逻辑** | 读 `sys_file` → 仅 `content_type` 为 `image/*` → 返回对象字节 + 对应 MIME；`Cache-Control: public, max-age=86400` |
+| **用途** | Markdown `![](/api/v1/public/files/{id})` 稳定地址（不随预签名过期） |
+| **上传** | 管理端编辑器 → `POST /api/v1/files`（`bizType=ARTICLE_IMAGE`）→ 得 id 后拼上述 URL |
 
 **使用表**：`blog_article`、`blog_article_detail`、`sys_file` + **MinIO**
 

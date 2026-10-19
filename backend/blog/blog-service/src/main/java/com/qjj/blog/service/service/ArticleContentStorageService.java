@@ -6,7 +6,6 @@ import com.qjj.blog.framework.core.IdGenerator;
 import com.qjj.blog.framework.storage.ObjectStorageClient;
 import com.qjj.blog.service.entity.SysFile;
 import com.qjj.blog.service.enums.BizFileTypeEnum;
-import com.qjj.blog.service.enums.ContentFormatEnum;
 import com.qjj.blog.service.mapper.SysFileMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,7 +15,7 @@ import java.util.UUID;
 
 /**
  * 文章正文 OSS 读写：put 对象 → INSERT sys_file → 返回 file_id。
- * 业务禁止直绑 MinIO SDK；禁止业务表裸存 object_key。
+ * 正文唯一 Markdown（article-content-markdown-only）；业务禁止直绑 MinIO SDK。
  */
 @Service
 @RequiredArgsConstructor
@@ -30,12 +29,12 @@ public class ArticleContentStorageService {
     private final IdGenerator idGenerator;
 
     /**
-     * 写入正文对象并登记 sys_file。
+     * 写入 Markdown 正文对象并登记 sys_file。
      *
-     * @param track live|draft
+     * @param draftTrack true=草稿轨，false=线上轨
      * @return 新 sys_file.id
      */
-    public Long putContent(Long articleId, boolean draftTrack, String content, String format) {
+    public Long putContent(Long articleId, boolean draftTrack, String content) {
         if (content == null || content.isBlank()) {
             throw new BizException(BlogErrorCodeEnum.CONTENT_REQUIRED);
         }
@@ -43,14 +42,9 @@ public class ArticleContentStorageService {
         if (bytes.length > MAX_CONTENT_BYTES) {
             throw new BizException(BlogErrorCodeEnum.CONTENT_TOO_LARGE);
         }
-        String fmt = format == null || format.isBlank() ? ContentFormatEnum.MARKDOWN.getCode() : format;
-        if (!ContentFormatEnum.supports(fmt)) {
-            throw new BizException(BlogErrorCodeEnum.CONTENT_FORMAT_INVALID);
-        }
-        String ext = ContentFormatEnum.HTML.getCode().equals(fmt) ? ".html" : ".md";
         String track = draftTrack ? "draft" : "live";
-        String objectKey = "blog-content/" + articleId + "/" + track + "/" + UUID.randomUUID() + ext;
-        String contentType = ContentFormatEnum.HTML.getCode().equals(fmt) ? "text/html" : "text/markdown";
+        String objectKey = "blog-content/" + articleId + "/" + track + "/" + UUID.randomUUID() + ".md";
+        String contentType = "text/markdown";
         try {
             storageClient.put(objectKey, new java.io.ByteArrayInputStream(bytes), bytes.length, contentType);
         } catch (Exception e) {
@@ -60,7 +54,7 @@ public class ArticleContentStorageService {
         meta.setId(idGenerator.nextId());
         meta.setBucket(storageClient.bucket());
         meta.setObjectKey(objectKey);
-        meta.setOriginalName(articleId + ext);
+        meta.setOriginalName(articleId + ".md");
         meta.setContentType(contentType);
         meta.setSizeBytes((long) bytes.length);
         meta.setBizType(draftTrack ? BizFileTypeEnum.ARTICLE_DRAFT.getCode() : BizFileTypeEnum.ARTICLE_LIVE.getCode());
@@ -69,7 +63,7 @@ public class ArticleContentStorageService {
         return meta.getId();
     }
 
-    /** 按 file_id 读正文；不存在返回 null */
+    /** 按 file_id 读正文（Markdown 源文）；不存在返回 null */
     public String readContent(Long fileId) {
         if (fileId == null || fileId <= 0) {
             return null;

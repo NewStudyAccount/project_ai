@@ -9,6 +9,7 @@ import {
   saveArticleContent,
   type ArticleDetailVO,
 } from '@/api/content'
+import MdEditor from '@/components/markdown/MdEditor.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -16,7 +17,6 @@ const articleId = String(route.params.id || '')
 
 const detail = ref<ArticleDetailVO | null>(null)
 const content = ref('')
-const contentFormat = ref('markdown')
 const seoTitle = ref('')
 const seoDescription = ref('')
 const saving = ref(false)
@@ -27,22 +27,31 @@ const tip = computed(() => {
   if (detail.value?.status === 1) return '已发布：保存草稿不会下线线上正文'
   return '未发布：保存草稿后可点「发布」'
 })
+const byteSize = computed(() => new TextEncoder().encode(content.value || '').length)
+const overSize = computed(() => byteSize.value > 500 * 1024)
 
 async function load() {
   detail.value = await getArticle(articleId)
   content.value = detail.value.content || ''
-  contentFormat.value = detail.value.contentFormat || 'markdown'
   seoTitle.value = detail.value.seoTitle || ''
   seoDescription.value = detail.value.seoDescription || ''
 }
 
+function guardSize(): boolean {
+  if (overSize.value) {
+    ElMessage.error('正文超过 500KB，请精简后再保存')
+    return false
+  }
+  return true
+}
+
 async function saveDraft() {
+  if (!guardSize()) return
   saving.value = true
   try {
     await saveArticleContent(articleId, {
       mode: 'draft',
       content: content.value,
-      contentFormat: contentFormat.value,
       seoTitle: seoTitle.value,
       seoDescription: seoDescription.value,
     })
@@ -54,12 +63,12 @@ async function saveDraft() {
 }
 
 async function saveAndPublish() {
+  if (!guardSize()) return
   saving.value = true
   try {
     await saveArticleContent(articleId, {
       mode: 'publish',
       content: content.value,
-      contentFormat: contentFormat.value,
       seoTitle: seoTitle.value,
       seoDescription: seoDescription.value,
     })
@@ -108,21 +117,22 @@ onMounted(load)
       <el-button @click="router.push(`/articles/${articleId}/main`)">编辑主表</el-button>
     </div>
     <el-alert type="warning" :closable="false" :title="tip" show-icon style="margin: 12px 0" />
+
     <div class="editor-bar">
-      <el-select v-model="contentFormat" style="width: 140px">
-        <el-option label="Markdown" value="markdown" />
-        <el-option label="HTML" value="html" />
-      </el-select>
-      <span class="muted">≤500KB · 保存草稿只写 draft 轨</span>
+      <span class="label">Markdown（md-editor-v3）</span>
+      <span class="muted size" :class="{ danger: overSize }">
+        {{ (byteSize / 1024).toFixed(1) }}KB / 500KB · 保存 Markdown 源文 · 图片上传后为 /api/v1/public/files/{id}
+      </span>
     </div>
-    <el-input v-model="content" type="textarea" :rows="18" placeholder="正文内容" />
+    <MdEditor v-model="content" placeholder="Markdown 正文源码…" height="560px" :biz-id="articleId" />
+
     <div class="seo">
       <el-input v-model="seoTitle" placeholder="SEO 标题（存 draft_seo_*，发布时覆盖）" maxlength="200" />
       <el-input v-model="seoDescription" placeholder="SEO 描述" maxlength="300" />
     </div>
     <div class="actions">
-      <el-button :loading="saving" @click="saveDraft">保存草稿（线上不动）</el-button>
-      <el-button type="primary" :loading="saving" @click="saveAndPublish">保存并发布</el-button>
+      <el-button :loading="saving" :disabled="overSize" @click="saveDraft">保存草稿（线上不动）</el-button>
+      <el-button type="primary" :loading="saving" :disabled="overSize" @click="saveAndPublish">保存并发布</el-button>
       <el-button v-if="hasDraft" type="warning" @click="publishOnly">仅发布现有草稿</el-button>
       <el-button v-if="hasDraft" type="danger" plain @click="dropDraft">放弃草稿</el-button>
     </div>
@@ -143,6 +153,17 @@ onMounted(load)
   gap: 12px;
   align-items: center;
   margin-bottom: 8px;
+}
+.label {
+  font-size: 12px;
+  color: #606266;
+  font-weight: 600;
+}
+.size {
+  margin-left: auto;
+}
+.size.danger {
+  color: #f56c6c;
 }
 .seo {
   display: grid;

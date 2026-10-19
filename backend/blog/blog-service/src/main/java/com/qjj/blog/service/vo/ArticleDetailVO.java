@@ -8,7 +8,6 @@ import lombok.EqualsAndHashCode;
 public class ArticleDetailVO extends ArticleVO {
     private String content;
     private String contentFrom;
-    private String contentFormat;
     private Integer wordCount;
     private String seoTitle;
     private String seoDescription;

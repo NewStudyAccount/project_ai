@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
- * 保存正文入参（双轨：mode=draft|publish）。
+ * 保存正文入参（双轨：mode=draft|publish）。正文固定 Markdown 源文，无格式字段。
  */
 @Data
 public class ArticleContentRequest {
@@ -16,8 +16,6 @@ public class ArticleContentRequest {
     @NotBlank(message = "正文不能为空")
     @Size(max = 512000, message = "正文最长 500KB")
     private String content;
-
-    private String contentFormat;
 
     @Size(max = 200, message = "SEO 标题最长 200")
     private String seoTitle;

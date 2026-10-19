@@ -386,7 +386,8 @@ src/main/java/com.qjj.{system}.{module}/
 ├── controller/
 ├── dto/
 ├── vo/
-├── service/      # XxxService + XxxServiceImpl
+├── service/      # XxxService 接口
+│   └── impl/     # XxxServiceImpl 实现类（固定放 service/impl/）
 ├── bo/
 ├── converter/    # MapStruct 只放这里
 ├── mapper/
@@ -398,10 +399,10 @@ src/main/java/com.qjj.{system}.{module}/
 └── util/
 ```
 
-- 小模块可将 `dto/` `vo/` 并入 `controller/dto`、`controller/vo`；**`entity` / `converter` / `bo` 边界不变**。
+- 小模块可将 `dto/` `vo/` 并入 `controller/dto`、`controller/vo`；**`entity` / `converter` / `bo` / `service/impl` 边界不变**。
 - 调用链：`Controller → Service → Mapper`；**禁止** Controller 直调 Mapper。
 - 转换：MapStruct 放 `converter/`（**唯一**转换落点；不设第二套「集中转换层」）。
-- Service 接口 + 实现分离；业务规则只在 Service。
+- Service 接口放 `service/`，实现类放 `service/impl/`（`XxxService` + `service/impl/XxxServiceImpl`），禁止接口与实现混在同一目录；业务规则只在 Service。
 - **Feign：** 接口与 Fallback 优先在 `{domain}-api`；必须 Fallback；必须配置连接/读取超时（具体值由 `framework`/网关配置固定）。
 
 | 对象 | 职责 | 落点 |

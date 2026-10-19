@@ -35,6 +35,7 @@
 | Pinia | ^2.3.x | 状态管理 |
 | Element Plus | ^2.9.x | 统一 UI 库 |
 | axios | ^1.8.x | 经 `src/api` 统一封装 |
+| md-editor-v3 | ^7.1.x | 管理端写正文 Markdown 编辑器（内容组件，非 UI 框架） |
 | ESLint 9 + typescript-eslint + eslint-plugin-vue / Prettier | 当前稳定线 | lint / format（flat config） |
 
 配套证据：Spring Cloud 2025.0.x ↔ Boot 3.5.x（SC 2025.1.3 BOM 硬钉 `spring-boot.version=4.0.8`，佐证 2025.1 列车 = Boot 4 线）；SCA `2025.0.0.0` ↔ SC 2025.0.x（版本列车命名配套）；`redisson-spring-boot-starter` 3.52.0 的 BOM 基线为 Boot 3.5.5。
@@ -54,3 +55,4 @@
 | 2026-09-24 | JWT 库改判 spring-security-oauth2-jose（Nimbus，撤销 JJWT）；新增 Spring Authorization Server（仅 auth 引）；AT 默认 10 分钟（5–15 可配） | 用户裁决（SAS 内核同源，避免双 JOSE 栈） |
 | 2026-09-24 | 「随 BOM」行补实据解析值（mysql-connector-j 9.7.0 等）；用户中心组件清单按模块锁定 | 用户确认（Spring Cloud 方式：一域一服务 + 独立网关） |
 | 2026-09-24 | 新增前端主框架版本行（Vue3/Vite/TS/Pinia/Element Plus 等），随 `scaffold-user-center` 首个前端工程登记 | 规则：新增前端工程时登记（§2） |
+| 2026-10-19 | 前端依赖登记 **md-editor-v3 ^7.1.x**（blog-admin 写正文 Markdown 编辑器） | 变更 `adopt-markdown-editor` 技术选型 |

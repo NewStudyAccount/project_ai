@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="ZWuhb2uOWIvRzMIM2dWFb7">
+<head data-page-node-id="owQcTAy8aiC5vL51ETSwjF">
+<meta charset="UTF-8" data-page-node-id="CmW3ZWzR3U9MXmMllYOzrW">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="w1JiJqjgdwH6mVTzcR5c55">
+<title>通用管理页样张 · Generic CRUD Page（云白）</title>
+<style>
+  /* ===== 云白 Design Tokens（admin-ui-design.md §1）===== */
+  :root{
+    --bg-page:#f6f7f9; --bg-surface:#ffffff; --bg-sidebar:#ffffff;
+    --bg-sidebar-active:#f0f9ff;
+    --text-primary:#18181b; --text-regular:#3f3f46; --text-secondary:#71717a;
+    --text-sidebar-active:#0c4a6e;
+    --border:#e4e4e7;
+    --primary:#0284c7; --primary-hover:#0369a1; --primary-light:#f0f9ff;
+    --accent-bar:#0284c7; --danger:#e11d48; --success:#0f766e; --warning:#c2410c;
+    --shadow-card:0 1px 2px rgba(24,24,27,.04),0 8px 20px rgba(24,24,27,.04);
+    --shadow-dialog:0 8px 24px rgba(15,23,42,.12);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:Inter,'PingFang SC','Microsoft YaHei',sans-serif;
+    font-size:14px;color:var(--text-regular);background:var(--bg-page);
+    min-width:1280px;
+  }
+  /* ===== App Shell（admin-ui-design.md §2）===== */
+  .shell{display:flex;min-height:100vh}
+  .sidebar{
+    width:240px;flex:none;background:var(--bg-sidebar);
+    border-right:1px solid var(--border);display:flex;flex-direction:column;
+  }
+  .sidebar .brand{height:56px;display:flex;align-items:center;padding:0 20px;
+    font-size:15px;font-weight:600;color:var(--text-primary);border-bottom:1px solid var(--border)}
+  .nav{padding:12px 0;flex:1}
+  .nav .group{padding:10px 20px 4px;font-size:12px;color:var(--text-secondary)}
+  .nav a{
+    display:flex;align-items:center;gap:10px;padding:9px 20px;color:var(--text-primary);
+    text-decoration:none;font-size:13.5px;border-left:3px solid transparent;
+  }
+  .nav a:hover{background:var(--primary-light)}
+  .nav a.active{background:var(--bg-sidebar-active);border-left-color:var(--accent-bar);
+    color:var(--text-sidebar-active);font-weight:500}
+  .nav a .ico{width:16px;height:16px;flex:none;border:1.5px solid #a1a1aa;border-radius:4px;
+    display:inline-block;position:relative}
+  .nav a.active .ico{border-color:var(--accent-bar)}
+  .topbar{
+    height:56px;background:var(--bg-surface);border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex:none;
+  }
+  .topbar .sys{font-size:15px;font-weight:600;color:var(--text-primary)}
+  .topbar .op{display:flex;align-items:center;gap:14px;font-size:13px;color:var(--text-regular)}
+  .topbar .op a{color:var(--text-secondary);text-decoration:none}
+  .topbar .op a:hover{color:var(--primary)}
+  .main{flex:1;display:flex;flex-direction:column}
+  .content{flex:1;padding:16px}
+  /* ===== page-card（§5）===== */
+  .page-card{
+    background:var(--bg-surface);border-radius:12px;box-shadow:var(--shadow-card);
+    padding:20px;margin-bottom:16px;
+  }
+  /* ===== toolbar ===== */
+  .toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .toolbar .grow{flex:1}
+  /* 按钮：主操作胶囊 / 行内 link */
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;border:none;cursor:pointer;
+    font-family:inherit;font-size:13px;height:32px;padding:0 14px;border-radius:8px;
+    background:var(--bg-surface);color:var(--text-regular);border:1px solid var(--border);
+  }
+  .btn:hover{color:var(--primary);border-color:var(--primary)}
+  .btn-primary{background:var(--primary);color:#fff;border:none;border-radius:999px;padding:0 18px}
+  .btn-primary:hover{background:var(--primary-hover);color:#fff}
+  .btn-link{background:none;border:none;color:var(--primary);padding:0 4px;height:auto}
+  .btn-link:hover{color:var(--primary-hover);text-decoration:underline}
+  .btn-link.danger{color:var(--danger)}
+  .btn-link.danger:hover{color:#be123c}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  /* 筛选控件 */
+  .filter{display:flex;align-items:center;gap:8px}
+  .filter label{font-size:13px;color:var(--text-secondary);white-space:nowrap}
+  .ipt,.sel{
+    height:32px;border:1px solid var(--border);border-radius:8px;padding:0 10px;
+    font-family:inherit;font-size:13px;color:var(--text-regular);background:var(--bg-surface);
+    outline:none;min-width:150px;
+  }
+  .ipt:focus,.sel:focus{border-color:var(--primary)}
+  /* ===== 表格 ===== */
+  table.grid{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.grid th,table.grid td{border:1px solid var(--border);padding:9px 12px;text-align:left;vertical-align:middle}
+  table.grid th{background:#fafafa;color:var(--text-secondary);font-size:12.5px;font-weight:500;white-space:nowrap}
+  table.grid td{color:var(--text-regular)}
+  table.grid td.num{font-variant-numeric:tabular-nums}
+  table.grid td .ell{display:inline-block;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+  table.grid td.ops{white-space:nowrap}
+  .copy{display:inline-block;margin-left:6px;font-size:11px;color:var(--text-secondary);cursor:pointer;
+    border:1px solid var(--border);border-radius:4px;padding:0 4px;line-height:16px}
+  .copy:hover{color:var(--primary);border-color:var(--primary)}
+  /* 软胶囊状态（§5 status-pill）*/
+  .pill{display:inline-flex;align-items:center;height:22px;padding:0 10px;border-radius:999px;font-size:12px}
+  .pill.success{background:#d1fae5;color:#065f46}
+  .pill.warning{background:#fef3c7;color:#92400e}
+  .pill.danger{background:#ffe4e6;color:#9f1239}
+  .pill.info{background:#e0f2fe;color:#075985}
+  /* 分页 */
+  .pagination{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:14px;font-size:13px}
+  .pagination .pg{
+    min-width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:#fff;
+    color:var(--text-regular);cursor:pointer;font-family:inherit;font-size:13px;padding:0 6px;
+  }
+  .pagination .pg.cur{background:var(--primary);border-color:var(--primary);color:#fff}
+  .pagination .pg:disabled{opacity:.4;cursor:not-allowed}
+  .pagination .total{color:var(--text-secondary);margin-right:8px}
+  /* 空态 */
+  .empty{padding:48px 0;text-align:center;color:var(--text-secondary)}
+  .empty .fig{width:56px;height:40px;margin:0 auto 10px;border:1.5px dashed var(--border);border-radius:8px;position:relative}
+  .empty .fig::after{content:'';position:absolute;left:50%;top:50%;width:18px;height:2px;background:var(--border);transform:translate(-50%,-50%)}
+  /* ===== D-Form 弹窗 ===== */
+  .mask{position:fixed;inset:0;background:rgba(15,23,42,.35);display:none;align-items:flex-start;justify-content:center;padding-top:10vh;z-index:50}
+  .mask.show{display:flex}
+  .dialog{
+    width:560px;background:var(--bg-surface);border-radius:12px;box-shadow:var(--shadow-dialog);
+    overflow:hidden;animation:pop .18s ease-out;
+  }
+  @keyframes pop{from{transform:translateY(-8px);opacity:0}to{transform:none;opacity:1}}
+  .dialog .d-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0}
+  .dialog .d-head h3{font-size:16px;font-weight:600;color:var(--text-primary)}
+  .dialog .d-head .x{cursor:pointer;color:var(--text-secondary);font-size:18px;line-height:1;border:none;background:none}
+  .dialog .d-body{padding:18px 20px 4px;max-height:60vh;overflow:auto}
+  .frow{display:flex;margin-bottom:14px}
+  .frow label{width:96px;flex:none;text-align:right;padding-right:12px;padding-top:7px;font-size:13px;color:var(--text-regular)}
+  .frow label b{color:var(--danger);margin-right:2px;font-weight:400}
+  .frow .fc{flex:1}
+  .frow .ipt,.frow .sel{width:100%}
+  .frow textarea.ipt{height:64px;padding-top:7px;resize:vertical}
+  .frow .err{color:var(--danger);font-size:12px;margin-top:4px;display:none}
+  .frow.invalid .err{display:block}
+  .frow.invalid .ipt,.frow.invalid .sel{border-color:var(--danger)}
+  .dialog .d-foot{display:flex;justify-content:flex-end;gap:8px;padding:10px 20px 18px}
+  /* toast */
+  #toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--text-primary);
+    color:#fff;font-size:13px;border-radius:8px;padding:9px 18px;display:none;z-index:99}
+  /* confirm 弹窗（简化示意 ElMessageBox）*/
+  .confirm-box{width:400px}
+  .confirm-box .d-body{padding:22px 20px 8px;font-size:14px;color:var(--text-primary);display:flex;gap:10px;max-height:none}
+  .confirm-box .warn-ico{width:22px;height:22px;flex:none;border-radius:50%;background:#ffe4e6;color:var(--danger);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;margin-top:1px}
+  /* 响应提示条 */
+  .resp{position:fixed;right:16px;bottom:16px;background:var(--bg-sidebar-active);color:var(--text-sidebar-active);
+    border:1px solid #bae6fd;border-radius:8px;padding:8px 12px;font-size:12px;z-index:98;display:none;max-width:360px}
+</style>
+</head>
+<body data-page-node-id="7oXBcU0fxdaCELBGrAtI8F">
+<div class="shell" data-page-node-id="yD2rWQeB2zEYGklNTxnjkX">
+  <!-- 侧栏 240 纸白 -->
+  <aside class="sidebar" data-page-node-id="UfPFaIrgGsY2SEz2JP0HYL">
+    <div class="brand" data-page-node-id="zqXvEmdazbAtHLIWNmqQYh">博客系统 · 管理端</div>
+    <nav class="nav" data-page-node-id="xkirJQLXyI4jPsKAGjcLrE">
+      <div class="group" data-page-node-id="ctA6HsKTxWWH9JXm0jddWV">总览</div>
+      <a href="#" data-page-node-id="NrUNCnycIkufaX2UfGqWtM"><span class="ico" data-page-node-id="7K47FIrivNgyjzMbJRyZRf"></span>首页</a>
+      <div class="group" data-page-node-id="hKJPhSbDl3GsTjkFQFo0nV">内容管理</div>
+      <a href="#" class="active" data-page-node-id="gKuqsnecdpdNPwABHYUhGM"><span class="ico" data-page-node-id="VEYZBqbzt2jApPMGIQlGDb"></span>文章管理</a>
+      <a href="#" data-page-node-id="vS98AdtnEtPu2jNBEFb42h"><span class="ico" data-page-node-id="04T70iw4k9THALrpVLnMy2"></span>分类管理</a>
+      <a href="#" data-page-node-id="jknOGlXkd7IkJ8m0i4XdFj"><span class="ico" data-page-node-id="yAMnHMrjFM89bJ5HAtMDIH"></span>标签管理</a>
+      <div class="group" data-page-node-id="lTy0pveGC1EugrOG4uzOnr">系统管理</div>
+      <a href="#" data-page-node-id="jWf8piAOkblgPhjb6AS1ZL"><span class="ico" data-page-node-id="KgBo1Y1H3pDgQyNSIM1MGW"></span>文件管理</a>
+    </nav>
+  </aside>
+  <div class="main" data-page-node-id="bwBVqPwfUIShKDq1fNwFlb">
+    <!-- 顶栏 56 白 -->
+    <header class="topbar" data-page-node-id="6kFGObQD7zb0Gmqo0jLbIa">
+      <div class="sys" data-page-node-id="PSUM1qqj1HnMAyE8QuIvQm">博客系统</div>
+      <div class="op" data-page-node-id="V6kPHENhgEijrcVfHZH4je"><span data-page-node-id="GHvZgYRrE65NxRPnRG585D">admin</span><a href="#" data-page-node-id="16HDb8qnQIoE9J6OoGQOgg">退出</a></div>
+    </header>
+    <main class="content" data-page-node-id="3N0Fp8MPwmqEf9pc6aQDSh">
+      <div class="page-card" data-page-node-id="ErpA8gBmv0ksr7kcqUxBqG">
+        <!-- B. toolbar：左主操作，右筛选 -->
+        <div class="toolbar" data-page-node-id="lmtpwYhAzj8cTcHt4mHkwE">
+          <button class="btn btn-primary" id="btnCreate" data-page-node-id="E86gwn6iZJWay9vdHbcQD9">＋ 新建文章</button>
+          <div class="grow" data-page-node-id="vQXxJFAvWCKLTnxouGecFg"></div>
+          <div class="filter" data-page-node-id="GSshf8ozu4n82DpbsXEEGE">
+            <label data-page-node-id="lEPA5qkZmXz9Dr1RGvLkVj">关键词</label>
+            <input class="ipt" id="fKeyword" placeholder="标题 / 作者" data-page-node-id="qzVUpOHpmQWMgNZ1gFcZrw">
+          </div>
+          <div class="filter" data-page-node-id="ZBe54ihLH0TTnvJtsi9ZqM">
+            <label data-page-node-id="RppyMleV4f02U4BCx2T2jk">状态</label>
+            <select class="sel" id="fStatus" style="min-width:110px" data-page-node-id="Crp17SySWZQO0a3cXWc97s">
+              <option value="" data-page-node-id="4s5Qtfob3Ph3ZivHlvAqAu">全部</option><option value="1" data-page-node-id="YE2DnWdsBcNZrlbNnW12wf">已发布</option>
+              <option value="0" data-page-node-id="3fjkZLjOJkRdDfqSLjzzZZ">草稿</option><option value="2" data-page-node-id="5ptmHKkysrBqaGLcrCSlK5">已下线</option>
+            </select>
+          </div>
+          <div class="filter" data-page-node-id="77FHPg9vkYJNsZO9x5RfBg">
+            <label data-page-node-id="6r9q1XFyPdN2Pt8Yvx8p3j">创建时间</label>
+            <input class="ipt" type="date" id="fBegin" style="min-width:130px" data-page-node-id="iWSAkwCEUnhP47ZhOHX9Ck">
+            <span style="color:var(--text-secondary)" data-page-node-id="tjJUlzM6JOdlqWaYLjOxcB">~</span>
+            <input class="ipt" type="date" id="fEnd" style="min-width:130px" data-page-node-id="CJISnnQTg5ysfF52xLhSEf">
+          </div>
+        </div>
+        <!-- C. 表格 -->
+        <table class="grid" data-page-node-id="WmOSTXAxlXEUWKV7X4aPp5">
+          <thead data-page-node-id="2T4WOvntJCNLvsu6bC17FE">
+            <tr data-page-node-id="rA4SryJgON3S08GVSNWssD">
+              <th style="width:110px" data-page-node-id="wQExoZCaPjkiaEbqSLrNNb">ID</th>
+              <th style="min-width:220px" data-page-node-id="IQroS0E6HEcDSsZhquq6Ku">标题</th>
+              <th style="width:100px" data-page-node-id="p6HCpncHLtuI6wX0FMssfY">作者</th>
+              <th style="width:90px" data-page-node-id="WaVHQ0BP4hi7gJKjMTocGH">分类</th>
+              <th style="width:90px" data-page-node-id="HWqxLeFEZJMGmXxn8ENKn7">状态</th>
+              <th style="width:100px" data-page-node-id="uumWpSeqWxv5IJ4qcRzZdb">浏览量</th>
+              <th style="width:160px" data-page-node-id="TBlqDQJ5GpewBoK7FHBIfG">创建时间</th>
+              <th style="width:140px" data-page-node-id="Ovnj1DXzTuuV4yJyhblMWk">操作</th>
+            </tr>
+          </thead>
+          <tbody id="tbody" data-page-node-id="qGZ4n8vrbJ7zlPDQYBV3s7"></tbody>
+        </table>
+        <!-- D. 分页 -->
+        <div class="pagination" id="pager" data-page-node-id="fYaWKuHc7UxjO9ytif63zy"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- E. D-Form 弹窗（新建/编辑共用） -->
+<div class="mask" id="formMask" data-page-node-id="pHTPtbcwknKvKmVjWcVJYH">
+  <div class="dialog" data-page-node-id="7JnhleAgEbXsYKNvL1vGnH">
+    <div class="d-head" data-page-node-id="hA24iMWkpaHlDnAmGfV2Jt"><h3 id="formTitle" data-page-node-id="XJvf8trkJLmzRdmcEK5EH2">新建文章</h3><button class="x" id="formClose" data-page-node-id="HYMoMh8pFLY51LbFechtCQ">✕</button></div>
+    <div class="d-body" data-page-node-id="s8l0Yx1mBZ3BQ087emYU2t">
+      <div class="frow" data-f="title" data-page-node-id="DlXOhFNGtQoHllpfFzhNmj">
+        <label data-page-node-id="9izcjxR2qvf0AztqHDzais"><b data-page-node-id="UmxCHQcvQyJYUeJYHcACTC">*</b>标题</label>
+        <div class="fc" data-page-node-id="Rl1ZAdXjzGXUOlvHdYBegm"><input class="ipt" id="gTitle" placeholder="请输入文章标题" data-page-node-id="9MLoEgv6bOZJu7x6C54ipu"><div class="err" data-page-node-id="03NptN1uOEh2jEXjr0R6Hq">请输入标题（1–100 字）</div></div>
+      </div>
+      <div class="frow" data-f="category" data-page-node-id="uWovu2eGCXaE2CdPiYzA9N">
+        <label data-page-node-id="8yLRsYdcgnfuDJk4NAWiAU"><b data-page-node-id="b2JawjqFtLPxbr1pSt9qjb">*</b>分类</label>
+        <div class="fc" data-page-node-id="VwqFCAUzIx249u2Q3CXw31"><select class="sel" id="gCategory" data-page-node-id="NxAip4CZ8cni0aCC9jwVLV"><option value="" data-page-node-id="9L44fAgvuLvQfHbm00P74G">请选择</option><option data-page-node-id="m75awi06ioc6PE82TIpbiP">技术</option><option data-page-node-id="o772CLL8fHplAMZDLdtiQM">随笔</option><option data-page-node-id="ervzQtj8NXHurTQC9vEv3R">公告</option></select><div class="err" data-page-node-id="EgrpHZFHoii6gkY8UkSsnH">请选择分类</div></div>
+      </div>
+      <div class="frow" data-f="author" data-page-node-id="th1T26vHRfLke7YTTX1xcW">
+        <label data-page-node-id="ACGGy4rBK87K1frW9YZrOz">作者</label>
+        <div class="fc" data-page-node-id="RCVPgtqCk5og9SahcGsuqQ"><input class="ipt" id="gAuthor" placeholder="默认当前操作员" data-page-node-id="onQN7BuzCscnqyi467FBM4"></div>
+      </div>
+      <div class="frow" data-f="status" data-page-node-id="PRmcEgraTf3e0KQaXGksBI">
+        <label data-page-node-id="rL6mgqdY3p0QJpd7DCHSFi"><b data-page-node-id="FMDIigfmfBzyJXBJDGyHHf">*</b>状态</label>
+        <div class="fc" data-page-node-id="azQDmMDasj8t2QnXp9o3z5"><select class="sel" id="gStatus" data-page-node-id="opoHcaoV7XuxaIfsTT9Xme"><option value="0" data-page-node-id="AmRvhZ3n7nGLzXo2fAmNDk">草稿</option><option value="1" data-page-node-id="UZMHbiNkC02tI4hduoCVEE">已发布</option><option value="2" data-page-node-id="U3HBfh22y0OHTn6xez213E">已下线</option></select><div class="err" data-page-node-id="FuosVlbglwysP5ASdBLSVO">请选择状态</div></div>
+      </div>
+      <div class="frow" data-f="summary" data-page-node-id="WZtlIQ0bntgrYA4gVIWnOC">
+        <label data-page-node-id="lx1p2AZjirGfpxo9mDQ932">摘要</label>
+        <div class="fc" data-page-node-id="p6eC7RhjKD9fnt3fk3iWLu"><textarea class="ipt" id="gSummary" placeholder="展示在列表与分享卡片（≤200 字）"></textarea></div>
+      </div>
+    </div>
+    <div class="d-foot" data-page-node-id="AE7Pe2qHjyFU6sCjekxHGs">
+      <button class="btn" id="formCancel" data-page-node-id="JaL3coOY0ToXXRC7mr4BWd">取消</button>
+      <button class="btn btn-primary" id="formSave" data-page-node-id="YX9Baeak6nESbCtDluLmoR">保 存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 删除二次确认（示意 ElMessageBox.confirm） -->
+<div class="mask" id="delMask" data-page-node-id="y7zR3ubJCLW8I9kWJO0X45">
+  <div class="dialog confirm-box" data-page-node-id="T2dVCplnqhog4aEhM1lT0L">
+    <div class="d-body" data-page-node-id="bgGEGOKN156MdUTi514l1t"><span class="warn-ico" data-page-node-id="ASbUGXU982xIGHJdeSEArD">!</span><span id="delText" data-page-node-id="WRVMe19XhjKU0tVbDmg3cc">确认删除该条数据吗？</span></div>
+    <div class="d-foot" data-page-node-id="C9usgMpUr1vyW4pod93zW2">
+      <button class="btn" id="delCancel" data-page-node-id="CdVv9lBSBIlOSiRWaYeFfP">取消</button>
+      <button class="btn btn-primary" id="delOk" style="background:var(--danger)" data-page-node-id="DC2aHpLtPCfGv4VsWnZyVU">删 除</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" data-page-node-id="V9Z4RUdFhHwIUT1rUM7jS5"></div>
+<div class="resp" id="resp" data-page-node-id="BvHJOIQOLDAYlrvONijoQR"></div>
+
+<script>
+/* ====== 通用管理页运行时（样张示意；工程版为 CrudPage.vue 配置驱动）====== */
+/* schema 即 docs/template/generic-admin-page-design.md §3 的演示形态 */
+const schema = {
+  permissionPrefix: 'blog:article',
+  columns: [
+    { prop:'id',      label:'ID',       type:'text',  width:110, copyable:true },
+    { prop:'title',   label:'标题',     type:'text',  minWidth:220, tooltip:true },
+    { prop:'author',  label:'作者',     type:'text',  width:100 },
+    { prop:'category',label:'分类',     type:'enum',  width:90,  options:{} },
+    { prop:'status',  label:'状态',     type:'pill',  width:90,
+      options:{ 1:{label:'已发布',tone:'success'}, 0:{label:'草稿',tone:'warning'}, 2:{label:'已下线',tone:'danger'} } },
+    { prop:'views',   label:'浏览量',   type:'text',  width:100 },
+    { prop:'createTime', label:'创建时间', type:'datetime', width:160 },
+  ],
+  filters: [ {prop:'keyword',type:'input'}, {prop:'status',type:'select'}, {prop:'range',type:'dateRange'} ],
+};
+
+/* ===== mock 数据（模拟 PageResult：records + total）===== */
+const STATUS = {1:{label:'已发布',tone:'success'},0:{label:'草稿',tone:'warning'},2:{label:'已下线',tone:'danger'}};
+const CATS = ['技术','随笔','公告'];
+let db = []; let seq = 1;
+function seed(){
+  const titles=['Spring Cloud 网关鉴权实践','一文读懂 OIDC 授权码 + PKCE','MinIO 预签名 URL 踩坑记','发号器设计：16 位业务日期号段','Vue3 动态路由与按钮权限','Element Plus 表单校验最佳实践','博客上线公告'];
+  const authors=['admin','editor','admin','admin','editor','admin','admin'];
+  for(let i=0;i<23;i++){
+    const d=new Date(2026,8,1)+i*36e5*29;
+    db.push({ id:'20260901'+String(seq++).padStart(8,'0'), title:titles[i%titles.length]+(i>=titles.length?'（续）':''),
+      author:authors[i%authors.length], category:CATS[i%3], status:[1,1,0,2,1,0][i%6],
+      views:(i*137)%900+40, createTime:fmt(d) });
+  }
+}
+function fmt(d){const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`}
+
+/* ===== 状态 ===== */
+const state = { current:1, size:10, total:0 };
+const $ = s=>document.querySelector(s);
+function toast(msg){const t=$('#toast');t.textContent=msg;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',1800)}
+function resp(msg){const r=$('#resp');r.textContent=msg;r.style.display='block';clearTimeout(r._h);r._h=setTimeout(()=>r.style.display='none',2600)}
+
+/* 模拟 api.page → PageResult（筛选在服务端语义） */
+function fetchPage(){
+  const kw=$('#fKeyword').value.trim(), st=$('#fStatus').value, b=$('#fBegin').value, e=$('#fEnd').value;
+  let rows=db.filter(r=>
+    (!kw || r.title.includes(kw)||r.author.includes(kw)) &&
+    (st===''||String(r.status)===st) &&
+    (!b || r.createTime.slice(0,10)>=b) && (!e || r.createTime.slice(0,10)<=e));
+  state.total=rows.length;
+  const start=(state.current-1)*state.size;
+  return rows.slice(start,start+state.size);
+}
+
+/* 渲染（列由 schema.columns 驱动——示意） */
+function render(){
+  const rows=fetchPage(), tb=$('#tbody');
+  if(!rows.length){ tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="fig"></div>暂无数据</div></td></tr>`; renderPager(); return; }
+  tb.innerHTML=rows.map(r=>`<tr>
+    <td class="num">${r.id}<span class="copy" data-id="${r.id}">复制</span></td>
+    <td><span class="ell" title="${r.title}">${r.title}</span></td>
+    <td>${r.author}</td><td>${r.category}</td>
+    <td><span class="pill ${STATUS[r.status].tone}">${STATUS[r.status].label}</span></td>
+    <td class="num">${r.views}</td><td class="num">${r.createTime}</td>
+    <td class="ops">
+      <button class="btn-link" data-edit="${r.id}">编辑</button>
+      <button class="btn-link danger" data-del="${r.id}">删除</button>
+    </td></tr>`).join('');
+  renderPager();
+}
+function renderPager(){
+  const pages=Math.max(1,Math.ceil(state.total/state.size));
+  let h=`<span class="total">共 ${state.total} 条</span>`;
+  h+=`<button class="pg" ${state.current<=1?'disabled':''} data-pg="${state.current-1}">‹</button>`;
+  for(let i=1;i<=pages;i++){ if(pages>7&&i>2&&i<pages-1&&Math.abs(i-state.current)>1){ if(i===3&&state.current>4)h+=`<span>…</span>`; continue;} h+=`<button class="pg ${i===state.current?'cur':''}" data-pg="${i}">${i}</button>`; }
+  h+=`<button class="pg" ${state.current>=pages?'disabled':''} data-pg="${state.current+1}">›</button>`;
+  h+=`<select class="sel" id="pgSize" style="min-width:88px;height:28px;margin-left:8px">`+[10,20,50].map(n=>`<option ${n===state.size?'selected':''}>${n} 条/页</option>`).join('')+`</select>`;
+  $('#pager').innerHTML=h;
+}
+
+/* 筛选：变更即查，页码重置 1 */
+['fKeyword','fStatus','fBegin','fEnd'].forEach(id=>{
+  $('#'+id).addEventListener(id==='fKeyword'?'input':'change',()=>{state.current=1;render()});
+});
+$('#pager').addEventListener('click',e=>{
+  const b=e.target.closest('[data-pg]'); if(b&&!b.disabled){state.current=+b.dataset.pg;render()}
+});
+$('#pager').addEventListener('change',e=>{
+  if(e.target.id==='pgSize'){state.size=parseInt(e.target.value);state.current=1;render()}
+});
+document.addEventListener('click',e=>{
+  if(e.target.classList.contains('copy')){
+    navigator.clipboard&&navigator.clipboard.writeText(e.target.dataset.id);toast('已复制 ID');
+  }
+  const ed=e.target.closest('[data-edit]'), del=e.target.closest('[data-del]');
+  if(ed) openForm(db.find(r=>r.id===ed.dataset.edit));
+  if(del){
+    $('#delText').textContent=`确认删除文章「${db.find(r=>r.id===del.dataset.del).title}」吗？删除后不可恢复。`;
+    $('#delMask').dataset.id=del.dataset.del; $('#delMask').classList.add('show');
+  }
+});
+
+/* D-Form：新建 / 编辑 */
+let editing=null;
+function openForm(row){
+  editing=row||null;
+  $('#formTitle').textContent=row?'编辑文章':'新建文章';
+  $('#gTitle').value=row?row.title:''; $('#gCategory').value=row?row.category:'';
+  $('#gAuthor').value=row?row.author:''; $('#gStatus').value=String(row?row.status:0);
+  $('#gSummary').value='';
+  document.querySelectorAll('.frow').forEach(f=>f.classList.remove('invalid'));
+  $('#formMask').classList.add('show');
+  setTimeout(()=>$('#gTitle').focus(),60);   /* 弹窗打开聚焦首输入（admin-ui-design.md §6） */
+}
+function closeForm(){$('#formMask').classList.remove('show')}
+$('#btnCreate').onclick=()=>openForm(null);
+$('#formClose').onclick=$('#formCancel').onclick=closeForm;
+$('#formSave').onclick=function(){
+  this.disabled=true; this.textContent='保存中…';      /* 提交防重 loading */
+  let ok=true;
+  const need=[['gTitle','title'],['gCategory','category'],['gStatus','status']];
+  document.querySelectorAll('.frow').forEach(f=>f.classList.remove('invalid'));
+  need.forEach(([id,f])=>{
+    if(!$('#'+id).value.trim()){document.querySelector(`.frow[data-f="${f}"]`).classList.add('invalid');ok=false}
+  });
+  if(!ok){this.disabled=false;this.textContent='保 存';return}
+  setTimeout(()=>{                                       /* 模拟请求 */
+    if(editing){ Object.assign(editing,{title:$('#gTitle').value.trim(),category:$('#gCategory').value,author:$('#gAuthor').value.trim()||'admin',status:+$('#gStatus').value}); }
+    else{ db.unshift({id:'20261019'+String(seq++).padStart(8,'0'),title:$('#gTitle').value.trim(),author:$('#gAuthor').value.trim()||'admin',category:$('#gCategory').value,status:+$('#gStatus').value,views:0,createTime:fmt(new Date())}); }
+    this.disabled=false; this.textContent='保 存'; closeForm();
+    toast(editing?'已保存':'新建成功'); state.current=1; render();
+  },400);
+};
+/* 删除确认 → 成功 toast → 刷新当前页 */
+$('#delCancel').onclick=()=>$('#delMask').classList.remove('show');
+$('#delOk').onclick=function(){
+  const id=$('#delMask').dataset.id; db=db.filter(r=>r.id!==id);
+  $('#delMask').classList.remove('show'); toast('删除成功');
+  const pages=Math.max(1,Math.ceil(db.length/state.size));
+  if(state.current>pages)state.current=pages;           /* 当前页删空回退一页 */
+  render();
+};
+
+seed(); render();
+resp('样张说明：新建/编辑/删除/筛选/分页均可交互；工程版由 CrudPage.vue 消费 xxx.config.ts 配置驱动，视觉 token 与本样张一致。');
+</script>
+</body>
+</html>

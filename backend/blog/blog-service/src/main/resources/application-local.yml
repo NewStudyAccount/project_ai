@@ -21,7 +21,7 @@ blog:
   minio:
     endpoint: http://192.168.99.100:9000
     access-key: minio_admin
-    secret-key: 123456
+    secret-key: minio123456
     bucket: blog
 user:
   feign:

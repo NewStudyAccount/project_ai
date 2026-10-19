@@ -29,7 +29,6 @@ export interface ArticleVO {
 
 export interface ArticleDetailVO extends ArticleVO {
   content?: string
-  contentFormat?: string
   seoTitle?: string
   seoDescription?: string
 }
