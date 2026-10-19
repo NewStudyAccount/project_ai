@@ -1,8 +1,9 @@
-package com.qjj.auth.service.service;
+package com.qjj.auth.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qjj.auth.common.result.PageResult;
+import com.qjj.auth.service.service.AuditService;
 import com.qjj.auth.framework.core.AuthContext;
 import com.qjj.auth.framework.core.IdGenerator;
 import com.qjj.auth.framework.core.MybatisSupportConfiguration;

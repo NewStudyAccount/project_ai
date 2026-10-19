@@ -1,4 +1,4 @@
-package com.qjj.auth.service.service;
+package com.qjj.auth.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qjj.auth.common.enums.AuthErrorCodeEnum;
@@ -6,6 +6,9 @@ import com.qjj.auth.common.exception.BizException;
 import com.qjj.auth.service.entity.SysCredential;
 import com.qjj.auth.service.mapper.SysCredentialMapper;
 import com.qjj.auth.service.security.AuthPrincipal;
+import com.qjj.auth.service.service.AuditService;
+import com.qjj.auth.service.service.CredentialService;
+import com.qjj.auth.service.service.RbacService;
 import com.qjj.user.api.dto.UsernameStatusVO;
 import com.qjj.user.api.feign.UserQueryClient;
 import lombok.RequiredArgsConstructor;

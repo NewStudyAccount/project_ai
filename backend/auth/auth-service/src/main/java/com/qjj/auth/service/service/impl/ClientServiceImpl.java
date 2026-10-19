@@ -1,4 +1,4 @@
-package com.qjj.auth.service.service;
+package com.qjj.auth.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -10,6 +10,8 @@ import com.qjj.auth.framework.core.MybatisSupportConfiguration;
 import com.qjj.auth.service.dto.ClientRequest;
 import com.qjj.auth.service.entity.OAuthClient;
 import com.qjj.auth.service.mapper.OAuthClientMapper;
+import com.qjj.auth.service.service.AuditService;
+import com.qjj.auth.service.service.ClientService;
 import com.qjj.auth.service.vo.ClientSecretVO;
 import com.qjj.auth.service.vo.ClientVO;
 import lombok.RequiredArgsConstructor;

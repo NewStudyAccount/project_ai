@@ -1,4 +1,4 @@
-package com.qjj.auth.service.service;
+package com.qjj.auth.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -10,6 +10,9 @@ import com.qjj.auth.service.dto.GrantQuery;
 import com.qjj.auth.service.entity.AuthGrant;
 import com.qjj.auth.service.mapper.AuthGrantMapper;
 import com.qjj.auth.service.security.SsoSessionService;
+import com.qjj.auth.service.service.AuditService;
+import com.qjj.auth.service.service.GrantService;
+import com.qjj.auth.service.service.TokenManagementService;
 import com.qjj.auth.service.vo.GrantVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
