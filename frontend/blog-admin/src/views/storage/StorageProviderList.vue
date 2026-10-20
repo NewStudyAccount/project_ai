@@ -326,12 +326,12 @@ function onCustomAction(key: string, row?: StorageProviderVO) {
   font-weight: 500;
 }
 .pill-type {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: var(--pill-cyan-bg);
+  color: var(--pill-cyan-fg);
 }
 .pill-default {
-  background: #f0f9ff;
-  color: #0c4a6e;
+  background: var(--primary-light);
+  color: var(--primary-hover);
   border: 1px solid var(--primary);
   margin-left: 4px;
 }
