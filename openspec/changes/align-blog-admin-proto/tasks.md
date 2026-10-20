@@ -9,9 +9,11 @@
 
 ## 2. 低风险页收敛（行为零变化）
 
-- [x] 2.1 改造 `views/content/CategoryList.vue`：关键词/状态筛选、分页、D-Form 必填校验、删除二次确认 + 后端 `msg` 展示
+- [ ] 2.1 改造 `views/content/CategoryList.vue`：关键词/状态筛选、分页、D-Form 必填校验、删除二次确认 + 后端 `msg` 展示
+  > 缺口：分类页分页不适用——GET /admin/categories 返回树、后端无分页契约（CategoryService.tree 无 current/size），按工程契约 P-Tree（generic-admin-page-design §6）保留树表；关键词/状态筛选、D-Form 必填校验、删除二次确认 + 后端 msg 展示已达成。
 - [x] 2.2 改造 `views/content/TagList.vue`：同 2.1 形态
-- [x] 2.3 改造 `views/audit/AuditList.vue`：时间范围 + 操作人/模块/结果筛选、长文本省略 + title、详情 D-Panel 键值对（TraceId 仅出参有则展示）
+- [ ] 2.3 改造 `views/audit/AuditList.vue`：时间范围 + 操作人/模块/结果筛选、长文本省略 + title、详情 D-Panel 键值对（TraceId 仅出参有则展示）
+  > 缺口：部分完成——缺 模块/结果 筛选（后端依据：AuditPageQuery 仅 action/actorUserId/beginTime/endTime，无 module/result 参数）；已实现 时间范围+操作人+动作 三筛选、长文本省略、D-Panel、TraceId 条件渲染。
 - [x] 2.4 改造 `views/Dashboard.vue`：说明卡 + 快捷入口（文章/分类/标签/文件/服务商）；统计卡片有接口则展示、无则降级
 
 ## 3. 文章列表形态收敛（不碰编辑器）
@@ -25,7 +27,8 @@
 - [x] 4.1 与 `blog-object-storage-frontend` 持有者确认 apply 时机与文件分工（业务字段冲突以该变更为准）
 - [x] 4.2 改造 `views/file/FileList.vue` 形态层：筛选条/表格/分页/删除确认接 CrudPage；上传、引用检查、storageCode 逻辑逐行保持
 - [x] 4.3 改造 `views/storage/StorageProviderList.vue` 形态层：D-Form/确认/软胶囊对齐；测试连通、设默认、SK 只写掩码回显逻辑保持
-- [x] 4.4 动作手测：上传 / 测试连通 / 设默认 / 删除 / SK 留空保存，确认请求参数与结果处理与改造前一致
+- [ ] 4.4 动作手测：上传 / 测试连通 / 设默认 / 删除 / SK 留空保存，确认请求参数与结果处理与改造前一致
+  > 缺口：静态对照完成（上传/测试连通/设默认/删除/SK 留空 逐动作请求参数与结果处理与改造前一致，QA 已逐字节复核）；真机手测待测试环境/后端就绪后补做。
 
 ## 5. 自检
 
@@ -33,3 +36,7 @@
 - [x] 5.2 `cd frontend/blog-admin && npm run type-check` 通过
 - [x] 5.3 权限与契约走查：无权限按钮不渲染、无角色名硬编码、id 一律 string、无 console.log 残留、密钥/敏感字段无明文回显
 - [x] 5.4 提交自查：改动仅限 `frontend/blog-admin` 且不含编辑器/内容域文件；每页独立提交（`feat(blog-admin): …`）；与在途变更无字段级冲突
+
+## 偏离登记（QA 回归发现）
+
+> spec ≤30 行偏离（spec.md「业务页面 SHALL config + ≤ 30 行接线」）：ArticleList.vue 69 行、FileList.vue 382 行、StorageProviderList.vue 353 行、CategoryList.vue 167 行；且上传弹窗 / 服务商 D-Form / 分类 D-Form 为骨架外 el-dialog 自建。理由：密码只写输入、providerType→pathStyle 联动、region 条件必填、上传文件流、树表等超出 CrudForm FormFieldDef 契约（代码注释已述），骨架级扩展须 auth/blog/user 三系统同步走变更。是否修订 spec 归主理人呈用户裁决，本登记不改 spec 定义。
