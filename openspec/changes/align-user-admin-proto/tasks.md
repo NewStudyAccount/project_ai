@@ -9,14 +9,19 @@
 
 ## 2. 账号管理（UserList）
 
-- [x] 2.1 改造 `views/user/UserList.vue` 为 PageSchema 驱动：筛选（用户名/姓名关键词、角色、状态、创建时间范围），变更/回车即查且页码重置 1
-- [x] 2.2 表格列对齐原型：用户 id（string）、用户名、姓名、部门、角色、手机号（出参脱敏值）、状态软胶囊、创建时间（不换行）
-- [x] 2.3 D-Form 新建/编辑：用户名/姓名必填红字校验、编辑锁定用户名、id 不暴露、状态胶囊单选、保存 loading 防重
-- [x] 2.4 行内操作：编辑 / 重置密码（二次确认 + toast）/ 删除（danger 二次确认 + toast + 刷新 + 删空回退一页）
+- [ ] 2.1 改造 `views/user/UserList.vue` 为 PageSchema 驱动：筛选（用户名/姓名关键词、角色、状态、创建时间范围），变更/回车即查且页码重置 1
+  > 缺口：部分完成——缺 姓名关键词/角色/创建时间范围 三类筛选（后端依据：UserPageQuery 仅 username/status/orderBy/order，无 realName/role/beginTime/endTime 参数）；PageSchema 驱动、用户名/状态筛选、变更/回车即查且页码重置 1 已达成。
+- [ ] 2.2 表格列对齐原型：用户 id（string）、用户名、姓名、部门、角色、手机号（出参脱敏值）、状态软胶囊、创建时间（不换行）
+  > 缺口：部分完成——缺 部门/角色 列（后端依据：UserVO 16 字段无 dept/role，且无 GET /users/{id}/roles 读端点）；用户 id（string）、用户名、姓名、手机号（后端 DesensitizedUtils 脱敏出参直出）、状态软胶囊、创建时间不换行已达成。
+- [ ] 2.3 D-Form 新建/编辑：用户名/姓名必填红字校验、编辑锁定用户名、id 不暴露、状态胶囊单选、保存 loading 防重
+  > 缺口：部分完成——缺 状态胶囊单选（后端依据：Create/Update DTO 均无 status 字段，唯一契约 POST /users/{id}/status；FormFieldDef 无 radio 控件），现状以行内启停动作承载（updateStatus）；必填红字、编辑锁用户名、id 不暴露、保存防重已达成。
+- [ ] 2.4 行内操作：编辑 / 重置密码（二次确认 + toast）/ 删除（danger 二次确认 + toast + 刷新 + 删空回退一页）
+  > 缺口：未完成——后端无重置密码/删除账号端点（UserController 仅 page/get/create/update/updateStatus/assignRoles/removeRoles，controller 层 password|reset 零命中），前端未自造 API、未接线；待后端补齐后接线（二次确认+toast+刷新骨架已内建）。编辑行内操作已达成。
 
 ## 3. 审计列表（AuditList）
 
-- [x] 3.1 改造 `views/audit/AuditList.vue`：操作人/模块/结果筛选 + 时间范围（beginTime/endTime），长文本省略 + title 提示
+- [ ] 3.1 改造 `views/audit/AuditList.vue`：操作人/模块/结果筛选 + 时间范围（beginTime/endTime），长文本省略 + title 提示
+  > 缺口：部分完成——缺 模块/结果 筛选（后端依据：AuditPageQuery 仅 action/actorUserId/targetUserId/beginTime/endTime，无 module/result 参数）；操作人/时间范围筛选、长文本省略 + title 已达成。
 - [x] 3.2 审计详情 D-Panel：键值对展示全量字段；TraceId 仅当后端出参提供时渲染
 
 ## 4. 首页与全局
