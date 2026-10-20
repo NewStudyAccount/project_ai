@@ -1,40 +1,68 @@
-/* 云白 Cloud Paper · user-admin 全局样式
- * 权威：docs/template/admin-ui-design.md §1 / tokens-cloud-paper.css
+/* 极光 Aurora · user-admin 全局样式
+ * 权威：docs/template/admin-ui-design.md §1 / tokens-aurora.css
  */
 
 :root {
-  --bg-page: #f6f7f9;
+  /* 背景 */
+  --bg-page: #f3f5fb;
   --bg-surface: #ffffff;
-  --bg-sidebar: #ffffff;
-  --bg-sidebar-active: #f0f9ff;
-  --text-primary: #18181b;
-  --text-regular: #3f3f46;
-  --text-secondary: #71717a;
-  --text-sidebar: #18181b;
-  --text-sidebar-muted: #71717a;
-  --text-sidebar-active: #0c4a6e;
-  --border: #e4e4e7;
-  --primary: #0284c7;
-  --primary-hover: #0369a1;
-  --primary-light: #f0f9ff;
-  --accent-bar: #0284c7;
-  --danger: #e11d48;
-  --success: #0f766e;
-  --warning: #c2410c;
-  --page-radius: 12px;
-  --control-radius: 8px;
+  --bg-sidebar: #1c1248; /* 侧栏纯色兜底（渐变不可用时） */
+  --bg-sidebar-gradient: linear-gradient(165deg, #1b1147 0%, #271563 58%, #2c1c78 100%);
+  --sidebar-glow: radial-gradient(640px 260px at 20% -30%, rgba(109, 93, 246, 0.45), transparent 65%);
+  --bg-sidebar-active: rgba(255, 255, 255, 0.10); /* 侧栏激活项玻璃底 */
+
+  /* 文字 */
+  --text-primary: #1c1740;
+  --text-regular: #3f3a6b;
+  --text-secondary: #8580ad;
+  --text-sidebar: #edeaff;
+  --text-sidebar-muted: #a9a2d8;
+  --text-sidebar-active: #ffffff;
+
+  /* 线与强调 */
+  --border: #e6e4f4;
+  --primary: #6d5df6;
+  --primary-hover: #5a49e8;
+  --primary-light: #eeecff;
+  --accent-bar: #22d3ee;
+  --accent-gradient: linear-gradient(135deg, #6d5df6 0%, #8b5cf6 45%, #22d3ee 100%);
+  --primary-glow: 0 8px 24px rgba(109, 93, 246, 0.35);
+  --danger: #f43f5e;
+  --success: #10b981;
+  --warning: #f59e0b;
+
+  /* 圆角 / 阴影 / 间距 */
+  --page-radius: 16px;
+  --control-radius: 10px;
   --button-radius: 999px;
-  --space-page: 16px;
-  --space-toolbar: 8px;
-  --shadow-card: 0 1px 2px rgba(24, 24, 27, 0.04), 0 8px 20px rgba(24, 24, 27, 0.04);
-  --shadow-dialog: 0 8px 24px rgba(15, 23, 42, 0.12);
-  --el-color-primary: #0284c7;
-  --el-color-primary-light-3: #38a2d8;
-  --el-color-primary-light-5: #6bb8e2;
-  --el-color-primary-light-7: #9fd0ec;
-  --el-color-primary-light-8: #b9def2;
-  --el-color-primary-light-9: #e6f3fa;
-  --el-color-primary-dark-2: #026ea3;
+  --space-page: 20px;
+  --space-toolbar: 10px;
+  --shadow-card: 0 1px 2px rgba(28, 23, 64, 0.05), 0 12px 28px rgba(88, 70, 200, 0.09);
+  --shadow-card-hover: 0 2px 4px rgba(28, 23, 64, 0.06), 0 18px 40px rgba(88, 70, 200, 0.16);
+  --shadow-dialog: 0 24px 64px rgba(28, 23, 64, 0.22), 0 8px 24px rgba(88, 70, 200, 0.14);
+
+  /* 彩色统计卡（仅 Dashboard，接口可得时使用） */
+  --stat-grad-1: linear-gradient(135deg, #6d5df6 0%, #8b5cf6 100%); /* 靛紫 */
+  --stat-grad-2: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%); /* 青蓝 */
+  --stat-grad-3: linear-gradient(135deg, #10b981 0%, #34d399 100%); /* 翡翠 */
+  --stat-grad-4: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); /* 琥珀 */
+
+  /* 状态软胶囊底/字（固定配对，见 admin-ui-design.md §5） */
+  --pill-ok-bg: #d1fae5;    --pill-ok-fg: #047857;
+  --pill-warn-bg: #fef3c7;  --pill-warn-fg: #b45309;
+  --pill-bad-bg: #ffe4e6;   --pill-bad-fg: #be123c;
+  --pill-info-bg: #e0e7ff;  --pill-info-fg: #4338ca;
+  --pill-cyan-bg: #cffafe;  --pill-cyan-fg: #0e7490;
+
+  /* Element Plus 主色对齐 */
+  --el-color-primary: #6d5df6;
+  --el-color-primary-light-3: #8f83f8;
+  --el-color-primary-light-5: #b1a8fa;
+  --el-color-primary-light-7: #d2cdfd;
+  --el-color-primary-light-8: #e3dffe;
+  --el-color-primary-light-9: #f2f0ff;
+  --el-color-primary-dark-2: #5849c5;
+
   font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
   color: var(--text-primary);
   background: var(--bg-page);
@@ -54,6 +82,12 @@ body {
   background: var(--bg-surface);
   border-radius: var(--page-radius);
   box-shadow: var(--shadow-card);
+  transition: box-shadow 0.16s ease;
+}
+
+/* 卡片 hover 抬升（admin-ui-design.md §5） */
+.page-card:hover {
+  box-shadow: var(--shadow-card-hover);
 }
 
 .toolbar {
@@ -64,39 +98,108 @@ body {
   align-items: center;
 }
 
+/* 状态软胶囊（五组固定配对，admin-ui-design.md §5） */
 .status-pill {
   display: inline-flex;
   align-items: center;
   height: 22px;
   padding: 0 10px;
-  border-radius: 999px;
+  border-radius: var(--button-radius);
   font-size: 12px;
   font-weight: 500;
 }
 .status-pill.is-on {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--pill-ok-bg);
+  color: var(--pill-ok-fg);
 }
 .status-pill.is-off {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--pill-warn-bg);
+  color: var(--pill-warn-fg);
 }
 .status-pill.is-bad {
-  background: #ffe4e6;
-  color: #9f1239;
+  background: var(--pill-bad-bg);
+  color: var(--pill-bad-fg);
+}
+.status-pill.is-info {
+  background: var(--pill-info-bg);
+  color: var(--pill-info-fg);
+}
+.status-pill.is-cyan {
+  background: var(--pill-cyan-bg);
+  color: var(--pill-cyan-fg);
 }
 
-.toolbar .el-button--primary,
-.dialog-foot .el-button--primary {
+/* 主操作按钮：极光渐变胶囊 + 光晕（hover 提亮 / active 压暗 / disabled 降饱和不发光） */
+.toolbar .el-button--primary:not(.is-link),
+.el-dialog__footer .el-button--primary:not(.is-link) {
   border-radius: var(--button-radius);
+  border: none;
+  background: var(--accent-gradient);
+  box-shadow: var(--primary-glow);
+}
+.toolbar .el-button--primary:not(.is-link):hover,
+.el-dialog__footer .el-button--primary:not(.is-link):hover {
+  filter: brightness(1.07);
+}
+.toolbar .el-button--primary:not(.is-link):active,
+.el-dialog__footer .el-button--primary:not(.is-link):active {
+  filter: brightness(0.94);
+}
+.toolbar .el-button--primary.is-disabled,
+.el-dialog__footer .el-button--primary.is-disabled,
+.toolbar .el-button--primary:disabled,
+.el-dialog__footer .el-button--primary:disabled {
+  background: var(--border);
+  color: var(--text-secondary);
+  box-shadow: none;
+  filter: none;
 }
 
-/* 侧栏激活：浅天蓝底 + 3px 主色竖条（云白壳） */
+/* 分页当前页：极光渐变强调（admin-ui-design.md §5） */
+.el-pagination .el-pager li.is-active {
+  background: var(--accent-gradient);
+  color: #fff;
+  border-radius: var(--control-radius);
+  font-weight: 600;
+}
+
+/* 侧栏 el-menu 深色模式（壳，admin-ui-design.md §2；hover 取 token 不新增色值） */
+.el-menu {
+  border-right: none;
+  background: transparent;
+  --el-menu-bg-color: transparent;
+  --el-menu-text-color: var(--text-sidebar);
+  --el-menu-active-color: var(--text-sidebar-active);
+  --el-menu-hover-bg-color: var(--bg-sidebar-active);
+}
+.el-menu .el-sub-menu__title,
+.el-menu .el-menu-item {
+  color: var(--text-sidebar);
+}
+.el-menu .el-sub-menu__title:hover,
+.el-menu .el-menu-item:hover {
+  background: var(--bg-sidebar-active);
+  color: var(--text-sidebar);
+}
+.el-menu .el-sub-menu__icon-arrow {
+  color: var(--text-sidebar-muted);
+}
 .el-menu .el-menu-item.is-active {
   background: var(--bg-sidebar-active) !important;
   color: var(--text-sidebar-active) !important;
-  border-left: 3px solid var(--accent-bar);
-  padding-left: 13px;
+  font-weight: 600;
+  position: relative;
+}
+/* 激活项渐变竖条 3px（--accent-gradient） */
+.el-menu .el-menu-item.is-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--accent-gradient);
 }
 
 .el-dialog {

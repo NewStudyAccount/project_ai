@@ -15,11 +15,11 @@
 
 ## 3. user-admin 换装
 
-- [ ] 3.1 `frontend/user-admin/src/styles/main.css`：同 2.1
-- [ ] 3.2 `frontend/user-admin/src/components/AppLayout.vue`：同 2.2
-- [ ] 3.3 组件视觉对齐：同 2.3
-- [ ] 3.4 旧色值清底：同 2.4
-- [ ] 3.5 `cd frontend/user-admin && npm run lint && npm run type-check` 通过；独立提交 `feat(user-admin): 切换极光 Aurora 视觉基线`
+- [x] 3.1 `frontend/user-admin/src/styles/main.css`：同 2.1
+- [x] 3.2 `frontend/user-admin/src/components/AppLayout.vue`：同 2.2
+- [x] 3.3 组件视觉对齐：同 2.3
+- [x] 3.4 旧色值清底：同 2.4
+- [x] 3.5 `cd frontend/user-admin && npm run lint && npm run type-check` 通过；独立提交 `feat(user-admin): 切换极光 Aurora 视觉基线`
 
 ## 4. auth-admin 换装
 
