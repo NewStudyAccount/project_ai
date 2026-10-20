@@ -1,27 +1,53 @@
-/* 云白 Cloud Paper · auth-portal 全局样式
- * 权威：docs/template/admin-ui-design.md §1 / §4.5
+/* 极光 Aurora · auth-portal 全局样式
+ * 权威：docs/template/admin-ui-design.md §1 / §4.5 / tokens-aurora.css
  */
 
 :root {
-  --bg-page: #f6f7f9;
+  --bg-page: #f3f5fb;
   --bg-surface: #ffffff;
-  --text-primary: #18181b;
-  --text-regular: #3f3f46;
-  --text-secondary: #71717a;
-  --border: #e4e4e7;
-  --primary: #0284c7;
-  --primary-hover: #0369a1;
-  --danger: #e11d48;
-  --page-radius: 12px;
+  --text-primary: #1c1740;
+  --text-regular: #3f3a6b;
+  --text-secondary: #8580ad;
+  --border: #e6e4f4;
+  --primary: #6d5df6;
+  --primary-hover: #5a49e8;
+  --primary-light: #eeecff;
+  --accent-gradient: linear-gradient(135deg, #6d5df6 0%, #8b5cf6 45%, #22d3ee 100%);
+  --primary-glow: 0 8px 24px rgba(109, 93, 246, 0.35);
+  --danger: #f43f5e;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --page-radius: 16px;
   --button-radius: 999px;
-  --shadow-card: 0 1px 2px rgba(24, 24, 27, 0.04), 0 8px 20px rgba(24, 24, 27, 0.04);
-  --el-color-primary: #0284c7;
-  --el-color-primary-light-3: #38a2d8;
-  --el-color-primary-light-5: #6bb8e2;
-  --el-color-primary-light-7: #9fd0ec;
-  --el-color-primary-light-8: #b9def2;
-  --el-color-primary-light-9: #e6f3fa;
-  --el-color-primary-dark-2: #026ea3;
+  --shadow-card: 0 1px 2px rgba(28, 23, 64, 0.05), 0 12px 28px rgba(88, 70, 200, 0.09);
+  --el-color-primary: #6d5df6;
+  --el-color-primary-light-3: #8f83f8;
+  --el-color-primary-light-5: #b1a8fa;
+  --el-color-primary-light-7: #d2cdfd;
+  --el-color-primary-light-8: #e3dffe;
+  --el-color-primary-light-9: #f2f0ff;
+  --el-color-primary-dark-2: #5849c5;
+  --el-color-success: var(--success);
+  --el-color-success-light-3: #58cea7;
+  --el-color-success-light-5: #88dcc0;
+  --el-color-success-light-7: #b7ead9;
+  --el-color-success-light-8: #cff1e6;
+  --el-color-success-light-9: #e7f8f2;
+  --el-color-success-dark-2: #0d9467;
+  --el-color-warning: var(--warning);
+  --el-color-warning-light-3: #f8bb54;
+  --el-color-warning-light-5: #facf85;
+  --el-color-warning-light-7: #fce2b6;
+  --el-color-warning-light-8: #fdecce;
+  --el-color-warning-light-9: #fef5e7;
+  --el-color-warning-dark-2: #c47e09;
+  --el-color-danger: var(--danger);
+  --el-color-danger-light-3: #f7798e;
+  --el-color-danger-light-5: #fa9faf;
+  --el-color-danger-light-7: #fcc5cf;
+  --el-color-danger-light-8: #fdd9df;
+  --el-color-danger-light-9: #feecef;
+  --el-color-danger-dark-2: #c3324b;
   font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
   color: var(--text-primary);
   background: var(--bg-page);
@@ -54,7 +80,30 @@ body {
   padding: 32px 28px;
 }
 
+/* 主按钮：渐变胶囊 + 光晕（admin-ui-design.md §4.5） */
 .login-card .el-button--primary {
   width: 100%;
   border-radius: var(--button-radius);
+  background: var(--accent-gradient);
+  border-color: transparent;
+  box-shadow: var(--primary-glow);
+}
+
+.login-card .el-button--primary:hover,
+.login-card .el-button--primary:focus {
+  background: var(--accent-gradient);
+  border-color: transparent;
+  opacity: 0.92;
+}
+
+.login-card .el-button--primary:active {
+  opacity: 0.85;
+}
+
+.login-card .el-button--primary.is-disabled,
+.login-card .el-button--primary.is-disabled:hover {
+  background: var(--primary-light);
+  border-color: transparent;
+  box-shadow: none;
+  opacity: 1;
 }
