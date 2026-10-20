@@ -32,8 +32,8 @@ onMounted(async () => {
   gap: 10px;
 }
 .tag {
-  background: #ecf5ff;
-  color: #409eff;
+  background: var(--primary-light);
+  color: var(--primary);
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 13px;

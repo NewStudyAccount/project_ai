@@ -5,7 +5,7 @@
 <style scoped>
 .empty {
   text-align: center;
-  color: #909399;
+  color: var(--text-secondary);
   padding: 40px 0;
 }
 </style>

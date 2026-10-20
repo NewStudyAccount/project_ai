@@ -77,16 +77,16 @@ onMounted(load)
 }
 .item {
   padding: 12px 0;
-  border-bottom: 1px solid #f2f2f2;
+  border-bottom: 1px solid var(--border);
 }
 .item h3 {
   margin: 0 0 8px;
 }
 .meta {
-  color: #909399;
+  color: var(--text-secondary);
   font-size: 12px;
 }
 .empty {
-  color: #909399;
+  color: var(--text-secondary);
 }
 </style>

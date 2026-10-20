@@ -38,8 +38,8 @@ onMounted(async () => {
 
 <style scoped>
 .site-header {
-  background: #fff;
-  border-bottom: 1px solid #ebeef5;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
   margin-bottom: 16px;
 }
 .header-inner {
@@ -51,7 +51,7 @@ onMounted(async () => {
 .brand {
   font-weight: 600;
   font-size: 18px;
-  color: #303133;
+  color: var(--text-primary);
 }
 nav {
   display: flex;
@@ -60,7 +60,7 @@ nav {
 .site-footer {
   margin-top: 32px;
   padding: 16px 0;
-  color: #909399;
+  color: var(--text-secondary);
   font-size: 12px;
   text-align: center;
 }

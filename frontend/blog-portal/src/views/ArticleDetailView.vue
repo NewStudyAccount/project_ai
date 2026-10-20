@@ -54,7 +54,7 @@ h1 {
   font-size: 28px;
 }
 .meta {
-  color: #909399;
+  color: var(--text-secondary);
   font-size: 13px;
   margin-bottom: 8px;
 }
@@ -66,7 +66,7 @@ h1 {
   font-size: 12px;
 }
 .empty {
-  color: #909399;
+  color: var(--text-secondary);
   padding: 40px 0;
   text-align: center;
 }

@@ -33,7 +33,7 @@ onMounted(async () => {
 }
 .sub {
   margin-left: 16px;
-  color: #606266;
+  color: var(--text-regular);
 }
 li {
   padding: 6px 0;

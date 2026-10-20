@@ -49,20 +49,20 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
-  border-bottom: 1px solid #f2f2f2;
+  border-bottom: 1px solid var(--border);
 }
 .item h4 {
   margin: 0 0 8px;
 }
 .summary {
-  color: #606266;
+  color: var(--text-regular);
   margin: 0 0 8px;
 }
 .meta {
-  color: #909399;
+  color: var(--text-secondary);
   font-size: 12px;
 }
 .empty {
-  color: #909399;
+  color: var(--text-secondary);
 }
 </style>
