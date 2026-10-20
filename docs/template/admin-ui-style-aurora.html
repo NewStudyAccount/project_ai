@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>极光 Aurora · 管理端页面风格样张</title>
+<style>
+  /* ================= 样张页面自身的展示脚手架（非设计语言本体） ================= */
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #eef0f8;
+    color: #1c1740;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .sample-page { max-width: 1180px; margin: 0 auto; padding: 40px 32px 80px; }
+
+  .cover {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 40px 44px;
+    border-radius: 18px;
+    color: #edeaff;
+    margin-bottom: 40px;
+    background:
+      radial-gradient(720px 320px at 12% -40%, rgba(109, 93, 246, 0.55), transparent 60%),
+      radial-gradient(560px 280px at 88% 130%, rgba(34, 211, 238, 0.32), transparent 62%),
+      linear-gradient(165deg, #1b1147 0%, #271563 58%, #2c1c78 100%);
+    box-shadow: 0 24px 64px rgba(43, 27, 112, 0.35);
+  }
+  .cover h1 { margin: 0 0 10px; font-size: 30px; font-weight: 700; letter-spacing: 0.5px; }
+  .cover h1 .en {
+    font-size: 15px; font-weight: 500; letter-spacing: 3px; vertical-align: 4px;
+    margin-left: 12px; color: #a9a2d8;
+  }
+  .cover p { margin: 0 0 18px; font-size: 14px; color: #c7c1ef; max-width: 640px; }
+  .cover-swatch { display: flex; gap: 8px; }
+  .cover-swatch span {
+    width: 34px; height: 20px; border-radius: 6px; display: inline-block;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  }
+  .cover .badge {
+    flex-shrink: 0;
+    padding: 8px 18px; border-radius: 999px; font-size: 12px; font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #6d5df6 0%, #8b5cf6 45%, #22d3ee 100%);
+    box-shadow: 0 8px 24px rgba(109, 93, 246, 0.45);
+  }
+
+  .section { margin-bottom: 44px; }
+  .section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .section-head h2 { margin: 0; font-size: 20px; font-weight: 700; }
+  .section-head .code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px; padding: 3px 10px; border-radius: 999px;
+    background: #e9e6ff; color: #5849c5; font-weight: 600;
+  }
+  .section-desc { margin: 0 0 18px; font-size: 13px; color: #6f6a99; max-width: 860px; }
+
+  .card {
+    background: #fff; border-radius: 16px; padding: 22px 24px; margin-bottom: 16px;
+    box-shadow: 0 1px 2px rgba(28, 23, 64, 0.05), 0 12px 28px rgba(88, 70, 200, 0.08);
+    border: 1px solid #eceafa;
+  }
+  .card h3 { margin: 0 0 12px; font-size: 14px; font-weight: 600; }
+
+  /* token chips */
+  .token-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .token {
+    display: flex; gap: 10px; align-items: center;
+    padding: 10px 12px; border-radius: 12px; background: #f8f8fe; border: 1px solid #eceafa;
+  }
+  .token .chip {
+    width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+    border: 1px solid rgba(28, 23, 64, 0.08);
+  }
+  .token .name { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #5849c5; font-weight: 600; }
+  .token .val { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #3f3a6b; }
+  .token .use { font-size: 11px; color: #8580ad; margin-top: 1px; }
+
+  .type-row {
+    display: grid; grid-template-columns: 120px 1fr 200px; gap: 12px; align-items: baseline;
+    padding: 10px 0; border-bottom: 1px solid #f0eefb;
+  }
+  .type-row:last-child { border-bottom: none; }
+  .type-row .label { font-size: 12px; color: #8580ad; }
+  .type-row .spec { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #6f6a99; }
+
+  .spec-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .spec-table th {
+    text-align: left; padding: 8px 10px; background: #f6f5fd; color: #3f3a6b;
+    font-weight: 600; border-bottom: 1px solid #e6e4f4;
+  }
+  .spec-table td { padding: 8px 10px; border-bottom: 1px solid #f0eefb; color: #3f3a6b; }
+  .spec-table code {
+    font-family: ui-monospace, Menlo, monospace; font-size: 11px;
+    background: #f2f0fd; padding: 1px 6px; border-radius: 4px; color: #5849c5;
+  }
+  .spec-table .tag {
+    display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 10px; font-weight: 600;
+  }
+  .tag.new { background: #d1fae5; color: #047857; }
+  .tag.chg { background: #e0e7ff; color: #4338ca; }
+  .tag.keep { background: #f1f0fa; color: #6f6a99; }
+
+  .footnote {
+    margin-top: 56px; padding: 28px 32px; border-radius: 16px;
+    background: linear-gradient(165deg, #1b1147 0%, #271563 60%, #2c1c78 100%);
+    color: #c7c1ef; font-size: 13px;
+    box-shadow: 0 20px 48px rgba(43, 27, 112, 0.3);
+  }
+  .footnote h4 { margin: 0 0 10px; font-size: 16px; color: #fff; }
+  .footnote ol { margin: 10px 0 0; padding-left: 20px; }
+  .footnote li { margin-bottom: 6px; }
+  .footnote .hl { color: #8be9ff; font-weight: 600; }
+
+  /* ================= 设计语言本体（落地时即 token + 壳样式） ================= */
+  .aurora {
+    /* —— 色板（既有变量名 · 新取值） —— */
+    --bg-page: #f3f5fb;
+    --bg-surface: #ffffff;
+    --bg-sidebar: #1c1248;
+    --bg-sidebar-active: rgba(255, 255, 255, 0.10);
+    --text-primary: #1c1740;
+    --text-regular: #3f3a6b;
+    --text-secondary: #8580ad;
+    --text-sidebar: #edeaff;
+    --text-sidebar-muted: #a9a2d8;
+    --text-sidebar-active: #ffffff;
+    --border: #e6e4f4;
+    --primary: #6d5df6;
+    --primary-hover: #5a49e8;
+    --primary-light: #eeecff;
+    --accent-bar: #22d3ee;
+    --danger: #f43f5e;
+    --success: #10b981;
+    --warning: #f59e0b;
+    /* —— 形状与层次 —— */
+    --page-radius: 16px;
+    --control-radius: 10px;
+    --button-radius: 999px;
+    --space-page: 20px;
+    --space-toolbar: 10px;
+    --shadow-card: 0 1px 2px rgba(28, 23, 64, 0.05), 0 12px 28px rgba(88, 70, 200, 0.09);
+    --shadow-dialog: 0 24px 64px rgba(28, 23, 64, 0.22), 0 8px 24px rgba(88, 70, 200, 0.14);
+    /* —— 新增 token —— */
+    --bg-sidebar-gradient: linear-gradient(165deg, #1b1147 0%, #271563 58%, #2c1c78 100%);
+    --sidebar-glow: radial-gradient(640px 260px at 20% -30%, rgba(109, 93, 246, 0.45), transparent 65%);
+    --accent-gradient: linear-gradient(135deg, #6d5df6 0%, #8b5cf6 45%, #22d3ee 100%);
+    --primary-glow: 0 8px 24px rgba(109, 93, 246, 0.35);
+    --shadow-card-hover: 0 2px 4px rgba(28, 23, 64, 0.06), 0 18px 40px rgba(88, 70, 200, 0.16);
+    --stat-grad-1: linear-gradient(135deg, #6d5df6 0%, #8b5cf6 100%);
+    --stat-grad-2: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%);
+    --stat-grad-3: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    --stat-grad-4: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+    /* —— Element Plus 映射 —— */
+    --el-color-primary: #6d5df6;
+    --el-color-primary-light-3: #8f83f8;
+    --el-color-primary-light-5: #b1a8fa;
+    --el-color-primary-light-7: #d2cdfd;
+    --el-color-primary-light-8: #e3dffe;
+    --el-color-primary-light-9: #f2f0ff;
+    --el-color-primary-dark-2: #5849c5;
+    --el-color-danger: #f43f5e;
+    --el-color-success: #10b981;
+    --el-color-warning: #f59e0b;
+    --el-border-radius-base: 10px;
+  }
+
+  .shell-demo {
+    display: flex; height: 560px; border-radius: 18px; overflow: hidden;
+    box-shadow: 0 24px 64px rgba(43, 27, 112, 0.22);
+    border: 1px solid #e6e4f4;
+  }
+
+  /* 侧栏 240px */
+  .sidebar {
+    width: 240px; flex-shrink: 0; padding: 20px 14px;
+    background: var(--bg-sidebar-gradient), var(--bg-sidebar);
+    color: var(--text-sidebar);
+    display: flex; flex-direction: column; gap: 4px;
+    position: relative; overflow: hidden;
+  }
+  .sidebar::before {
+    content: ""; position: absolute; inset: 0;
+    background: var(--sidebar-glow); pointer-events: none;
+  }
+  .side-logo {
+    display: flex; align-items: center; gap: 10px;
+    padding: 4px 10px 20px; position: relative;
+  }
+  .logo-orb {
+    width: 34px; height: 34px; border-radius: 11px;
+    background: var(--accent-gradient);
+    box-shadow: 0 6px 18px rgba(109, 93, 246, 0.5);
+  }
+  .side-logo .name { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; color: #fff; }
+  .side-logo .sub { font-size: 10px; letter-spacing: 2px; color: var(--text-sidebar-muted); }
+  .menu-group { font-size: 10px; letter-spacing: 2px; color: var(--text-sidebar-muted); padding: 14px 12px 6px; }
+  .menu-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 10px;
+    font-size: 13px; color: var(--text-sidebar-muted);
+    position: relative; cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .menu-item svg { width: 16px; height: 16px; opacity: 0.85; }
+  .menu-item:hover { background: rgba(255, 255, 255, 0.06); color: var(--text-sidebar); }
+  .menu-item.active {
+    background: var(--bg-sidebar-active);
+    color: var(--text-sidebar-active);
+    font-weight: 600;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(4px);
+  }
+  .menu-item.active::before {
+    content: ""; position: absolute; left: 0; top: 8px; bottom: 8px;
+    width: 3px; border-radius: 3px;
+    background: var(--accent-gradient);
+    box-shadow: 0 0 12px rgba(34, 211, 238, 0.8);
+  }
+
+  /* 顶栏 56px + 主内容 */
+  .main-col { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg-page); }
+  .topbar {
+    height: 56px; flex-shrink: 0; display: flex; align-items: center; gap: 16px;
+    padding: 0 20px; background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .crumb { font-size: 13px; color: var(--text-secondary); }
+  .crumb b { color: var(--text-primary); font-weight: 600; }
+  .topbar .grow { flex: 1; }
+  .top-search {
+    width: 220px; height: 32px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--bg-page);
+    display: flex; align-items: center; gap: 8px; padding: 0 14px;
+    font-size: 12px; color: var(--text-secondary);
+  }
+  .bell {
+    width: 32px; height: 32px; border-radius: 10px; position: relative;
+    background: var(--bg-page); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .bell .dot {
+    position: absolute; top: 6px; right: 7px; width: 7px; height: 7px;
+    border-radius: 50%; background: var(--danger); border: 1.5px solid #fff;
+  }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--accent-gradient);
+    color: #fff; font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(109, 93, 246, 0.25);
+  }
+  .content-area { flex: 1; overflow: auto; padding: var(--space-page); }
+  .page-hint {
+    font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;
+    display: flex; gap: 8px; align-items: center;
+  }
+  .page-hint .mark {
+    font-family: ui-monospace, Menlo, monospace; font-size: 10px;
+    background: var(--primary-light); color: var(--primary-hover);
+    padding: 2px 8px; border-radius: 999px; font-weight: 600;
+  }
+
+  /* 通用卡片 */
+  .page-card {
+    background: var(--bg-surface); border-radius: var(--page-radius);
+    box-shadow: var(--shadow-card); border: 1px solid var(--border);
+    padding: 18px 20px; margin-bottom: 16px;
+  }
+
+  /* 统计卡 4 连（渐变彩色） */
+  .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+  .stat-card {
+    border-radius: 14px; padding: 16px 18px; color: #fff; position: relative; overflow: hidden;
+  }
+  .stat-card .label { font-size: 12px; opacity: 0.85; font-weight: 500; }
+  .stat-card .value { font-size: 26px; font-weight: 700; letter-spacing: 0.5px; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+  .stat-card .delta { font-size: 11px; opacity: 0.85; }
+  .stat-card .bubble {
+    position: absolute; right: -22px; top: -22px; width: 92px; height: 92px;
+    border-radius: 50%; background: rgba(255, 255, 255, 0.14);
+  }
+  .stat-card .bubble.small { right: 22px; top: auto; bottom: -34px; width: 64px; height: 64px; }
+  .s1 { background: var(--stat-grad-1); box-shadow: 0 10px 28px rgba(109, 93, 246, 0.35); }
+  .s2 { background: var(--stat-grad-2); box-shadow: 0 10px 28px rgba(59, 130, 246, 0.32); }
+  .s3 { background: var(--stat-grad-3); box-shadow: 0 10px 28px rgba(16, 185, 129, 0.32); }
+  .s4 { background: var(--stat-grad-4); box-shadow: 0 10px 28px rgba(245, 158, 11, 0.32); }
+
+  /* 快捷入口 */
+  .quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .quick-item {
+    border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
+    cursor: pointer; transition: all 0.16s; background: var(--bg-surface);
+  }
+  .quick-item:hover {
+    border-color: transparent;
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+  }
+  .quick-item .q-name { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .quick-item .q-desc { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+  .q-icon {
+    width: 28px; height: 28px; border-radius: 9px; display: inline-flex;
+    align-items: center; justify-content: center;
+  }
+
+  /* P-List toolbar */
+  .toolbar { display: flex; align-items: center; gap: var(--space-toolbar); margin-bottom: 14px; flex-wrap: wrap; }
+  .toolbar .grow { flex: 1; }
+  .f-pill {
+    height: 32px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--bg-surface); color: var(--text-regular);
+    display: inline-flex; align-items: center; gap: 6px; padding: 0 14px;
+    font-size: 12px;
+  }
+  .f-pill.placeholder { color: var(--text-secondary); }
+  .f-pill .caret { font-size: 9px; color: var(--text-secondary); }
+  .f-input {
+    height: 32px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--bg-surface); padding: 0 14px; font-size: 12px;
+    color: var(--text-regular); width: 180px; outline: none;
+  }
+  .f-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(109, 93, 246, 0.15); }
+
+  /* 按钮体系 */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    height: 34px; padding: 0 18px; border-radius: var(--button-radius);
+    font-size: 13px; font-weight: 600; cursor: pointer; border: none;
+    transition: all 0.16s;
+  }
+  .btn-primary {
+    background: var(--accent-gradient); color: #fff;
+    box-shadow: var(--primary-glow);
+    background-size: 140% 140%;
+  }
+  .btn-primary:hover {
+    filter: brightness(1.07);
+    box-shadow: 0 10px 28px rgba(109, 93, 246, 0.5);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active {
+    filter: brightness(0.95);
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(109, 93, 246, 0.35);
+  }
+  .btn-secondary {
+    background: var(--bg-surface); color: var(--primary);
+    border: 1px solid #d5d0f5;
+  }
+  .btn-secondary:hover {
+    background: var(--primary-light); border-color: var(--primary);
+  }
+  .btn-secondary:active { background: #e2defe; }
+  .btn-danger { background: var(--danger); color: #fff; box-shadow: 0 6px 18px rgba(244, 63, 94, 0.3); }
+  .btn-danger:hover { filter: brightness(1.06); transform: translateY(-1px); }
+  .btn-danger:active { filter: brightness(0.94); transform: translateY(0); }
+  .btn-ghost { background: transparent; color: var(--text-regular); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+  .btn[disabled] {
+    background: #e9e8f4 !important; color: #b3afc9 !important;
+    box-shadow: none !important; cursor: not-allowed; transform: none !important; filter: none !important;
+    border: none !important;
+  }
+
+  /* 状态软胶囊（柔和多彩） */
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 10px;
+    border-radius: 999px; font-size: 11px; font-weight: 600;
+  }
+  .pill .led { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .pill-ok { background: #d1fae5; color: #047857; }
+  .pill-warn { background: #fef3c7; color: #b45309; }
+  .pill-bad { background: #ffe4e6; color: #be123c; }
+  .pill-info { background: #e0e7ff; color: #4338ca; }
+  .pill-cyan { background: #cffafe; color: #0e7490; }
+
+  /* 表格 */
+  .data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+  .data-table th {
+    text-align: left; padding: 10px 14px; font-size: 12px; font-weight: 600;
+    color: var(--text-regular); background: #f6f5fd;
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  }
+  .data-table th:first-child { border-left: 1px solid var(--border); border-radius: 10px 0 0 10px; }
+  .data-table th:last-child { border-right: 1px solid var(--border); border-radius: 0 10px 10px 0; }
+  .data-table td {
+    padding: 11px 14px; border-bottom: 1px solid #f0eefb; color: var(--text-regular);
+    background: var(--bg-surface);
+  }
+  .data-table tbody tr:nth-child(even) td { background: #fbfaff; }
+  .data-table tbody tr:hover td { background: #f3f1ff; }
+  .data-table .id-col { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--text-secondary); }
+  .row-link {
+    color: var(--primary); font-size: 12px; font-weight: 600; cursor: pointer;
+    text-decoration: none; margin-right: 12px;
+  }
+  .row-link:hover { text-decoration: underline; }
+  .row-link.danger { color: var(--danger); }
+
+  /* 分页 */
+  .pager { display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-top: 14px; }
+  .pager .total { font-size: 12px; color: var(--text-secondary); margin-right: 8px; }
+  .pg {
+    min-width: 28px; height: 28px; padding: 0 8px; border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px; color: var(--text-regular); cursor: pointer;
+    border: 1px solid var(--border); background: var(--bg-surface);
+  }
+  .pg:hover { border-color: var(--primary); color: var(--primary); }
+  .pg.cur {
+    background: var(--accent-gradient); color: #fff; border-color: transparent;
+    font-weight: 600; box-shadow: 0 4px 12px rgba(109, 93, 246, 0.35);
+  }
+
+  /* D-Form 弹窗演示 */
+  .dialog-stage {
+    border-radius: 16px; padding: 36px 24px 28px;
+    background:
+      radial-gradient(600px 240px at 20% 0%, rgba(109, 93, 246, 0.10), transparent 60%),
+      #211a4e;
+  }
+  .dialog {
+    max-width: 560px; margin: 0 auto; background: var(--bg-surface);
+    border-radius: var(--page-radius); box-shadow: var(--shadow-dialog);
+    overflow: hidden;
+  }
+  .dialog-hd {
+    padding: 16px 22px; font-size: 15px; font-weight: 700;
+    border-bottom: 1px solid var(--border); color: var(--text-primary);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dialog-hd .accent { width: 4px; height: 16px; border-radius: 4px; background: var(--accent-gradient); }
+  .dialog-bd { padding: 20px 22px 8px; }
+  .form-item { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: start; margin-bottom: 16px; }
+  .form-label {
+    text-align: right; font-size: 13px; color: var(--text-regular);
+    line-height: 32px; position: relative;
+  }
+  .form-label.is-required::before { content: "*"; color: var(--danger); margin-right: 3px; }
+  .form-control input, .form-control textarea {
+    width: 100%; height: 32px; border-radius: var(--control-radius);
+    border: 1px solid var(--border); padding: 0 12px; font-size: 13px;
+    color: var(--text-regular); background: var(--bg-surface); outline: none;
+  }
+  .form-control textarea { height: 64px; padding: 8px 12px; resize: none; }
+  .form-control input:focus, .form-control textarea:focus {
+    border-color: var(--primary); box-shadow: 0 0 0 3px rgba(109, 93, 246, 0.15);
+  }
+  .form-control input.err { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.12); }
+  .form-error { font-size: 11px; color: var(--danger); margin-top: 4px; }
+  .radio-pills { display: flex; gap: 8px; padding-top: 4px; }
+  .r-pill {
+    height: 28px; padding: 0 16px; border-radius: 999px; cursor: pointer;
+    font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;
+    border: 1px solid var(--border); color: var(--text-secondary); background: var(--bg-surface);
+    transition: all 0.15s;
+  }
+  .r-pill.on {
+    background: var(--primary-light); border-color: var(--primary);
+    color: var(--primary-hover); box-shadow: 0 2px 8px rgba(109, 93, 246, 0.18);
+  }
+  .r-pill.on.warn-on { background: #fef3c7; border-color: var(--warning); color: #b45309; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.18); }
+  .dialog-ft {
+    display: flex; justify-content: flex-end; gap: 10px;
+    padding: 14px 22px 18px; border-top: 1px solid var(--border);
+    background: #fbfaff;
+  }
+
+  /* 按钮状态展示 */
+  .btn-state-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .btn-state-cell {
+    border: 1px solid var(--border); border-radius: 12px; padding: 16px 12px;
+    text-align: center; background: var(--bg-surface);
+  }
+  .btn-state-cell .cap {
+    font-size: 11px; color: var(--text-secondary); margin-top: 10px;
+    font-family: ui-monospace, Menlo, monospace;
+  }
+  .demo-label {
+    display: inline-block; font-size: 11px; font-weight: 600; color: var(--primary-hover);
+    background: var(--primary-light); padding: 2px 10px; border-radius: 999px; margin-bottom: 12px;
+  }
+</style>
+</head>
+<body>
+<div class="sample-page aurora">
+
+  <!-- ================= Cover ================= -->
+  <header class="cover">
+    <div>
+      <h1>极光<span class="en">AURORA</span></h1>
+      <p>深邃渐变壳 × 明亮多彩内容面。以「靛紫 → 紫罗兰 → 青」极光渐变为唯一强调语言，彩色渐变统计卡、柔和多彩状态胶囊、紫调分层阴影——一套告别单色平涂的现代 SaaS 管理端设计语言。</p>
+      <div class="cover-swatch">
+        <span style="background:#1c1248"></span>
+        <span style="background:#6d5df6"></span>
+        <span style="background:#8b5cf6"></span>
+        <span style="background:#22d3ee"></span>
+        <span style="background:#10b981"></span>
+        <span style="background:#f59e0b"></span>
+        <span style="background:#f43f5e"></span>
+        <span style="background:#f3f5fb"></span>
+      </div>
+    </div>
+    <div class="badge">新方案 · 可视化样张</div>
+  </header>
+
+  <!-- ================= 1. 设计令牌 ================= -->
+  <section class="section">
+    <div class="section-head">
+      <h2>1. 设计令牌 Design Tokens</h2>
+      <span class="code">极光 · 色彩即层次</span>
+    </div>
+    <p class="section-desc">变量名沿用 <code>frontend/*/src/styles/main.css</code> 的 <code>:root</code> 体系（落地三端只换 token 值 + 少量壳样式）。允许改值、允许新增渐变/统计卡专用 token，映射关系见本节末表格。</p>
+
+    <div class="card">
+      <h3>色板 Palette</h3>
+      <div class="token-grid">
+        <div class="token">
+          <div class="chip" style="background:linear-gradient(165deg,#1b1147,#2c1c78)"></div>
+          <div class="meta">
+            <div class="name">--bg-sidebar-gradient</div>
+            <div class="val">#1b1147 → #2c1c78</div>
+            <div class="use">侧栏底 · 深靛紫极光渐变（新增）</div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="chip" style="background:#f3f5fb"></div>
+          <div class="meta">
+            <div class="name">--bg-page</div>
+            <div class="val">#f3f5fb</div>
+            <div class="use">内容区底 · 冷紫灰</div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="chip" style="background:#ffffff; border-bottom:1px solid #e6e4f4"></div>
+          <div class="meta">
+            <div class="name">--bg-surface</div>
+            <div class="val">#ffffff</div>
+            <div class="use">卡片 / 表格 / 顶栏</div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="chip" style="background:linear-gradient(135deg,#6d5df6,#22d3ee)"></div>
+          <div class="meta">
+            <div class="name">--accent-gradient</div>
+            <div class="val">#6d5df6 → #8b5cf6 → #22d3ee</div>
+            <div class="use">主按钮 / 激活条 / 选中分页（新增）</div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="chip" style="background:#6d5df6"></div>
+          <div class="meta">
+            <div class="name">--primary</div>
+            <div class="val">#6d5df6</div>
+            <div class="use">链接 / 勾选 / 焦点 · 靛紫</div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="chip" style="background:#22d3ee"></div>
+          <div class="meta">
+            <div class="name">--accent-bar</div>
+            <div class="val">#22d3ee</div>
+            <div class="use">侧栏激活竖条端点 / 青色点缀</div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="chip" style="background:#1c1740"></div>
+          <div class="meta">
+            <div class="name">--text-primary</div>
+            <div class="val">#1c1740</div>
+            <div class="use">标题 · 深靛墨</div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="chip" style="background:#e6e4f4"></div>
+          <div class="meta">
+            <div class="name">--border</div>
+            <div class="val">#e6e4f4</div>
+            <div class="use">分割线 · 紫调浅描边</div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="chip" style="background:linear-gradient(90deg,#10b981 0 25%,#f59e0b 25% 50%,#f43f5e 50% 75%,#6d5df6 75% 100%)"></div>
+          <div class="meta">
+            <div class="name">success / warning / danger / info</div>
+            <div class="val">#10b981 · #f59e0b · #f43f5e · #6d5df6</div>
+            <div class="use">翡翠 / 琥珀 / 玫红 / 靛紫状态</div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="chip" style="background:linear-gradient(135deg,#6d5df6,#8b5cf6)"></div>
+          <div class="meta">
+            <div class="name">--stat-grad-1</div>
+            <div class="val">靛紫渐变</div>
+            <div class="use">统计卡 · 账号（新增）</div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="chip" style="background:linear-gradient(135deg,#22d3ee,#3b82f6)"></div>
+          <div class="meta">
+            <div class="name">--stat-grad-2</div>
+            <div class="val">青蓝渐变</div>
+            <div class="use">统计卡 · 文章（新增）</div>
+          </div>
+        </div>
+        <div class="token">
+          <div class="chip" style="background:linear-gradient(135deg,#10b981,#34d399)"></div>
+          <div class="meta">
+            <div class="name">--stat-grad-3/4</div>
+            <div class="val">翡翠渐变 / 琥珀渐变</div>
+            <div class="use">统计卡 · 文件 / 审计（新增）</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>字体与字号</h3>
+      <div class="type-row">
+        <div class="label">字族</div>
+        <div style="font-size:15px">Inter, PingFang SC, Microsoft YaHei</div>
+        <div class="spec">sans-serif · 数字 tabular-nums</div>
+      </div>
+      <div class="type-row">
+        <div class="label">页面标题</div>
+        <div style="font-size:20px; font-weight:700; color:#1c1740">文章管理</div>
+        <div class="spec">20px / 700</div>
+      </div>
+      <div class="type-row">
+        <div class="label">卡片标题</div>
+        <div style="font-size:15px; font-weight:600">存储服务商</div>
+        <div class="spec">15px / 600</div>
+      </div>
+      <div class="type-row">
+        <div class="label">正文 / 表格</div>
+        <div style="font-size:13px; color:#3f3a6b">创建时间　2026-09-25 10:30:00</div>
+        <div class="spec">13px / 400</div>
+      </div>
+      <div class="type-row">
+        <div class="label">表头 / 辅助</div>
+        <div style="font-size:12px; color:#8580ad">操作 · 状态 · 备注</div>
+        <div class="spec">11–12px / 500</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>圆角 · 间距 · 阴影</h3>
+      <div class="type-row">
+        <div class="label">圆角</div>
+        <div>
+          <span style="display:inline-block;width:56px;height:26px;background:#eeecff;border:1px solid #d5d0f5;border-radius:16px;vertical-align:middle"></span>
+          <span style="display:inline-block;width:56px;height:26px;background:#eeecff;border:1px solid #d5d0f5;border-radius:10px;vertical-align:middle;margin:0 6px"></span>
+          <span style="display:inline-block;width:80px;height:26px;background:linear-gradient(135deg,#6d5df6,#8b5cf6,#22d3ee);border-radius:999px;vertical-align:middle"></span>
+        </div>
+        <div class="spec">卡片 16px / 控件 10px / 按钮 999px</div>
+      </div>
+      <div class="type-row">
+        <div class="label">间距</div>
+        <div>
+          <span style="display:inline-block;height:10px;width:20px;background:#d5d0f5;border-radius:3px"></span>
+          <span style="display:inline-block;height:10px;width:10px;background:#c3bdf2;border-radius:3px;margin:0 4px"></span>
+          <span style="display:inline-block;height:10px;width:5px;background:#b1a8fa;border-radius:3px"></span>
+        </div>
+        <div class="spec">页边距 20 / 卡片内距 18–20 / 工具栏 gap 10</div>
+      </div>
+      <div class="type-row">
+        <div class="label">卡片阴影</div>
+        <div>
+          <span style="display:inline-block;width:120px;height:44px;background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(28,23,64,.05),0 12px 28px rgba(88,70,200,.09)"></span>
+        </div>
+        <div class="spec">紫调分层 · 0 12px 28px rgba(88,70,200,.09)</div>
+      </div>
+      <div class="type-row">
+        <div class="label">主按钮光晕</div>
+        <div>
+          <span style="display:inline-block;width:120px;height:36px;border-radius:999px;background:linear-gradient(135deg,#6d5df6,#8b5cf6,#22d3ee);box-shadow:0 8px 24px rgba(109,93,246,.35)"></span>
+        </div>
+        <div class="spec">--primary-glow（新增）</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>令牌映射表 · 对齐现有 main.css :root（换值 + 新增）</h3>
+      <table class="spec-table">
+        <thead>
+          <tr><th>现有变量</th><th>极光取值</th><th>说明</th><th>性质</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>--bg-page</code></td><td>#f3f5fb</td><td>内容区底 · 冷紫灰亮面</td><td><span class="tag chg">改值</span></td></tr>
+          <tr><td><code>--bg-surface</code></td><td>#ffffff</td><td>卡片 / 表格 / 顶栏</td><td><span class="tag keep">沿用</span></td></tr>
+          <tr><td><code>--bg-sidebar</code></td><td>#1c1248</td><td>侧栏纯色兜底（渐变不可用时）</td><td><span class="tag chg">改值</span></td></tr>
+          <tr><td><code>--bg-sidebar-gradient</code></td><td>linear-gradient(165deg,#1b1147,#271563,#2c1c78)</td><td>侧栏极光渐变</td><td><span class="tag new">新增</span></td></tr>
+          <tr><td><code>--sidebar-glow</code></td><td>radial-gradient(640×260 @20% -30%, rgba(109,93,246,.45))</td><td>侧栏顶部极光光晕</td><td><span class="tag new">新增</span></td></tr>
+          <tr><td><code>--bg-sidebar-active</code></td><td>rgba(255,255,255,.10)</td><td>侧栏激活项玻璃底</td><td><span class="tag chg">改值</span></td></tr>
+          <tr><td><code>--text-primary / regular / secondary</code></td><td>#1c1740 / #3f3a6b / #8580ad</td><td>正文三级 · 深靛墨系</td><td><span class="tag chg">改值</span></td></tr>
+          <tr><td><code>--text-sidebar / -muted / -active</code></td><td>#edeaff / #a9a2d8 / #ffffff</td><td>侧栏文字系</td><td><span class="tag chg">改值</span></td></tr>
+          <tr><td><code>--border</code></td><td>#e6e4f4</td><td>紫调浅描边</td><td><span class="tag chg">改值</span></td></tr>
+          <tr><td><code>--primary / --primary-hover</code></td><td>#6d5df6 / #5a49e8</td><td>靛紫主色（避开旧方案天蓝 #0284c7）</td><td><span class="tag chg">改值</span></td></tr>
+          <tr><td><code>--primary-light</code></td><td>#eeecff</td><td>选中 / 浅底</td><td><span class="tag chg">改值</span></td></tr>
+          <tr><td><code>--accent-gradient</code></td><td>linear-gradient(135deg,#6d5df6,#8b5cf6 45%,#22d3ee)</td><td>极光渐变 · 主按钮 / 激活条 / 当前页</td><td><span class="tag new">新增</span></td></tr>
+          <tr><td><code>--accent-bar</code></td><td>#22d3ee</td><td>青色点缀 / 激活竖条端点</td><td><span class="tag chg">改值</span></td></tr>
+          <tr><td><code>--primary-glow</code></td><td>0 8px 24px rgba(109,93,246,.35)</td><td>主按钮光晕</td><td><span class="tag new">新增</span></td></tr>
+          <tr><td><code>--danger / --success / --warning</code></td><td>#f43f5e / #10b981 / #f59e0b</td><td>玫红 / 翡翠 / 琥珀（饱和度较旧方案上探）</td><td><span class="tag chg">改值</span></td></tr>
+          <tr><td><code>--page-radius / --control-radius / --button-radius</code></td><td>16px / 10px / 999px</td><td>更圆润的现代层级</td><td><span class="tag chg">改值</span></td></tr>
+          <tr><td><code>--space-page / --space-toolbar</code></td><td>20px / 10px</td><td>留白略增</td><td><span class="tag chg">改值</span></td></tr>
+          <tr><td><code>--shadow-card</code></td><td>0 1px 2px rgba(28,23,64,.05), 0 12px 28px rgba(88,70,200,.09)</td><td>紫调分层阴影</td><td><span class="tag chg">改值</span></td></tr>
+          <tr><td><code>--shadow-card-hover</code></td><td>0 2px 4px …, 0 18px 40px rgba(88,70,200,.16)</td><td>卡片抬升态</td><td><span class="tag new">新增</span></td></tr>
+          <tr><td><code>--shadow-dialog</code></td><td>0 24px 64px rgba(28,23,64,.22), 0 8px 24px rgba(88,70,200,.14)</td><td>弹窗 · 更强紫调</td><td><span class="tag chg">改值</span></td></tr>
+          <tr><td><code>--stat-grad-1 … --stat-grad-4</code></td><td>靛紫 / 青蓝 / 翡翠 / 琥珀 135° 渐变</td><td>彩色统计卡专用</td><td><span class="tag new">新增</span></td></tr>
+          <tr><td><code>--el-color-primary</code> 系列</td><td>#6d5df6，light-3 #8f83f8，light-5 #b1a8fa，light-7 #d2cdfd，light-8 #e3dffe，light-9 #f2f0ff，dark-2 #5849c5</td><td>Element Plus 主题映射</td><td><span class="tag chg">改值</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= 2. 应用壳 ================= -->
+  <section class="section">
+    <div class="section-head">
+      <h2>2. 应用壳 App Shell</h2>
+      <span class="code">侧栏 240 · 顶栏 56</span>
+    </div>
+    <p class="section-desc">深邃极光渐变侧栏 + 明亮内容面。菜单激活态：玻璃拟态浅底 + 渐变发光竖条；悬停：半透明浮层。壳为骨架级样式，三端同构复制。</p>
+
+    <div class="shell-demo">
+      <aside class="sidebar">
+        <div class="side-logo">
+          <div class="logo-orb"></div>
+          <div>
+            <div class="name">内容中台</div>
+            <div class="sub">AURORA CONSOLE</div>
+          </div>
+        </div>
+        <div class="menu-group">概览</div>
+        <div class="menu-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+          控制台
+        </div>
+        <div class="menu-group">内容</div>
+        <div class="menu-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7"/></svg>
+          文章管理
+        </div>
+        <div class="menu-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          分类与标签
+        </div>
+        <div class="menu-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h6l2 2h10v10H3z"/></svg>
+          文件管理
+        </div>
+        <div class="menu-group">系统</div>
+        <div class="menu-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.6-3.6 4-5 7-5s5.4 1.4 7 5"/></svg>
+          账号管理
+        </div>
+        <div class="menu-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 3v6c0 4.4-3.2 7.7-8 9-4.8-1.3-8-4.6-8-9V6z"/></svg>
+          角色管理
+        </div>
+        <div class="menu-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>
+          审计日志
+        </div>
+      </aside>
+      <div class="main-col">
+        <div class="topbar">
+          <div class="crumb">内容管理　/　<b>文章管理</b></div>
+          <div class="grow"></div>
+          <div class="top-search">搜索文章、账号、文件…</div>
+          <div class="bell">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8580ad" stroke-width="2"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
+            <span class="dot"></span>
+          </div>
+          <div class="avatar">岑</div>
+        </div>
+        <div class="content-area">
+          <div class="page-hint"><span class="mark">主内容区</span>明亮冷紫灰底 · 白色卡片 · 紫调分层阴影 · hover 抬升（此处示意壳布局，Dashboard / P-List / D-Form 见后续章节）</div>
+          <div class="page-card" style="height:110px;display:flex;align-items:center;justify-content:center;color:#b3afc9;font-size:12px">页面内容插槽</div>
+          <div class="page-card" style="height:110px;display:flex;align-items:center;justify-content:center;color:#b3afc9;font-size:12px">页面内容插槽</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 3. Dashboard ================= -->
+  <section class="section">
+    <div class="section-head">
+      <h2>3. Dashboard 概览</h2>
+      <span class="code">彩色渐变统计卡</span>
+    </div>
+    <p class="section-desc">统计卡 4 连用四组渐变（靛紫 / 青蓝 / 翡翠 / 琥珀）+ 同色光晕，是「告别单调」的第一视觉锚点；快捷入口白卡 hover 抬升。</p>
+
+    <div class="stat-row">
+      <div class="stat-card s1">
+        <div class="bubble"></div><div class="bubble small"></div>
+        <div class="label">账号总数</div>
+        <div class="value">1,286</div>
+        <div class="delta">较上周 +12 · 启用 1,201</div>
+      </div>
+      <div class="stat-card s2">
+        <div class="bubble"></div><div class="bubble small"></div>
+        <div class="label">已发布文章</div>
+        <div class="value">578</div>
+        <div class="delta">草稿 64 · 今日发布 7</div>
+      </div>
+      <div class="stat-card s3">
+        <div class="bubble"></div><div class="bubble small"></div>
+        <div class="label">存储文件</div>
+        <div class="value">12,405</div>
+        <div class="delta">容量 38.6 GB · 默认服务商 minio-local</div>
+      </div>
+      <div class="stat-card s4">
+        <div class="bubble"></div><div class="bubble small"></div>
+        <div class="label">今日操作审计</div>
+        <div class="value">342</div>
+        <div class="delta">失败 3 · 均可追溯</div>
+      </div>
+    </div>
+
+    <div class="page-card">
+      <h3 style="margin:0 0 12px; font-size:15px;">快捷入口</h3>
+      <div class="quick-grid">
+        <div class="quick-item">
+          <div class="q-name"><span class="q-icon" style="background:#eeecff"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6d5df6" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/></svg></span>新建文章</div>
+          <div class="q-desc">主表 + Markdown 正文 + 发布/下架</div>
+        </div>
+        <div class="quick-item">
+          <div class="q-name"><span class="q-icon" style="background:#cffafe"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0e7490" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>分类管理</div>
+          <div class="q-desc">分类树维护与引用约束</div>
+        </div>
+        <div class="quick-item">
+          <div class="q-name"><span class="q-icon" style="background:#d1fae5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2"><path d="M3 7h6l2 2h10v10H3z"/></svg></span>文件管理</div>
+          <div class="q-desc">上传、公开 URL、逻辑删除</div>
+        </div>
+        <div class="quick-item">
+          <div class="q-name"><span class="q-icon" style="background:#e0e7ff"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4338ca" stroke-width="2"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.6-3.6 4-5 7-5s5.4 1.4 7 5"/></svg></span>账号管理</div>
+          <div class="q-desc">账号列表、启停与审计追溯</div>
+        </div>
+        <div class="quick-item">
+          <div class="q-name"><span class="q-icon" style="background:#fef3c7"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></span>审计日志</div>
+          <div class="q-desc">关键写操作留痕与详情</div>
+        </div>
+        <div class="quick-item">
+          <div class="q-name"><span class="q-icon" style="background:#ffe4e6"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#be123c" stroke-width="2"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/></svg></span>存储服务商</div>
+          <div class="q-desc">多服务商配置、连通性与默认项</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 4. P-List ================= -->
+  <section class="section">
+    <div class="section-head">
+      <h2>4. P-List 列表页</h2>
+      <span class="code">toolbar · 表格 · 分页</span>
+    </div>
+    <p class="section-desc">主按钮为极光渐变胶囊；筛选控件统一胶囊化；表头淡紫、行悬停淡紫、斑马底；状态软胶囊柔和多彩；行内操作为渐变色 link。</p>
+
+    <div class="page-card">
+      <div class="toolbar">
+        <button class="btn btn-primary">＋ 新建文章</button>
+        <div class="grow"></div>
+        <input class="f-input" value="博客" />
+        <div class="f-pill placeholder">分类：全部　<span class="caret">▾</span></div>
+        <div class="f-pill">状态：已发布　<span class="caret">▾</span></div>
+        <div class="f-pill placeholder">创建时间范围　<span class="caret">▾</span></div>
+        <button class="btn btn-secondary">查询</button>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:150px">ID</th>
+            <th>标题</th>
+            <th style="width:110px">分类</th>
+            <th style="width:110px">状态</th>
+            <th style="width:90px">作者</th>
+            <th style="width:160px">发布时间</th>
+            <th style="width:190px">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="id-col">2026092500000013</td>
+            <td>极光设计语言：管理端视觉升级说明</td>
+            <td>产品设计</td>
+            <td><span class="pill pill-ok"><span class="led"></span>已发布</span></td>
+            <td>岑雨</td>
+            <td>2026-09-25 10:30:00</td>
+            <td>
+              <a class="row-link">编辑</a><a class="row-link">正文</a><a class="row-link">下架</a><a class="row-link danger">删除</a>
+            </td>
+          </tr>
+          <tr>
+            <td class="id-col">2026092400000182</td>
+            <td>对象存储多服务商接入实践</td>
+            <td>技术博客</td>
+            <td><span class="pill pill-info"><span class="led"></span>草稿</span></td>
+            <td>岑雨</td>
+            <td>—</td>
+            <td>
+              <a class="row-link">编辑</a><a class="row-link">正文</a><a class="row-link">发布</a><a class="row-link danger">删除</a>
+            </td>
+          </tr>
+          <tr>
+            <td class="id-col">2026092300000047</td>
+            <td>RBAC 权限模型在多系统中的落地</td>
+            <td>技术博客</td>
+            <td><span class="pill pill-ok"><span class="led"></span>已发布</span></td>
+            <td>柯豆</td>
+            <td>2026-09-23 18:02:11</td>
+            <td>
+              <a class="row-link">编辑</a><a class="row-link">正文</a><a class="row-link">下架</a><a class="row-link danger">删除</a>
+            </td>
+          </tr>
+          <tr>
+            <td class="id-col">2026092100000309</td>
+            <td>审计留痕与 TraceId 追踪指南</td>
+            <td>运维手册</td>
+            <td><span class="pill pill-warn"><span class="led"></span>已下架</span></td>
+            <td>柯豆</td>
+            <td>2026-09-21 09:47:53</td>
+            <td>
+              <a class="row-link">编辑</a><a class="row-link">正文</a><a class="row-link">发布</a><a class="row-link danger">删除</a>
+            </td>
+          </tr>
+          <tr>
+            <td class="id-col">2026092000000064</td>
+            <td>博客系统九月运营月报</td>
+            <td>产品设计</td>
+            <td><span class="pill pill-cyan"><span class="led"></span>审核中</span></td>
+            <td>岑雨</td>
+            <td>—</td>
+            <td>
+              <a class="row-link">编辑</a><a class="row-link">正文</a><a class="row-link">发布</a><a class="row-link danger">删除</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="pager">
+        <span class="total">共 128 条</span>
+        <span class="pg">‹</span>
+        <span class="pg cur">1</span>
+        <span class="pg">2</span>
+        <span class="pg">3</span>
+        <span class="pg">4</span>
+        <span class="pg">5</span>
+        <span class="pg">›</span>
+        <span class="pg">10 条/页</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 5. D-Form ================= -->
+  <section class="section">
+    <div class="section-head">
+      <h2>5. D-Form 弹窗</h2>
+      <span class="code">label 右对齐 · 校验红字</span>
+    </div>
+    <p class="section-desc">弹窗 16px 圆角 + 紫调强阴影，压在深色遮罩上；label 右对齐 96px；必填红字（* + 字段下红字）；状态用胶囊单选；底栏「取消 + 保存」，保存为极光渐变胶囊（提交中 loading 防重）。</p>
+
+    <div class="dialog-stage">
+      <div class="dialog">
+        <div class="dialog-hd"><span class="accent"></span>新建账号</div>
+        <div class="dialog-bd">
+          <div class="form-item">
+            <div class="form-label is-required">用户名</div>
+            <div class="form-control">
+              <input value="cen.yu" />
+            </div>
+          </div>
+          <div class="form-item">
+            <div class="form-label is-required">姓名</div>
+            <div class="form-control">
+              <input class="err" placeholder="请输入姓名" />
+              <div class="form-error">请输入姓名</div>
+            </div>
+          </div>
+          <div class="form-item">
+            <div class="form-label">手机号</div>
+            <div class="form-control">
+              <input value="138****6021" />
+            </div>
+          </div>
+          <div class="form-item">
+            <div class="form-label">状态</div>
+            <div class="form-control">
+              <div class="radio-pills">
+                <span class="r-pill on">启用</span>
+                <span class="r-pill warn-on">停用</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-item">
+            <div class="form-label">备注</div>
+            <div class="form-control">
+              <textarea placeholder="可选，最长 255"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="dialog-ft">
+          <button class="btn btn-ghost">取消</button>
+          <button class="btn btn-primary">保存</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 6. 按钮组 ================= -->
+  <section class="section">
+    <div class="section-head">
+      <h2>6. 按钮组</h2>
+      <span class="code">渐变主按钮 · 三态</span>
+    </div>
+    <p class="section-desc">主按钮为极光渐变胶囊（hover 提亮 + 光晕增强 + 轻抬升，active 压暗回落）；次按钮白底紫描边；危险玫红；禁用灰化无光晕。</p>
+
+    <div class="card">
+      <div class="demo-label">主按钮 Primary · 极光渐变</div>
+      <div class="btn-state-grid">
+        <div class="btn-state-cell"><button class="btn btn-primary">保存</button><div class="cap">default</div></div>
+        <div class="btn-state-cell"><button class="btn btn-primary" style="filter:brightness(1.07);box-shadow:0 10px 28px rgba(109,93,246,.5);transform:translateY(-1px)">保存</button><div class="cap">hover · 提亮 + 光晕</div></div>
+        <div class="btn-state-cell"><button class="btn btn-primary" style="filter:brightness(.95);box-shadow:0 4px 12px rgba(109,93,246,.35)">保存</button><div class="cap">active · 压暗回落</div></div>
+        <div class="btn-state-cell"><button class="btn btn-primary" disabled>保存</button><div class="cap">disabled</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="demo-label">次按钮 Secondary / 幽灵 Ghost</div>
+      <div class="btn-state-grid">
+        <div class="btn-state-cell"><button class="btn btn-secondary">查询</button><div class="cap">default</div></div>
+        <div class="btn-state-cell"><button class="btn btn-secondary" style="background:#eeecff;border-color:#6d5df6">查询</button><div class="cap">hover</div></div>
+        <div class="btn-state-cell"><button class="btn btn-ghost">重置</button><div class="cap">ghost</div></div>
+        <div class="btn-state-cell"><button class="btn btn-secondary" disabled>查询</button><div class="cap">disabled</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="demo-label">危险按钮 Danger / 行内 Link</div>
+      <div class="btn-state-grid">
+        <div class="btn-state-cell"><button class="btn btn-danger">确认删除</button><div class="cap">default</div></div>
+        <div class="btn-state-cell"><button class="btn btn-danger" style="filter:brightness(1.06);transform:translateY(-1px)">确认删除</button><div class="cap">hover</div></div>
+        <div class="btn-state-cell"><a class="row-link">编辑</a><a class="row-link danger">删除</a><div class="cap">row-link</div></div>
+        <div class="btn-state-cell"><button class="btn btn-danger" disabled>确认删除</button><div class="cap">disabled</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 页脚注 ================= -->
+  <footer class="footnote">
+    <h4>极光 Aurora · 管理端视觉风格</h4>
+    <div>一句话气质：<span class="hl">深邃渐变壳、明亮多彩面——用极光渐变贯穿强调系统，专业而不单调的现代 SaaS 管理端。</span></div>
+    <ol>
+      <li><b>渐变语言 vs 平涂色块</b>：旧四方案（云白 / 墨岩 / 石墨 / 霜钢）全部为平涂单色块；极光以「靛紫→紫罗兰→青」渐变作为唯一强调语言——主按钮、侧栏、激活条、分页当前页、统计卡全部渐变化。</li>
+      <li><b>主色体系区隔</b>：避开旧方案的天蓝 #0284c7 / #3b82f6 与纯紫 #7c3aed、黑白灰单色系，主色定为靛紫 #6d5df6 并以青 #22d3ee 收尾成极光色带；状态色上探饱和度（翡翠 / 琥珀 / 玫红），配柔和多彩胶囊。</li>
+      <li><b>立体层次 vs 平面化</b>：紫调彩色分层阴影 + 主按钮光晕 + 侧栏顶部极光光晕 + 玻璃拟态菜单激活态 + 卡片 hover 抬升；旧方案阴影均无彩灰、无光晕、无抬升交互。</li>
+    </ol>
+    <div style="margin-top:14px; font-size:12px; color:#a9a2d8">
+      落地映射：Token 架构与 <code style="color:#8be9ff">frontend/*/src/styles/main.css :root</code> 同名对齐（见第 1 节映射表，改值 16 项 / 新增 8 项），Element Plus 主题变量同步换值；三端（auth-admin / user-admin / blog-admin）落地时换 token + 少量壳样式即可同构复制。本样张零依赖、纯静态。
+    </div>
+  </footer>
+</div>
+</body>
+</html>
