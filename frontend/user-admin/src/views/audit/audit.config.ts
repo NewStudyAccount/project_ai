@@ -3,13 +3,14 @@
  * 字段与真实契约一致（api AuditQuery、types AuditVO），出参没有的字段（如 TraceId）不自造、不渲染
  */
 import { auditApi } from '@/api/audit'
+import { compactQuery } from '@/utils/query'
 import type { AuditVO } from '@/types'
 import type { CrudPageSchema } from '@/types/crud'
 
 export function buildAuditSchema(): CrudPageSchema<AuditVO, Record<string, unknown>> {
   return {
     api: {
-      page: (q) => auditApi.page(q as unknown as Parameters<typeof auditApi.page>[0]),
+      page: (q) => auditApi.page(compactQuery(q) as unknown as Parameters<typeof auditApi.page>[0]),
     },
     filters: [
       { prop: 'action', type: 'input', placeholder: '动作', width: 160 },
@@ -26,7 +27,7 @@ export function buildAuditSchema(): CrudPageSchema<AuditVO, Record<string, unkno
       { prop: 'ip', label: 'IP', width: 150 },
       { prop: 'createTime', label: '时间', width: 180, type: 'datetime' },
     ],
-    rowActions: [{ key: 'detail', label: '详情' }],
+    rowActions: [{ key: 'detail', label: '详情', permission: 'user:audit:list' }],
     emptyText: '暂无审计记录',
   }
 }

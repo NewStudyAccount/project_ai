@@ -6,6 +6,7 @@
  * - 状态变更走 userApi.updateStatus（Create/Update DTO 无 status 字段，状态不在表单内）
  */
 import { userApi, type UserInput } from '@/api/user'
+import { compactQuery } from '@/utils/query'
 import type { UserVO } from '@/types'
 import type { CrudPageSchema, FormFieldDef, OptionItem } from '@/types/crud'
 
@@ -45,7 +46,7 @@ export function buildUserSchema(): CrudPageSchema<UserVO, UserInput> {
   return {
     permissionPrefix: 'user:user',
     api: {
-      page: (q) => userApi.page(q as unknown as Parameters<typeof userApi.page>[0]),
+      page: (q) => userApi.page(compactQuery(q) as unknown as Parameters<typeof userApi.page>[0]),
       create: (data) => userApi.create(data),
       update: (id, data) => userApi.update(id, data),
     },
