@@ -10,7 +10,7 @@
 ## 2. 低风险页收敛（行为零变化）
 
 - [x] 2.1 改造 `views/content/CategoryList.vue`：关键词/状态筛选、分页、D-Form 必填校验、删除二次确认 + 后端 `msg` 展示
-- [ ] 2.2 改造 `views/content/TagList.vue`：同 2.1 形态
+- [x] 2.2 改造 `views/content/TagList.vue`：同 2.1 形态
 - [ ] 2.3 改造 `views/audit/AuditList.vue`：时间范围 + 操作人/模块/结果筛选、长文本省略 + title、详情 D-Panel 键值对（TraceId 仅出参有则展示）
 - [ ] 2.4 改造 `views/Dashboard.vue`：说明卡 + 快捷入口（文章/分类/标签/文件/服务商）；统计卡片有接口则展示、无则降级
 
