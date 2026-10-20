@@ -3,19 +3,12 @@
     <div class="page-head">
       <h2 class="title">文件管理</h2>
       <span class="sub">展示页 · 上传 / 公开 URL 预览下载 / 逻辑删除</span>
-      <span class="spacer"></span>
-      <el-button
-        v-if="hasPermission('blog:file:upload')"
-        type="primary"
-        @click="openUpload"
-      >上传</el-button>
-      <el-button link type="primary" @click="goProviders">存储服务商配置</el-button>
     </div>
 
     <div class="stat-row">
       <el-card shadow="never" class="stat" style="width: 180px">
         <div class="stat-label">有效文件</div>
-        <div class="stat-value">{{ total }}</div>
+        <div class="stat-value">{{ statTotal }}</div>
       </el-card>
       <el-card shadow="never" class="stat" style="width: 260px">
         <div class="stat-label">默认服务商</div>
@@ -31,151 +24,72 @@
         <div class="stat-sub">单文件 ≤10MB · png/jpeg/gif/pdf · 公开永久 URL</div>
       </el-card>
     </div>
+  </div>
 
-    <div class="toolbar">
-      <el-input
-        v-model="query.keyword"
-        placeholder="原始文件名关键字"
-        clearable
-        style="width: 200px"
-        @keyup.enter="onSearch"
-      />
-      <el-select
-        v-model="query.storageCode"
-        placeholder="服务商：全部"
-        clearable
-        style="width: 180px"
-        @change="onSearch"
-      >
-        <el-option
-          v-for="p in providers"
-          :key="p.code"
-          :label="p.code"
-          :value="p.code"
+  <CrudPage ref="crudRef" :schema="schema" @custom-action="onCustomAction">
+    <template #col-id="{ row }">
+      <div class="thumb" :title="thumbTitle(row)">
+        <img
+          v-if="isImage(row.contentType) && thumbSrc(row)"
+          :src="thumbSrc(row) || ''"
+          :alt="row.originalName"
+          @error="onThumbError($event, row.contentType)"
         />
-      </el-select>
-      <el-select
-        v-model="query.contentType"
-        placeholder="类型：全部"
-        clearable
-        style="width: 160px"
-        @change="onSearch"
-      >
-        <el-option label="PNG" value="image/png" />
-        <el-option label="JPEG" value="image/jpeg" />
-        <el-option label="GIF" value="image/gif" />
-        <el-option label="PDF" value="application/pdf" />
-      </el-select>
-      <el-button type="primary" plain @click="onSearch">查询</el-button>
-      <el-button @click="reset">重置</el-button>
-    </div>
+        <span v-else class="thumb-placeholder">{{ typeAbbrev(row.contentType) }}</span>
+      </div>
+    </template>
+    <template #col-originalName="{ row }">
+      <div class="file-name">
+        <div class="name" :title="row.originalName">{{ row.originalName }}</div>
+        <div class="key" :title="row.objectKey">{{ shortKey(row.objectKey) }}</div>
+      </div>
+    </template>
+    <template #col-storageCode="{ row }">
+      <div class="provider-cell">
+        <div class="provider">{{ row.storageCode || '—' }}</div>
+        <div class="bucket">{{ row.bucket || '—' }}</div>
+      </div>
+    </template>
+  </CrudPage>
 
-    <el-table v-if="records.length" :data="records" border>
-      <el-table-column label="缩略图" width="80">
-        <template #default="{ row }">
-          <div class="thumb" :title="thumbTitle(row)">
-            <img
-              v-if="isImage(row.contentType) && thumbSrc(row)"
-              :src="thumbSrc(row) || ''"
-              :alt="row.originalName"
-              @error="onThumbError($event, row.contentType)"
-            />
-            <span v-else class="thumb-placeholder">{{ typeAbbrev(row.contentType) }}</span>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="文件名" min-width="220">
-        <template #default="{ row }">
-          <div class="file-name">
-            <div class="name" :title="row.originalName">{{ row.originalName }}</div>
-            <div class="key" :title="row.objectKey">{{ shortKey(row.objectKey) }}</div>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="服务商 / 桶" width="180">
-        <template #default="{ row }">
-          <div class="provider-cell">
-            <div class="provider">{{ row.storageCode || '—' }}</div>
-            <div class="bucket">{{ row.bucket || '—' }}</div>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column prop="contentType" label="类型" width="120" />
-      <el-table-column label="大小" width="100">
-        <template #default="{ row }">{{ formatBytes(row.sizeBytes) }}</template>
-      </el-table-column>
-      <el-table-column prop="createTime" label="上传时间" width="180" />
-      <el-table-column label="操作" width="220" fixed="right">
-        <template #default="{ row }">
-          <el-button
-            v-if="hasPermission('blog:file:read')"
-            link
-            type="primary"
-            @click="preview(row)"
-          >预览</el-button>
-          <el-button
-            v-if="hasPermission('blog:file:read')"
-            link
-            type="primary"
-            @click="download(row)"
-          >下载</el-button>
-          <el-button
-            v-if="hasPermission('blog:file:delete')"
-            link
-            type="danger"
-            @click="remove(row)"
-          >删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <el-empty v-else description="暂无文件" />
-
-    <el-pagination
-      v-model:current-page="query.current"
-      v-model:page-size="query.size"
-      :total="total"
-      layout="total, sizes, prev, pager, next"
-      @current-change="load"
-      @size-change="load"
-    />
-
-    <el-dialog v-model="uploadVisible" title="上传文件" width="480px">
-      <el-form label-position="top">
-        <el-form-item label="目标服务商">
-          <el-select
-            v-model="uploadForm.storageCode"
-            placeholder="默认服务商"
-            style="width: 100%"
-            :disabled="providers.length === 0"
-          >
-            <el-option
-              v-for="p in providers"
-              :key="p.code"
-              :label="`${p.code}${p.isDefault === 1 ? '（默认）' : ''}`"
-              :value="p.code"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="业务类型 bizType（可选）">
-          <el-input v-model="uploadForm.bizType" placeholder="如 ARTICLE_IMAGE / FILE" />
-        </el-form-item>
-        <el-form-item label="文件">
-          <el-upload
-            drag
-            :auto-upload="false"
-            :limit="1"
-            :on-change="onFileChange"
-            :on-remove="() => (selected = null)"
-            accept=".png,.jpg,.jpeg,.gif,.pdf,image/png,image/jpeg,image/gif,application/pdf"
-          >
-            <div class="el-upload__text">拖拽文件到此处，或<em>点击选择</em></div>
-            <template #tip>
-              <div class="el-upload__tip">支持 PNG / JPEG / GIF / PDF · 单文件 ≤ 10MB</div>
-            </template>
-          </el-upload>
-        </el-form-item>
-      </el-form>
-      <template #footer>
+  <el-dialog v-model="uploadVisible" title="上传文件" width="480px">
+    <el-form label-position="top">
+      <el-form-item label="目标服务商">
+        <el-select
+          v-model="uploadForm.storageCode"
+          placeholder="默认服务商"
+          style="width: 100%"
+          :disabled="providers.length === 0"
+        >
+          <el-option
+            v-for="p in providers"
+            :key="p.code"
+            :label="`${p.code}${p.isDefault === 1 ? '（默认）' : ''}`"
+            :value="p.code"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="业务类型 bizType（可选）">
+        <el-input v-model="uploadForm.bizType" placeholder="如 ARTICLE_IMAGE / FILE" />
+      </el-form-item>
+      <el-form-item label="文件">
+        <el-upload
+          drag
+          :auto-upload="false"
+          :limit="1"
+          :on-change="onFileChange"
+          :on-remove="() => (selected = null)"
+          accept=".png,.jpg,.jpeg,.gif,.pdf,image/png,image/jpeg,image/gif,application/pdf"
+        >
+          <div class="el-upload__text">拖拽文件到此处，或<em>点击选择</em></div>
+          <template #tip>
+            <div class="el-upload__tip">支持 PNG / JPEG / GIF / PDF · 单文件 ≤ 10MB</div>
+          </template>
+        </el-upload>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <span class="dialog-foot">
         <el-button @click="uploadVisible = false">取消</el-button>
         <el-button
           type="primary"
@@ -183,37 +97,33 @@
           :disabled="providers.length === 0"
           @click="doUpload"
         >上传</el-button>
-      </template>
-      <div v-if="providers.length === 0" class="no-provider-tip">
-        无可用服务商，请先在「存储服务商配置页」新增并启用。
-      </div>
-    </el-dialog>
-  </div>
+      </span>
+    </template>
+    <div v-if="providers.length === 0" class="no-provider-tip">
+      无可用服务商，请先在「存储服务商配置页」新增并启用。
+    </div>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox, type UploadFile } from 'element-plus'
-import { deleteFile, getFileUrl, pageFiles, uploadFile } from '@/api/file'
+import { ElMessage, type UploadFile } from 'element-plus'
+import CrudPage from '@/components/common/CrudPage.vue'
+import { getFileUrl, uploadFile } from '@/api/file'
 import { storageProviderApi } from '@/api/storageProvider'
-import { hasPermission } from '@/utils/permission'
-import type { FileMeta, StorageProviderVO } from '@/types'
+import { buildFileSchema } from './file.config'
+import type { FileMeta, PageResult, StorageProviderVO } from '@/types'
 
 const ALLOW = ['image/png', 'image/jpeg', 'image/gif', 'application/pdf']
 
-const router = useRouter()
+type CrudPageExpose = { reload: () => Promise<void>; search: () => void }
 
-const records = ref<FileMeta[]>([])
-const total = ref(0)
+const router = useRouter()
+const crudRef = ref<CrudPageExpose | null>(null)
+
 const providers = ref<StorageProviderVO[]>([])
-const query = reactive({
-  current: 1,
-  size: 10,
-  keyword: '',
-  contentType: '',
-  storageCode: '',
-})
+const statTotal = ref(0)
 
 const uploadVisible = ref(false)
 const uploading = ref(false)
@@ -227,11 +137,11 @@ const defaultProvider = computed(
   () => providers.value.find((p) => p.isDefault === 1) || null,
 )
 
-function formatBytes(n: number) {
-  if (n < 1024) return n + ' B'
-  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB'
-  return (n / 1024 / 1024).toFixed(2) + ' MB'
+function onPageLoaded(page: PageResult<FileMeta>) {
+  statTotal.value = Number(page.total)
 }
+
+const schema = computed(() => buildFileSchema(providers.value, onPageLoaded))
 
 function shortKey(key: string) {
   if (!key) return ''
@@ -283,31 +193,6 @@ async function loadProviders() {
   }
 }
 
-async function load() {
-  const page = await pageFiles({
-    current: query.current,
-    size: query.size,
-    keyword: query.keyword || undefined,
-    contentType: query.contentType || undefined,
-    storageCode: query.storageCode || undefined,
-  })
-  records.value = page.records
-  total.value = page.total
-}
-
-function onSearch() {
-  query.current = 1
-  load()
-}
-
-function reset() {
-  query.keyword = ''
-  query.contentType = ''
-  query.storageCode = ''
-  query.current = 1
-  load()
-}
-
 function goProviders() {
   router.push('/storage/providers')
 }
@@ -349,8 +234,7 @@ async function doUpload() {
     )
     ElMessage.success('上传成功')
     uploadVisible.value = false
-    query.current = 1
-    await load()
+    crudRef.value?.search()
   } finally {
     uploading.value = false
   }
@@ -380,20 +264,25 @@ async function download(row: FileMeta) {
   document.body.removeChild(a)
 }
 
-async function remove(row: FileMeta) {
-  await ElMessageBox.confirm(
-    `确认删除「${row.originalName}」？\n此为逻辑删除（deleted=1），公开 URL 在物理清理前可能仍可访问；删除前会做引用检查，被正文/业务引用时将拒绝删除并返回引用摘要。`,
-    '删除文件',
-    { type: 'warning' },
-  )
-  await deleteFile(row.id)
-  ElMessage.success('已逻辑删除')
-  await load()
+/** 上传/预览/下载经 custom-action 扩展点接线，请求与结果处理保持现状逐行 */
+function onCustomAction(key: string, row?: FileMeta) {
+  if (key === 'upload') {
+    openUpload()
+    return
+  }
+  if (key === 'providers') {
+    goProviders()
+    return
+  }
+  if (!row) return
+  if (key === 'preview') {
+    void preview(row)
+  } else if (key === 'download') {
+    void download(row)
+  }
 }
 
-onMounted(async () => {
-  await Promise.all([load(), loadProviders()])
-})
+onMounted(loadProviders)
 </script>
 
 <style scoped>
@@ -412,13 +301,9 @@ onMounted(async () => {
   font-size: 12px;
   color: var(--text-secondary);
 }
-.page-head .spacer {
-  flex: 1;
-}
 .stat-row {
   display: flex;
   gap: 12px;
-  margin-bottom: 16px;
 }
 .stat {
   flex: 1;
@@ -440,13 +325,6 @@ onMounted(async () => {
   font-size: 12px;
   color: var(--text-regular);
   line-height: 1.6;
-}
-.toolbar {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-  align-items: center;
 }
 .thumb {
   width: 40px;
