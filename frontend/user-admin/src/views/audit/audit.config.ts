@@ -32,8 +32,8 @@ export function buildAuditSchema(): CrudPageSchema<AuditVO, Record<string, unkno
 }
 
 /** 详情 D-Panel 行（键值对，覆盖 AuditVO 全量出参字段） */
-export function auditDetailRows(row: AuditVO) {
-  return [
+export function auditDetailRows(row: AuditVO): { key: string; label: string; value?: string | number | null }[] {
+  const rows: { key: string; label: string; value?: string | number | null }[] = [
     { key: 'id', label: '记录 ID', value: row.id },
     { key: 'createTime', label: '发生时间', value: row.createTime },
     { key: 'action', label: '动作', value: row.action },
@@ -42,4 +42,8 @@ export function auditDetailRows(row: AuditVO) {
     { key: 'ip', label: '来源 IP', value: row.ip },
     { key: 'detail', label: '摘要', value: row.detail },
   ]
+  // TraceId 仅当出参携带时渲染（AuditVO 无该字段，禁止前端自造，D5）
+  const traceId = (row as unknown as { traceId?: string }).traceId
+  if (traceId) rows.push({ key: 'traceId', label: 'TraceId', value: traceId })
+  return rows
 }

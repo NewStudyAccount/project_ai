@@ -2,10 +2,10 @@
 
 ## 1. 通用骨架（CrudPage / CrudForm）
 
-- [ ] 1.1 新增 `src/types/crud.ts`：PageSchema / ColumnDef / FilterDef / ActionDef / RowActionDef / FormFieldDef 类型（对齐 `generic-admin-page-design.md` §3，`prop` 与 `src/types` VO 字段一致、主键一律 string）
-- [ ] 1.2 新增 `src/components/common/CrudForm.vue`（D-Form）：label 右对齐 96px、必填红字校验、编辑回显、不可变字段 disabled、底栏「取消 + 保存（胶囊，loading 防重）」
-- [ ] 1.3 新增 `src/components/common/CrudPage.vue`：toolbar（主操作靠左 + 筛选右置换行）、`el-table border`、分页（current 从 1 起）、内建 create/update/delete、`hasPermission` 无权限整钮不渲染、危险操作二次确认 + toast ≤ 2s + 刷新当前页（删空回退一页）
-- [ ] 1.4 预留列类型扩展点（enum / pill / datetime / copyable / tooltip，pillTone 仅 success/warning/danger），样式只用云白 token
+- [x] 1.1 新增 `src/types/crud.ts`：PageSchema / ColumnDef / FilterDef / ActionDef / RowActionDef / FormFieldDef 类型（对齐 `generic-admin-page-design.md` §3，`prop` 与 `src/types` VO 字段一致、主键一律 string）
+- [x] 1.2 新增 `src/components/common/CrudForm.vue`（D-Form）：label 右对齐 96px、必填红字校验、编辑回显、不可变字段 disabled、底栏「取消 + 保存（胶囊，loading 防重）」
+- [x] 1.3 新增 `src/components/common/CrudPage.vue`：toolbar（主操作靠左 + 筛选右置换行）、`el-table border`、分页（current 从 1 起）、内建 create/update/delete、`hasPermission` 无权限整钮不渲染、危险操作二次确认 + toast ≤ 2s + 刷新当前页（删空回退一页）
+- [x] 1.4 预留列类型扩展点（enum / pill / datetime / copyable / tooltip，pillTone 仅 success/warning/danger），样式只用云白 token
 
 ## 2. 账号管理（UserList）
 
@@ -16,8 +16,8 @@
 
 ## 3. 审计列表（AuditList）
 
-- [ ] 3.1 改造 `views/audit/AuditList.vue`：操作人/模块/结果筛选 + 时间范围（beginTime/endTime），长文本省略 + title 提示
-- [ ] 3.2 审计详情 D-Panel：键值对展示全量字段；TraceId 仅当后端出参提供时渲染
+- [x] 3.1 改造 `views/audit/AuditList.vue`：操作人/模块/结果筛选 + 时间范围（beginTime/endTime），长文本省略 + title 提示
+- [x] 3.2 审计详情 D-Panel：键值对展示全量字段；TraceId 仅当后端出参提供时渲染
 
 ## 4. 首页与全局
 
