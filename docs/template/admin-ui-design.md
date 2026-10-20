@@ -23,6 +23,7 @@
 | `--bg-sidebar-gradient` | `linear-gradient(165deg, #1b1147 0%, #271563 58%, #2c1c78 100%)` | **侧栏底**（深靛紫极光渐变） |
 | `--sidebar-glow` | `radial-gradient(640px 260px at 20% -30%, rgba(109,93,246,.45), transparent 65%)` | 侧栏顶部极光光晕 |
 | `--bg-sidebar-active` | `rgba(255,255,255,.10)` | 侧栏激活项玻璃底 |
+| `--bg-thead` | `#f6f5fd` | 表格表头底（浅灰紫） |
 | `--text-primary` | `#1c1740` | 主内容标题（深靛墨） |
 | `--text-regular` | `#3f3a6b` | 表格正文、次要 |
 | `--text-secondary` | `#8580ad` | 辅助说明、表头 |
@@ -41,7 +42,7 @@
 | `--warning` | `#f59e0b` | 停用/警告（琥珀） |
 | `--stat-grad-1…4` | 靛紫 `#6d5df6→#8b5cf6` / 青蓝 `#22d3ee→#3b82f6` / 翡翠 `#10b981→#34d399` / 琥珀 `#f59e0b→#f97316`（各 135°） | 彩色统计卡专用（仅 Dashboard） |
 
-- **全局主色**映射 Element Plus：`--el-color-primary: #6d5df6`（light-3 `#8f83f8` / light-5 `#b1a8fa` / light-7 `#d2cdfd` / light-8 `#e3dffe` / light-9 `#f2f0ff` / dark-2 `#5849c5`）；**禁止**各系统私自换主色
+- **全局主色**映射 Element Plus：`--el-color-primary: #6d5df6`（light-3 `#8f83f8` / light-5 `#b1a8fa` / light-7 `#d2cdfd` / light-8 `#e3dffe` / light-9 `#f2f0ff` / dark-2 `#5849c5`）；`--el-color-success/warning/danger` 亦映射 `--success/--warning/--danger`；**禁止**各系统私自换主色
 - 气质：**深邃渐变壳、明亮多彩面**——渐变是唯一的强调语言且只出自 `--accent-gradient`（及统计卡 4 渐变）；内容区保持明亮浅底
 - **禁止**：页面级大面积渐变背景、毛玻璃滥用（仅限侧栏激活项一处）、过重投影/发光堆叠、装饰插画、第三方图标包、侧栏彩色 emoji
 - 状态用**软胶囊 tag**（见 §5），不用高饱和色块铺行
@@ -259,7 +260,7 @@
 |------|------|------|
 | 页面容器 | `.page-card` | margin 20 + padding 18–22 + **圆角 16** + 白底 + 紫调阴影（§1.3）；hover 可抬升 `--shadow-card-hover` |
 | 工具栏 | `.toolbar` | flex，gap 10，margin-bottom 12；主按钮 `type=primary` **渐变胶囊 + 光晕** |
-| 表格 | `el-table` | 常规 `border`；表头浅灰紫 `#faf9ff`；树表 `row-key` + expand |
+| 表格 | `el-table` | 常规 `border`；表头浅灰紫 `var(--bg-thead)`（`#f6f5fd`）；树表 `row-key` + expand |
 | 表单 | `el-form` | `label-width` 96px |
 | 弹窗 | `el-dialog` | **圆角 16**；阴影见 §1.3；页内编辑/授权，避免整页跳转表单 |
 | 消息 | `ElMessage` / `ElMessageBox` | 成功 toast ≤ 2s；危险操作必须 confirm |

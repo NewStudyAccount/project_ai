@@ -10,6 +10,7 @@
   --bg-sidebar-gradient: linear-gradient(165deg, #1b1147 0%, #271563 58%, #2c1c78 100%);
   --sidebar-glow: radial-gradient(640px 260px at 20% -30%, rgba(109, 93, 246, 0.45), transparent 65%);
   --bg-sidebar-active: rgba(255, 255, 255, 0.10); /* 侧栏激活项玻璃底 */
+  --bg-thead: #f6f5fd; /* 表格表头底（浅灰紫） */
 
   /* 文字 */
   --text-primary: #1c1740;
@@ -62,6 +63,9 @@
   --el-color-primary-light-8: #e3dffe;
   --el-color-primary-light-9: #f2f0ff;
   --el-color-primary-dark-2: #5849c5;
+  --el-color-success: var(--success);
+  --el-color-warning: var(--warning);
+  --el-color-danger: var(--danger);
 
   font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
   color: var(--text-primary);
@@ -88,6 +92,11 @@ body {
 /* 卡片 hover 抬升（admin-ui-design.md §5） */
 .page-card:hover {
   box-shadow: var(--shadow-card-hover);
+}
+
+/* 表头浅灰紫（admin-ui-design.md §5，--bg-thead） */
+.el-table th.el-table__cell {
+  background: var(--bg-thead);
 }
 
 .toolbar {
