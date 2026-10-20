@@ -110,11 +110,11 @@ window.MOCK = (function () {
 
   /* ---------- OAuth2 Client（auth_client） ---------- */
   const clients = [
-    { id: '2026101000000201', clientId: 'auth-admin', name: '认证中心管理端', grantTypes: 'authorization_code, refresh_token', scope: 'openid profile', redirectUri: 'https://admin.example.com/callback', status: 1, secret: 'sk_live_9f2a7c41d8b64e5f9a3c72e1b04d8f65', createTime: '2026-10-10 10:00:00' },
-    { id: '2026101000000202', clientId: 'user-admin', name: '用户中心管理端', grantTypes: 'authorization_code, refresh_token', scope: 'openid profile', redirectUri: 'https://user.example.com/callback', status: 1, secret: 'sk_live_3b8e52fa19c74d0e8f6a25c9d17b4e30', createTime: '2026-10-10 10:05:12' },
-    { id: '2026101100000203', clientId: 'blog-admin', name: '博客管理端', grantTypes: 'authorization_code, refresh_token', scope: 'openid profile blog.read blog.write', redirectUri: 'https://blog.example.com/callback', status: 1, secret: 'sk_live_c7d41a95e2b84f6390a7e5c18b3f2d64', createTime: '2026-10-11 09:22:47' },
-    { id: '2026101200000204', clientId: 'ci-pipeline', name: 'CI 流水线', grantTypes: 'client_credentials', scope: 'deploy.trigger', redirectUri: '', status: 1, secret: 'sk_live_5e1c9b83a7f24d6b81c0e4a27d95f3b8', createTime: '2026-10-12 14:48:30' },
-    { id: '2026101300000205', clientId: 'legacy-report', name: '旧报表系统', grantTypes: 'password', scope: 'report.read', redirectUri: '', status: 0, secret: 'sk_live_2a6f8d14c5e94b0793e1f8a62c4b7d05', createTime: '2026-10-13 16:31:09' }
+    { id: '2026101000000201', clientId: 'auth-admin', name: '认证中心管理端', grantTypes: 'authorization_code, refresh_token', scope: 'openid profile', redirectUri: 'https://admin.example.com/callback', status: 1, secret: '', createTime: '2026-10-10 10:00:00' },
+    { id: '2026101000000202', clientId: 'user-admin', name: '用户中心管理端', grantTypes: 'authorization_code, refresh_token', scope: 'openid profile', redirectUri: 'https://user.example.com/callback', status: 1, secret: '', createTime: '2026-10-10 10:05:12' },
+    { id: '2026101100000203', clientId: 'blog-admin', name: '博客管理端', grantTypes: 'authorization_code, refresh_token', scope: 'openid profile blog.read blog.write', redirectUri: 'https://blog.example.com/callback', status: 1, secret: '', createTime: '2026-10-11 09:22:47' },
+    { id: '2026101200000204', clientId: 'ci-pipeline', name: 'CI 流水线', grantTypes: 'client_credentials', scope: 'deploy.trigger', redirectUri: '', status: 1, secret: '', createTime: '2026-10-12 14:48:30' },
+    { id: '2026101300000205', clientId: 'legacy-report', name: '旧报表系统', grantTypes: 'password', scope: 'report.read', redirectUri: '', status: 0, secret: '', createTime: '2026-10-13 16:31:09' }
   ];
 
   /* ---------- 首页统计 ---------- */
