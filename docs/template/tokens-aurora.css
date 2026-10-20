@@ -1,0 +1,74 @@
+/**
+ * 极光 Aurora · 管理端 Design Tokens（现行基线，2026-10-20 起）
+ * 权威定义见 docs/template/admin-ui-design.md §1
+ * 样张：docs/template/admin-ui-style-aurora.html
+ * 用法：在各 {system}-admin 的 main.css 顶部 @import 或直接合并本段
+ *
+ * 取代 云白 Cloud Paper（tokens-cloud-paper.css，仅存历史对照）。
+ */
+
+:root {
+  /* 背景 */
+  --bg-page: #f3f5fb;
+  --bg-surface: #ffffff;
+  --bg-sidebar: #1c1248; /* 侧栏纯色兜底（渐变不可用时） */
+  --bg-sidebar-gradient: linear-gradient(165deg, #1b1147 0%, #271563 58%, #2c1c78 100%);
+  --sidebar-glow: radial-gradient(640px 260px at 20% -30%, rgba(109, 93, 246, 0.45), transparent 65%);
+  --bg-sidebar-active: rgba(255, 255, 255, 0.10); /* 侧栏激活项玻璃底 */
+
+  /* 文字 */
+  --text-primary: #1c1740;
+  --text-regular: #3f3a6b;
+  --text-secondary: #8580ad;
+  --text-sidebar: #edeaff;
+  --text-sidebar-muted: #a9a2d8;
+  --text-sidebar-active: #ffffff;
+
+  /* 线与强调 */
+  --border: #e6e4f4;
+  --primary: #6d5df6;
+  --primary-hover: #5a49e8;
+  --primary-light: #eeecff;
+  --accent-bar: #22d3ee;
+  --accent-gradient: linear-gradient(135deg, #6d5df6 0%, #8b5cf6 45%, #22d3ee 100%);
+  --primary-glow: 0 8px 24px rgba(109, 93, 246, 0.35);
+  --danger: #f43f5e;
+  --success: #10b981;
+  --warning: #f59e0b;
+
+  /* 圆角 / 阴影 / 间距 */
+  --page-radius: 16px;
+  --control-radius: 10px;
+  --button-radius: 999px;
+  --space-page: 20px;
+  --space-toolbar: 10px;
+  --shadow-card: 0 1px 2px rgba(28, 23, 64, 0.05), 0 12px 28px rgba(88, 70, 200, 0.09);
+  --shadow-card-hover: 0 2px 4px rgba(28, 23, 64, 0.06), 0 18px 40px rgba(88, 70, 200, 0.16);
+  --shadow-dialog: 0 24px 64px rgba(28, 23, 64, 0.22), 0 8px 24px rgba(88, 70, 200, 0.14);
+
+  /* 彩色统计卡（仅 Dashboard，接口可得时使用） */
+  --stat-grad-1: linear-gradient(135deg, #6d5df6 0%, #8b5cf6 100%); /* 靛紫 */
+  --stat-grad-2: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%); /* 青蓝 */
+  --stat-grad-3: linear-gradient(135deg, #10b981 0%, #34d399 100%); /* 翡翠 */
+  --stat-grad-4: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); /* 琥珀 */
+
+  /* 状态软胶囊底/字（固定配对，见 admin-ui-design.md §5） */
+  --pill-ok-bg: #d1fae5;    --pill-ok-fg: #047857;
+  --pill-warn-bg: #fef3c7;  --pill-warn-fg: #b45309;
+  --pill-bad-bg: #ffe4e6;   --pill-bad-fg: #be123c;
+  --pill-info-bg: #e0e7ff;  --pill-info-fg: #4338ca;
+  --pill-cyan-bg: #cffafe;  --pill-cyan-fg: #0e7490;
+
+  /* Element Plus 主色对齐 */
+  --el-color-primary: #6d5df6;
+  --el-color-primary-light-3: #8f83f8;
+  --el-color-primary-light-5: #b1a8fa;
+  --el-color-primary-light-7: #d2cdfd;
+  --el-color-primary-light-8: #e3dffe;
+  --el-color-primary-light-9: #f2f0ff;
+  --el-color-primary-dark-2: #5849c5;
+
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--text-primary);
+  background: var(--bg-page);
+}

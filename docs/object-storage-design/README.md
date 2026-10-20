@@ -8,7 +8,7 @@
 | 路径 | 说明 |
 |------|------|
 | [`object-storage-design.md`](./object-storage-design.md) | 对象存储通用设计（独立模块 / S3 多服务商 / 管理端双页） |
-| [`prototype.html`](./prototype.html) | 可交互原型（文件管理展示页 + 服务商配置页，云白风格） |
+| [`prototype.html`](./prototype.html) | 可交互原型（文件管理展示页 + 服务商配置页，极光 Aurora 风格） |
 | [`assets/proto-file-list.svg`](./assets/proto-file-list.svg) | 文件管理页原型图 |
 | [`assets/proto-storage-provider.svg`](./assets/proto-storage-provider.svg) | 存储服务商配置页原型图 |
 
@@ -19,7 +19,7 @@
 | 文件管理 | §7.2 | `/files` | 上传、筛选（含服务商）、预览/下载、逻辑删除 |
 | 存储服务商 | §7.3 | `/storage/providers` | 服务商 CRUD、连通性测试、启停、设默认 |
 
-视觉基线：`docs/template/admin-ui-design.md`（云白）· 组件 Element Plus。
+视觉基线：`docs/template/admin-ui-design.md`（极光 Aurora）· 组件 Element Plus。
 
 ## 打开方式
 

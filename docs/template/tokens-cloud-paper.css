@@ -1,5 +1,6 @@
 /**
  * 云白 Cloud Paper · 管理端 Design Tokens
+ * ⚠️ 历史基线（已废止）：2026-10-20 起由「极光 Aurora」（tokens-aurora.css）取代，本文件仅存比选对照，禁止新代码引用。
  * 权威定义见 docs/template/admin-ui-design.md §1
  * 用法：在各 {system}-admin 的 main.css 顶部 @import 或直接合并本段
  */

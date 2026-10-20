@@ -2,7 +2,7 @@
 
 > 状态：**设计稿 v1**
 > 定位：`admin-ui-design.md` §3.1 **P-List** 的工程化展开——一份**配置驱动**的通用管理页设计，新业务列表页不再重复写骨架，只写配置。
-> 视觉：沿用「云白」Design Tokens（`admin-ui-design.md` §1），**不新增任何色值**。
+> 视觉：沿用「极光 Aurora」Design Tokens（`admin-ui-design.md` §1 / `tokens-aurora.css`），**不新增本 token 体系之外的色值**。
 > 适用：各系统 `{system}-admin` 的实体管理页（账号、分类、文章、文件、Client…）。
 > 不覆盖：树管理页（P-Tree，见 `admin-ui-design.md` §3.2）、登录页（§4.5）、Dashboard（§4.1）。
 
@@ -145,14 +145,14 @@ frontend/{system}-admin/src/
     └── xxx.config.ts                   # 本页全部差异（§3 schema）
 ```
 
-- `CrudPage.vue` 内部不改全局样式；全部走「云白」token 与 §5 组件约定
+- `CrudPage.vue` 内部不改全局样式；全部走「极光 Aurora」token 与 §5 组件约定
 - 页面仅允许通过 schema 定制；骨架级改动（列宽策略、弹窗宽度等）在组件内统一裁决
 - **P-Tree / D-Panel 不套用本组件**（树表交互差异大，维持 `admin-ui-design.md` 原模式）
 
 ## 7. 落地自检
 
 - [ ] 页面文件 ≤ 30 行（不含 config）；差异全在 `xxx.config.ts`
-- [ ] 色值/圆角/间距未新增，全部「云白」token
+- [ ] 色值/圆角/间距未新增，全部「极光 Aurora」token
 - [ ] 主按钮与行内操作权限串符合 `system:resource:action`；无权限的钮**不渲染**（不是 disabled）
 - [ ] 主键、分页、枚举值均与后端契约一致，无前端自造
 - [ ] 删除有二次确认；成功后刷新当前页；提交按钮防重

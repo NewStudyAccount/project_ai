@@ -522,7 +522,7 @@ sys_file 1 ──── * 审计日志（target_type=FILE / STORAGE_PROVIDER）
 
 ## 7. 管理端前端设计
 
-> 视觉与布局遵循 `admin-ui-design.md`（云白、Element Plus、P-List / D-Form）；权限标识格式 `system:resource:action`（`CLAUDE.md` §5.2）。
+> 视觉与布局遵循 `admin-ui-design.md`（极光 Aurora、Element Plus、P-List / D-Form）；权限标识格式 `system:resource:action`（`CLAUDE.md` §5.2）。
 
 ### 7.1 信息架构
 
