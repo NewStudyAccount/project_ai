@@ -4,6 +4,11 @@ export interface Result<T> {
   data: T
 }
 
+export interface PageQuery {
+  current: number
+  size: number
+}
+
 export interface PageResult<T> {
   records: T[]
   total: number

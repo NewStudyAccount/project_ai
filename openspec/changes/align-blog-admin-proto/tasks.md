@@ -2,10 +2,10 @@
 
 ## 1. 通用骨架（CrudPage / CrudForm）
 
-- [ ] 1.1 新增 `src/types/crud.ts`：PageSchema / ColumnDef / FilterDef / ActionDef / RowActionDef / FormFieldDef 类型（对齐 `generic-admin-page-design.md` §3，`prop` 与 `src/types` VO 字段一致、主键一律 string）
-- [ ] 1.2 新增 `src/components/common/CrudForm.vue`（D-Form）：label 右对齐 96px、必填红字校验、编辑回显、不可变字段 disabled、底栏「取消 + 保存（胶囊，loading 防重）」
-- [ ] 1.3 新增 `src/components/common/CrudPage.vue`：toolbar / el-table border / 分页（current 从 1 起）/ 内建 create/update/delete / `hasPermission` 整钮不渲染 / 危险确认 + toast ≤ 2s + 刷新（删空回退一页）
-- [ ] 1.4 扩展点：自定义 primaryActions / rowActions（显式权限全串 + confirm 文案）、列类型 enum/pill/datetime/copyable/tooltip/slot；样式只用云白 token
+- [x] 1.1 新增 `src/types/crud.ts`：PageSchema / ColumnDef / FilterDef / ActionDef / RowActionDef / FormFieldDef 类型（对齐 `generic-admin-page-design.md` §3，`prop` 与 `src/types` VO 字段一致、主键一律 string）
+- [x] 1.2 新增 `src/components/common/CrudForm.vue`（D-Form）：label 右对齐 96px、必填红字校验、编辑回显、不可变字段 disabled、底栏「取消 + 保存（胶囊，loading 防重）」
+- [x] 1.3 新增 `src/components/common/CrudPage.vue`：toolbar / el-table border / 分页（current 从 1 起）/ 内建 create/update/delete / `hasPermission` 整钮不渲染 / 危险确认 + toast ≤ 2s + 刷新（删空回退一页）
+- [x] 1.4 扩展点：自定义 primaryActions / rowActions（显式权限全串 + confirm 文案）、列类型 enum/pill/datetime/copyable/tooltip/slot；样式只用云白 token
 
 ## 2. 低风险页收敛（行为零变化）
 
