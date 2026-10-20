@@ -27,7 +27,7 @@ export function buildAuditSchema(): CrudPageSchema<AuditVO, Record<string, unkno
       { prop: 'ip', label: 'IP', width: 140 },
       { prop: 'createTime', label: '时间', width: 180, type: 'datetime' },
     ],
-    rowActions: [{ key: 'detail', label: '详情' }],
+    rowActions: [{ key: 'detail', label: '详情', permission: 'blog:audit:list' }],
     emptyText: '暂无审计记录',
   }
 }
