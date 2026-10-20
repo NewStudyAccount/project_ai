@@ -27,7 +27,7 @@
 
 ## 5. 自检
 
-- [ ] 5.1 `cd frontend/user-admin && npm run lint` 通过
-- [ ] 5.2 `cd frontend/user-admin && npm run type-check` 通过
-- [ ] 5.3 权限与契约走查：无权限按钮不渲染、无角色名硬编码、id 一律 string、无 console.log 残留、无密码明文处理
-- [ ] 5.4 提交自查：改动仅限 `frontend/user-admin`（不碰 menu/role 视图与后端）；一个提交只做一件事（`feat(user-admin): …`）
+- [x] 5.1 `cd frontend/user-admin && npm run lint` 通过
+- [x] 5.2 `cd frontend/user-admin && npm run type-check` 通过
+- [x] 5.3 权限与契约走查：无权限按钮不渲染、无角色名硬编码、id 一律 string、无 console.log 残留、无密码明文处理
+- [x] 5.4 提交自查：改动仅限 `frontend/user-admin`（不碰 menu/role 视图与后端）；一个提交只做一件事（`feat(user-admin): …`）
