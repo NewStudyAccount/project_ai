@@ -90,7 +90,7 @@ OIDC RP（unify-login-facade）：
 
 | 类型 | 地址 | 项目/Bucket | 用户名（AccessKey） | 密码/密钥（SecretKey） | 备注 |
 |------|------|-------------|---------------------|------------------------|------|
-| OSS/MinIO | http://192.168.99.100:9000 | blog | minio_admin | minio123456（测试用可写；生产密钥禁止） | blog 系统（`blog.object-storage.providers[code=minio-local]`）；与 `application-local.yml` / `application-test.yml` 一致；已验证 put/get/delete。**公开读基址** `public-base-url=http://192.168.99.100:9000/blog`（桶 `blog` 需**公共读**，匿名 GET 200 / 匿名 PUT 失败；无生产密钥） |
+| OSS/MinIO | http://192.168.99.100:9000 | blog | Nj8dcWqsI4bG2mFH16DD | v9vEyjmfvWuRcq77H3nnZifqwvaPTTvftDqCqgOj（测试用可写；生产密钥禁止） | blog 系统（`blog.object-storage.providers[code=minio-local]`）；与 `application-local.yml` / `application-test.yml` 一致；已验证 put/get/delete。**公开读基址** `public-base-url=http://192.168.99.100:9000/blog`（桶 `blog` 需**公共读**，匿名 GET 200 / 匿名 PUT 失败；无生产密钥） |
 
 > **注：** SK 加密主密钥体系已移除（变更 `blog-object-storage-remove-sk-encryption`）；dev/test 阶段 SK 明文落库 `sys_storage_provider.secret_key`；生产部署前须另开独立加密变更重引入加密层。
 
