@@ -42,7 +42,7 @@
 | `--warning` | `#f59e0b` | 停用/警告（琥珀） |
 | `--stat-grad-1…4` | 靛紫 `#6d5df6→#8b5cf6` / 青蓝 `#22d3ee→#3b82f6` / 翡翠 `#10b981→#34d399` / 琥珀 `#f59e0b→#f97316`（各 135°） | 彩色统计卡专用（仅 Dashboard） |
 
-- **全局主色**映射 Element Plus：`--el-color-primary: #6d5df6`（light-3 `#8f83f8` / light-5 `#b1a8fa` / light-7 `#d2cdfd` / light-8 `#e3dffe` / light-9 `#f2f0ff` / dark-2 `#5849c5`）；`--el-color-success/warning/danger` 亦映射 `--success/--warning/--danger`；**禁止**各系统私自换主色
+- **全局主色**映射 Element Plus：`--el-color-primary: #6d5df6`（light-3 `#8f83f8` / light-5 `#b1a8fa` / light-7 `#d2cdfd` / light-8 `#e3dffe` / light-9 `#f2f0ff` / dark-2 `#5849c5`）；`--el-color-success/warning/danger` 及其 light-3/5/7/8/9、dark-2 系列亦映射 token 体系（按 EP 白混合公式从基色派生，见 `tokens-aurora.css`）；**禁止**各系统私自换主色
 - 气质：**深邃渐变壳、明亮多彩面**——渐变是唯一的强调语言且只出自 `--accent-gradient`（及统计卡 4 渐变）；内容区保持明亮浅底
 - **禁止**：页面级大面积渐变背景、毛玻璃滥用（仅限侧栏激活项一处）、过重投影/发光堆叠、装饰插画、第三方图标包、侧栏彩色 emoji
 - 状态用**软胶囊 tag**（见 §5），不用高饱和色块铺行

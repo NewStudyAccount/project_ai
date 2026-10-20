@@ -69,8 +69,26 @@
   --el-color-primary-light-9: #f2f0ff;
   --el-color-primary-dark-2: #5849c5;
   --el-color-success: var(--success);
+  --el-color-success-light-3: #58cea7;
+  --el-color-success-light-5: #88dcc0;
+  --el-color-success-light-7: #b7ead9;
+  --el-color-success-light-8: #cff1e6;
+  --el-color-success-light-9: #e7f8f2;
+  --el-color-success-dark-2: #0d9467;
   --el-color-warning: var(--warning);
+  --el-color-warning-light-3: #f8bb54;
+  --el-color-warning-light-5: #facf85;
+  --el-color-warning-light-7: #fce2b6;
+  --el-color-warning-light-8: #fdecce;
+  --el-color-warning-light-9: #fef5e7;
+  --el-color-warning-dark-2: #c47e09;
   --el-color-danger: var(--danger);
+  --el-color-danger-light-3: #f7798e;
+  --el-color-danger-light-5: #fa9faf;
+  --el-color-danger-light-7: #fcc5cf;
+  --el-color-danger-light-8: #fdd9df;
+  --el-color-danger-light-9: #feecef;
+  --el-color-danger-dark-2: #c3324b;
 
   font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
   color: var(--text-primary);
