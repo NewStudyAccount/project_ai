@@ -29,7 +29,7 @@
 
 ## 5. 自检
 
-- [ ] 5.1 `cd frontend/blog-admin && npm run lint` 通过
-- [ ] 5.2 `cd frontend/blog-admin && npm run type-check` 通过
-- [ ] 5.3 权限与契约走查：无权限按钮不渲染、无角色名硬编码、id 一律 string、无 console.log 残留、密钥/敏感字段无明文回显
-- [ ] 5.4 提交自查：改动仅限 `frontend/blog-admin` 且不含编辑器/内容域文件；每页独立提交（`feat(blog-admin): …`）；与在途变更无字段级冲突
+- [x] 5.1 `cd frontend/blog-admin && npm run lint` 通过
+- [x] 5.2 `cd frontend/blog-admin && npm run type-check` 通过
+- [x] 5.3 权限与契约走查：无权限按钮不渲染、无角色名硬编码、id 一律 string、无 console.log 残留、密钥/敏感字段无明文回显
+- [x] 5.4 提交自查：改动仅限 `frontend/blog-admin` 且不含编辑器/内容域文件；每页独立提交（`feat(blog-admin): …`）；与在途变更无字段级冲突
