@@ -22,16 +22,12 @@ public class ObjectStorageProperties {
 
     private List<Provider> providers = new ArrayList<>();
 
-    private long uploadMaxBytes = 10L * 1024 * 1024;
-
     private List<String> allowedContentTypes = new ArrayList<>(List.of(
             "image/png", "image/jpeg", "image/gif", "application/pdf"));
 
     private Duration connectTimeout = Duration.ofSeconds(5);
 
     private Duration readTimeout = Duration.ofSeconds(30);
-
-    private SecretCrypto secretCrypto = new SecretCrypto();
 
     @Getter
     @Setter
@@ -45,14 +41,5 @@ public class ObjectStorageProperties {
         private String secretKey;
         private Integer pathStyle = 1;
         private String publicBaseUrl;
-    }
-
-    @Getter
-    @Setter
-    public static class SecretCrypto {
-        /** 主密钥来源：env / nacos */
-        private String keySource = "env";
-        /** 环境变量名（默认 OBJECT_STORAGE_SK_KEY） */
-        private String keyEnv = "OBJECT_STORAGE_SK_KEY";
     }
 }

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>菜单管理 · 后端管理系统</title>
+<link rel="stylesheet" href="assets/css/proto.css" />
+</head>
+<body data-nav="menu-list">
+  <div id="app">
+    <!-- P-Tree（admin-ui-design.md §3.2 / §4.2） -->
+    <div class="page-card">
+      <div class="page-header">
+        <div class="page-title">菜单管理</div>
+        <div class="page-desc">目录 / 菜单 / 按钮 / 接口点统一维护。层级即权限树；权限标识格式 system:resource:action，与前端按钮渲染共用同一字符串。</div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn btn-primary" id="btn-create-root">新建根级菜单</button>
+        <button class="btn" id="btn-expand">全部展开</button>
+        <button class="btn" id="btn-collapse">全部收起</button>
+        <span class="spacer"></span>
+        <span class="filter-label">类型说明：</span>
+        <span class="type-tag">1 目录</span>
+        <span class="type-tag">2 菜单</span>
+        <span class="type-tag">3 按钮</span>
+        <span class="type-tag">4 接口点</span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>名称</th>
+              <th style="width: 90px">类型</th>
+              <th style="width: 210px">权限标识</th>
+              <th style="width: 150px">路由</th>
+              <th style="width: 210px">组件</th>
+              <th style="width: 60px">排序</th>
+              <th style="width: 80px">状态</th>
+              <th class="col-op" style="width: 220px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- D-Form：字段联动按 type 显隐（admin-ui-design.md §4.2） -->
+    <div class="dialog-mask" id="form-dialog">
+      <div class="dialog">
+        <div class="dialog-hd" id="form-title">新建菜单</div>
+        <div class="dialog-bd">
+          <div class="form-item">
+            <label class="form-label">上级节点</label>
+            <div class="form-control">
+              <input class="input" id="fm-parent" disabled placeholder="根级" />
+              <div class="form-hint">按钮 / 接口点必须挂在菜单节点下</div>
+            </div>
+          </div>
+          <div class="form-item">
+            <label class="form-label is-required">类型</label>
+            <div class="form-control">
+              <div class="switch-row" id="fm-type">
+                <span class="radio-pill" data-val="1">目录</span>
+                <span class="radio-pill is-on" data-val="2">菜单</span>
+                <span class="radio-pill" data-val="3">按钮</span>
+                <span class="radio-pill" data-val="4">接口点</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-item" id="fi-name">
+            <label class="form-label is-required">名称</label>
+            <div class="form-control">
+              <input class="input" id="fm-name" placeholder="菜单显示名" />
+              <div class="form-error">请输入名称</div>
+            </div>
+          </div>
+          <div class="form-item" id="fi-permission">
+            <label class="form-label" id="lab-permission">权限标识</label>
+            <div class="form-control">
+              <input class="input" id="fm-permission" placeholder="如 system:user:list" />
+              <div class="form-error">按钮 / 接口点必须填写权限标识</div>
+              <div class="form-hint">格式 system:resource:action，全小写</div>
+            </div>
+          </div>
+          <div class="form-item" id="fi-path">
+            <label class="form-label" id="lab-path">路由</label>
+            <div class="form-control">
+              <input class="input" id="fm-path" placeholder="如 /system/user" />
+              <div class="form-error">菜单类型必须填写路由</div>
+            </div>
+          </div>
+          <div class="form-item" id="fi-component">
+            <label class="form-label" id="lab-component">组件</label>
+            <div class="form-control">
+              <input class="input" id="fm-component" placeholder="如 views/system/user/index" />
+              <div class="form-error">菜单类型必须填写组件路径</div>
+            </div>
+          </div>
+          <div class="form-item">
+            <label class="form-label">排序</label>
+            <div class="form-control">
+              <input class="input" id="fm-sort" type="number" value="1" min="1" style="width: 120px" />
+            </div>
+          </div>
+          <div class="form-item">
+            <label class="form-label">状态</label>
+            <div class="form-control">
+              <div class="switch-row" id="fm-status">
+                <span class="radio-pill is-on" data-val="1">启用</span>
+                <span class="radio-pill" data-val="0">停用</span>
+              </div>
+              <div class="form-hint">停用或隐藏的菜单不下发给前端（hidden/status 过滤）</div>
+            </div>
+          </div>
+        </div>
+        <div class="dialog-ft">
+          <button class="btn" data-close="form-dialog">取消</button>
+          <button class="btn btn-primary" id="btn-save">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var TYPE_LABEL = { 1: '目录', 2: '菜单', 3: '按钮', 4: '接口点' };
+      var state = {
+        editing: null,          // { node, parentId }
+        parentNode: null,
+        collapsed: {},          // id -> true 收起
+        seq: 601
+      };
+
+      /* ---------- 树拍平渲染（层级缩进即结构） ---------- */
+      function flatten(nodes, depth, parentId, out) {
+        nodes.forEach(function (n) {
+          out.push({ node: n, depth: depth, parentId: parentId });
+          if (n.children && n.children.length && !state.collapsed[n.id]) {
+            flatten(n.children, depth + 1, n.id, out);
+          }
+        });
+        return out;
+      }
+
+      function findNode(id, nodes) {
+        for (var i = 0; i < nodes.length; i++) {
+          if (nodes[i].id === id) return nodes[i];
+          var hit = findNode(id, nodes[i].children || []);
+          if (hit) return hit;
+        }
+        return null;
+      }
+
+      function findParent(id, nodes, parent) {
+        for (var i = 0; i < nodes.length; i++) {
+          if (nodes[i].id === id) return parent;
+          var hit = findParent(id, nodes[i].children || [], nodes[i]);
+          if (hit) return hit;
+        }
+        return null;
+      }
+
+      function render() {
+        var rows = flatten(MOCK.menus, 0, null, []);
+        document.getElementById('tbody').innerHTML = rows.map(function (r) {
+          var n = r.node;
+          var hasKids = n.children && n.children.length > 0;
+          var toggle = hasKids
+            ? '<span class="tree-toggle' + (state.collapsed[n.id] ? '' : ' is-open') + '" data-act="toggle" data-id="' + n.id + '">' +
+              '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg></span>'
+            : '<span class="tree-toggle is-leaf"></span>';
+
+          return '<tr>' +
+            '<td class="cell-nowrap"><span class="tree-indent" style="width:' + (r.depth * 22) + 'px"></span>' + toggle +
+              '<span class="cell-main">' + Proto.esc(n.name) + '</span></td>' +
+            '<td><span class="type-tag">' + n.type + ' ' + TYPE_LABEL[n.type] + '</span></td>' +
+            '<td class="cell-mono">' + (n.permission ? Proto.esc(n.permission) : '<span class="cell-muted">—</span>') + '</td>' +
+            '<td class="cell-mono">' + (n.path ? Proto.esc(n.path) : '<span class="cell-muted">—</span>') + '</td>' +
+            '<td class="cell-mono">' + (n.component ? Proto.esc(n.component) : '<span class="cell-muted">—</span>') + '</td>' +
+            '<td class="cell-muted">' + n.sort + '</td>' +
+            '<td>' + Proto.statusPill(n.status) + '</td>' +
+            '<td class="col-op">' +
+              '<button class="btn-text" data-act="edit" data-id="' + n.id + '">编辑</button>' +
+              (n.type === 1 || n.type === 2 ? '<button class="btn-text" data-act="add-child" data-id="' + n.id + '">新增子级</button>' : '') +
+              '<button class="btn-text is-danger" data-act="del" data-id="' + n.id + '">删除</button>' +
+            '</td>' +
+          '</tr>';
+        }).join('');
+      }
+
+      /* ---------- 表单 + 字段联动（§4.2） ---------- */
+      function setType(val) {
+        val = Number(val);
+        document.querySelectorAll('#fm-type .radio-pill').forEach(function (el) {
+          el.classList.toggle('is-on', el.dataset.val === String(val));
+        });
+        // permission：目录隐藏，按钮/接口点必填，菜单可空
+        var fiPerm = document.getElementById('fi-permission');
+        fiPerm.style.display = val === 1 ? 'none' : 'flex';
+        document.getElementById('lab-permission').classList.toggle('is-required', val === 3 || val === 4);
+        // path / component：仅菜单必填，其余隐藏
+        var isMenu = val === 2;
+        document.getElementById('fi-path').style.display = isMenu ? 'flex' : 'none';
+        document.getElementById('fi-component').style.display = isMenu ? 'flex' : 'none';
+        document.getElementById('lab-path').classList.toggle('is-required', isMenu);
+        document.getElementById('lab-component').classList.toggle('is-required', isMenu);
+      }
+
+      function currentType() {
+        return Number(document.querySelector('#fm-type .radio-pill.is-on').dataset.val);
+      }
+
+      function openForm(node, parentNode) {
+        state.editing = node;
+        state.parentNode = parentNode || null;
+        document.getElementById('form-title').textContent = node ? '编辑菜单' : (parentNode ? '新增子级' : '新建根级菜单');
+        document.getElementById('fm-parent').value = parentNode ? parentNode.name : '根级';
+        // 字段联动默认值：目录下挂菜单，菜单下挂按钮（§4.2）
+        setType(node ? node.type : (parentNode ? (parentNode.type === 1 ? 2 : 3) : 1));
+        document.getElementById('fm-name').value = node ? node.name : '';
+        document.getElementById('fm-permission').value = node ? node.permission : '';
+        document.getElementById('fm-path').value = node ? node.path : '';
+        document.getElementById('fm-component').value = node ? node.component : '';
+        document.getElementById('fm-sort').value = node ? node.sort : 1;
+        setStatus(node ? node.status : 1);
+        ['fi-name', 'fi-permission', 'fi-path', 'fi-component'].forEach(function (id) {
+          document.getElementById(id).classList.remove('has-error');
+        });
+        Proto.openDialog('form-dialog');
+      }
+
+      function setStatus(val) {
+        document.querySelectorAll('#fm-status .radio-pill').forEach(function (el) {
+          el.classList.toggle('is-on', el.dataset.val === String(val));
+        });
+      }
+
+      function save() {
+        var type = currentType();
+        var name = document.getElementById('fm-name').value.trim();
+        var permission = document.getElementById('fm-permission').value.trim();
+        var path = document.getElementById('fm-path').value.trim();
+        var component = document.getElementById('fm-component').value.trim();
+
+        var bad = false;
+        document.getElementById('fi-name').classList.toggle('has-error', !name);
+        if (!name) bad = true;
+        var permBad = (type === 3 || type === 4) && !permission;
+        document.getElementById('fi-permission').classList.toggle('has-error', permBad);
+        if (permBad) bad = true;
+        var pathBad = type === 2 && (!path || !component);
+        document.getElementById('fi-path').classList.toggle('has-error', type === 2 && !path);
+        document.getElementById('fi-component').classList.toggle('has-error', type === 2 && !component);
+        if (pathBad) bad = true;
+        if (bad) return;
+
+        var payload = {
+          name: name, type: type,
+          permission: type === 1 ? '' : permission,
+          path: type === 2 ? path : '',
+          component: type === 2 ? component : '',
+          sort: Number(document.getElementById('fm-sort').value) || 1,
+          status: Number(document.querySelector('#fm-status .radio-pill.is-on').dataset.val)
+        };
+
+        if (state.editing) {
+          Object.assign(state.editing, payload);
+        } else {
+          var fresh = Object.assign({ id: String(state.seq++), children: [] }, payload);
+          if (state.parentNode) {
+            state.parentNode.children = state.parentNode.children || [];
+            state.parentNode.children.push(fresh);
+            state.collapsed[state.parentNode.id] = false;
+          } else {
+            MOCK.menus.push(fresh);
+          }
+        }
+        Proto.closeDialog('form-dialog');
+        Proto.toast('保存成功');
+        render();
+      }
+
+      /* ---------- 事件 ---------- */
+      document.getElementById('btn-create-root').addEventListener('click', function () { openForm(null, null); });
+      document.getElementById('btn-save').addEventListener('click', save);
+      document.getElementById('btn-expand').addEventListener('click', function () { state.collapsed = {}; render(); });
+      document.getElementById('btn-collapse').addEventListener('click', function () {
+        state.collapsed = {};
+        flatten(MOCK.menus, 0, null, []).forEach(function (r) {
+          if (r.node.children && r.node.children.length) state.collapsed[r.node.id] = true;
+        });
+        render();
+      });
+      document.querySelectorAll('#fm-type .radio-pill').forEach(function (el) {
+        el.addEventListener('click', function () { setType(el.dataset.val); });
+      });
+      document.querySelectorAll('#fm-status .radio-pill').forEach(function (el) {
+        el.addEventListener('click', function () { setStatus(el.dataset.val); });
+      });
+
+      document.addEventListener('click', function (e) {
+        var close = e.target.closest('[data-close]');
+        if (close) { Proto.closeDialog(close.dataset.close); return; }
+
+        var btn = e.target.closest('[data-act]');
+        if (!btn) return;
+        var node = findNode(btn.dataset.id, MOCK.menus);
+        if (!node) return;
+
+        if (btn.dataset.act === 'toggle') {
+          state.collapsed[node.id] = !state.collapsed[node.id];
+          render();
+        } else if (btn.dataset.act === 'edit') {
+          openForm(node, findParent(node.id, MOCK.menus, null));
+        } else if (btn.dataset.act === 'add-child') {
+          if (node.type !== 1 && node.type !== 2) { Proto.toast('按钮 / 接口点不可再挂子级', 'error'); return; }
+          openForm(null, node);
+        } else if (btn.dataset.act === 'del') {
+          if (node.children && node.children.length) {
+            Proto.toast('存在子节点，不允许删除', 'error');
+            return;
+          }
+          Proto.confirm({
+            title: '删除菜单',
+            text: '确定删除「' + node.name + '」吗？删除后关联角色的授权将一并失效。',
+            okText: '删除'
+          }).then(function (ok) {
+            if (!ok) return;
+            var parent = findParent(node.id, MOCK.menus, null);
+            var list = parent ? parent.children : MOCK.menus;
+            var idx = list.indexOf(node);
+            if (idx >= 0) list.splice(idx, 1);
+            Proto.toast('删除成功');
+            render();
+          });
+        }
+      });
+
+      render();
+    });
+  </script>
+</body>
+</html>

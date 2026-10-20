@@ -7,6 +7,11 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis: {}
+  servlet:
+    multipart:
+      # 解除上传大小限制（-1 = 无限）；业务层也不再校验大小
+      max-file-size: -1
+      max-request-size: -1
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
   configuration:
@@ -41,7 +46,6 @@ blog:
     # 引导默认服务商（运行时以 sys_storage_provider 库表为准；公共 yml 不放密钥）
     default-provider: "MIMO"
     providers: []
-    upload-max-bytes: 10485760
     allowed-content-types:
       - image/png
       - image/jpeg
@@ -49,10 +53,6 @@ blog:
       - application/pdf
     connect-timeout: 5s
     read-timeout: 30s
-    secret-crypto:
-      # SK 加密主密钥来源：环境变量；主密钥本身禁止入仓
-      key-source: env
-      key-env: OBJECT_STORAGE_SK_KEY
   feign:
     connect-timeout: 1s
     read-timeout: 3s

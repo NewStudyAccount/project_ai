@@ -1,9 +1,7 @@
 package com.qjj.blog.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.qjj.blog.objectstorage.ObjectStorageException;
 import com.qjj.blog.objectstorage.ProviderConfig;
-import com.qjj.blog.objectstorage.SecretKeyCipher;
 import com.qjj.blog.objectstorage.StorageProviderConfigSupplier;
 import com.qjj.blog.objectstorage.StorageProviderType;
 import com.qjj.blog.service.entity.SysStorageProvider;
@@ -18,7 +16,9 @@ import java.util.List;
 /**
  * 服务商配置供给方·DB 实现（运行时真相源，object-storage-design.md §6.1）。
  * 优先级高于 yml 引导（getOrder=10 < 1000）。
- * SK 解密失败抛能力异常，由 FileService/StorageProviderService 翻译为业务码。
+ *
+ * <p>注：SK 加密层已移除（变更 blog-object-storage-remove-sk-encryption）；
+ * dev/test 阶段 SK 明文落库，读取时直接取实体 secretKey，不经过解密。
  */
 @Slf4j
 @Component
@@ -26,7 +26,6 @@ import java.util.List;
 public class SysStorageProviderConfigSupplier implements StorageProviderConfigSupplier {
 
     private final SysStorageProviderMapper mapper;
-    private final SecretKeyCipher cipher;
 
     @Override
     public ProviderConfig resolve(String providerCode) {
@@ -78,12 +77,8 @@ public class SysStorageProviderConfigSupplier implements StorageProviderConfigSu
         cfg.setRegion(entity.getRegion());
         cfg.setBucket(entity.getBucket());
         cfg.setAccessKey(entity.getAccessKey());
-        try {
-            cfg.setSecretKey(cipher.decrypt(entity.getSecretKey()));
-        } catch (ObjectStorageException e) {
-            log.error("secret decrypt failed provider={}", entity.getCode(), e);
-            throw e;
-        }
+        // dev/test 阶段 SK 明文落库，直接取实体值；生产重引入加密后改回 cipher.decrypt
+        cfg.setSecretKey(entity.getSecretKey());
         cfg.setPathStyle(entity.getPathStyle() != null ? entity.getPathStyle() : 1);
         cfg.setPublicBaseUrl(entity.getPublicBaseUrl());
         cfg.setStatus(entity.getStatus());

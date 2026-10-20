@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Client 管理 · 后端管理系统</title>
+<link rel="stylesheet" href="assets/css/proto.css" />
+</head>
+<body data-nav="client-list">
+  <div id="app">
+    <!-- P-List + D-Panel 密钥查看 -->
+    <div class="page-card">
+      <div class="page-header">
+        <div class="page-title">Client 管理</div>
+        <div class="page-desc">OAuth2 / OIDC 客户端登记与密钥轮换。生产密钥不入仓，仅在认证中心内查看；此处为 Mock 值。</div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn btn-primary" id="btn-create">新建 Client</button>
+        <span class="spacer"></span>
+        <input class="input" id="f-keyword" placeholder="Client ID / 名称" style="width: 200px" />
+        <select class="select" id="f-status" style="width: 120px">
+          <option value="">全部状态</option>
+          <option value="1">启用</option>
+          <option value="0">停用</option>
+        </select>
+        <button class="btn" id="btn-search">查询</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width: 140px">Client ID</th>
+              <th style="width: 140px">名称</th>
+              <th>授权模式</th>
+              <th>Scope</th>
+              <th style="width: 220px">回调地址</th>
+              <th style="width: 80px">状态</th>
+              <th class="col-op" style="width: 190px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div class="table-empty" id="empty" style="display: none">暂无符合条件的 Client</div>
+      </div>
+
+      <div class="pagination" id="pager"></div>
+    </div>
+
+    <!-- D-Panel：密钥查看 -->
+    <div class="dialog-mask" id="secret-dialog">
+      <div class="dialog">
+        <div class="dialog-hd">Client 密钥 · <span id="secret-client" style="font-weight: 400; color: var(--text-secondary)"></span></div>
+        <div class="dialog-bd">
+          <div class="form-item" style="display: block">
+            <div class="login-label" style="margin-bottom: 8px">Client Secret</div>
+            <div class="secret-box">
+              <span id="secret-value" style="flex: 1">••••••••••••••••••••••••</span>
+              <button class="btn btn-icon" id="btn-toggle-secret" title="显示 / 隐藏">显示</button>
+              <button class="btn btn-icon" id="btn-copy-secret" title="复制">复制</button>
+            </div>
+            <div class="form-hint">密钥仅在认证中心内可见；轮换后旧密钥保留 24 小时宽限期。生产密钥禁止写入仓库文档。</div>
+          </div>
+        </div>
+        <div class="dialog-ft">
+          <button class="btn" id="btn-rotate">轮换密钥</button>
+          <button class="btn btn-primary" data-close="secret-dialog">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- D-Form：新建 / 编辑 Client -->
+    <div class="dialog-mask" id="form-dialog">
+      <div class="dialog">
+        <div class="dialog-hd" id="form-title">新建 Client</div>
+        <div class="dialog-bd">
+          <div class="form-item" id="fi-client-id">
+            <label class="form-label is-required">Client ID</label>
+            <div class="form-control">
+              <input class="input" id="fm-client-id" placeholder="小写连字符，如 blog-admin" />
+              <div class="form-error">请输入 Client ID</div>
+            </div>
+          </div>
+          <div class="form-item" id="fi-name">
+            <label class="form-label is-required">名称</label>
+            <div class="form-control">
+              <input class="input" id="fm-name" placeholder="客户端显示名" />
+              <div class="form-error">请输入名称</div>
+            </div>
+          </div>
+          <div class="form-item">
+            <label class="form-label">授权模式</label>
+            <div class="form-control">
+              <select class="select" id="fm-grant">
+                <option value="authorization_code, refresh_token">authorization_code + refresh_token</option>
+                <option value="client_credentials">client_credentials</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-item">
+            <label class="form-label">Scope</label>
+            <div class="form-control">
+              <input class="input" id="fm-scope" value="openid profile" placeholder="空格分隔" />
+            </div>
+          </div>
+          <div class="form-item">
+            <label class="form-label">回调地址</label>
+            <div class="form-control">
+              <input class="input" id="fm-redirect" placeholder="https://…/callback（授权码模式必填）" />
+            </div>
+          </div>
+          <div class="form-item">
+            <label class="form-label">状态</label>
+            <div class="form-control">
+              <div class="switch-row" id="fm-status">
+                <span class="radio-pill is-on" data-val="1">启用</span>
+                <span class="radio-pill" data-val="0">停用</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dialog-ft">
+          <button class="btn" data-close="form-dialog">取消</button>
+          <button class="btn btn-primary" id="btn-save">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var state = { current: 1, size: 6, editingId: null, rows: MOCK.clients.slice(), secretId: null, secretShown: false };
+
+      function filtered() {
+        var kw = document.getElementById('f-keyword').value.trim().toLowerCase();
+        var status = document.getElementById('f-status').value;
+        return state.rows.filter(function (c) {
+          if (kw && c.clientId.indexOf(kw) < 0 && c.name.indexOf(kw) < 0) return false;
+          if (status !== '' && String(c.status) !== status) return false;
+          return true;
+        });
+      }
+
+      function render() {
+        var list = filtered();
+        var pages = Math.max(1, Math.ceil(list.length / state.size));
+        if (state.current > pages) state.current = pages;
+        var page = list.slice((state.current - 1) * state.size, state.current * state.size);
+
+        document.getElementById('tbody').innerHTML = page.map(function (c) {
+          return '<tr>' +
+            '<td class="cell-mono">' + Proto.esc(c.clientId) + '</td>' +
+            '<td class="cell-main cell-nowrap">' + Proto.esc(c.name) + '</td>' +
+            '<td class="cell-mono">' + Proto.esc(c.grantTypes) + '</td>' +
+            '<td class="cell-muted">' + Proto.esc(c.scope) + '</td>' +
+            '<td class="cell-mono">' + (c.redirectUri ? Proto.esc(c.redirectUri) : '<span class="cell-muted">—</span>') + '</td>' +
+            '<td>' + Proto.statusPill(c.status) + '</td>' +
+            '<td class="col-op">' +
+              '<button class="btn-text" data-act="edit" data-id="' + c.id + '">编辑</button>' +
+              '<button class="btn-text" data-act="secret" data-id="' + c.id + '">查看密钥</button>' +
+              '<button class="btn-text is-danger" data-act="del" data-id="' + c.id + '">删除</button>' +
+            '</td>' +
+          '</tr>';
+        }).join('');
+
+        document.getElementById('empty').style.display = list.length ? 'none' : 'block';
+        Proto.paginate(document.getElementById('pager'), {
+          total: list.length, current: state.current, size: state.size,
+          onChange: function (p) { state.current = p; render(); }
+        });
+      }
+
+      /* ---------- 密钥查看 ---------- */
+      function openSecret(c) {
+        state.secretId = c.id;
+        state.secretShown = false;
+        document.getElementById('secret-client').textContent = c.clientId + '（' + c.name + '）';
+        document.getElementById('secret-value').textContent = '••••••••••••••••••••••••';
+        document.getElementById('btn-toggle-secret').textContent = '显示';
+        Proto.openDialog('secret-dialog');
+      }
+
+      function secretText() {
+        var c = state.rows.filter(function (x) { return x.id === state.secretId; })[0];
+        return c ? c.secret : '';
+      }
+
+      /* ---------- 表单 ---------- */
+      function openForm(c) {
+        state.editingId = c ? c.id : null;
+        document.getElementById('form-title').textContent = c ? '编辑 Client' : '新建 Client';
+        document.getElementById('fm-client-id').value = c ? c.clientId : '';
+        document.getElementById('fm-client-id').disabled = !!c;
+        document.getElementById('fm-name').value = c ? c.name : '';
+        document.getElementById('fm-grant').value = c ? c.grantTypes : 'authorization_code, refresh_token';
+        document.getElementById('fm-scope').value = c ? c.scope : 'openid profile';
+        document.getElementById('fm-redirect').value = c ? c.redirectUri : '';
+        setStatus(c ? c.status : 1);
+        ['fi-client-id', 'fi-name'].forEach(function (id) {
+          document.getElementById(id).classList.remove('has-error');
+        });
+        Proto.openDialog('form-dialog');
+      }
+
+      function setStatus(val) {
+        document.querySelectorAll('#fm-status .radio-pill').forEach(function (el) {
+          el.classList.toggle('is-on', el.dataset.val === String(val));
+        });
+      }
+
+      function save() {
+        var clientId = document.getElementById('fm-client-id').value.trim();
+        var name = document.getElementById('fm-name').value.trim();
+        document.getElementById('fi-client-id').classList.toggle('has-error', !clientId);
+        document.getElementById('fi-name').classList.toggle('has-error', !name);
+        if (!clientId || !name) return;
+
+        var payload = {
+          clientId: clientId, name: name,
+          grantTypes: document.getElementById('fm-grant').value,
+          scope: document.getElementById('fm-scope').value.trim(),
+          redirectUri: document.getElementById('fm-redirect').value.trim(),
+          status: Number(document.querySelector('#fm-status .radio-pill.is-on').dataset.val)
+        };
+
+        if (state.editingId) {
+          state.rows = state.rows.map(function (c) {
+            return c.id === state.editingId ? Object.assign({}, c, payload) : c;
+          });
+        } else {
+          state.rows.unshift(Object.assign({
+            id: '2026102000000206',
+            secret: 'sk_live_' + Math.random().toString(16).slice(2, 10) + Math.random().toString(16).slice(2, 26),
+            createTime: '2026-10-20 15:02:50'
+          }, payload));
+        }
+        Proto.closeDialog('form-dialog');
+        Proto.toast('保存成功');
+        render();
+      }
+
+      /* ---------- 事件 ---------- */
+      document.getElementById('btn-create').addEventListener('click', function () { openForm(null); });
+      document.getElementById('btn-save').addEventListener('click', save);
+      document.getElementById('btn-search').addEventListener('click', function () {
+        state.current = 1; render(); Proto.toast('已按条件筛选');
+      });
+      document.getElementById('f-keyword').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { state.current = 1; render(); }
+      });
+      document.getElementById('f-status').addEventListener('change', function () { state.current = 1; render(); });
+      document.querySelectorAll('#fm-status .radio-pill').forEach(function (el) {
+        el.addEventListener('click', function () { setStatus(el.dataset.val); });
+      });
+
+      document.getElementById('btn-toggle-secret').addEventListener('click', function () {
+        state.secretShown = !state.secretShown;
+        document.getElementById('secret-value').textContent = state.secretShown
+          ? secretText()
+          : '••••••••••••••••••••••••';
+        this.textContent = state.secretShown ? '隐藏' : '显示';
+      });
+
+      document.getElementById('btn-copy-secret').addEventListener('click', function () {
+        var text = secretText();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () { Proto.toast('密钥已复制'); });
+        } else {
+          Proto.toast('当前环境不支持一键复制，请手动选择', 'error');
+        }
+      });
+
+      document.getElementById('btn-rotate').addEventListener('click', function () {
+        Proto.confirm({
+          title: '轮换密钥',
+          text: '轮换后旧密钥保留 24 小时宽限期，超时失效。确定轮换吗？',
+          okText: '轮换'
+        }).then(function (ok) {
+          if (!ok) return;
+          var c = state.rows.filter(function (x) { return x.id === state.secretId; })[0];
+          if (c) {
+            c.secret = 'sk_live_' + Math.random().toString(16).slice(2, 10) + Math.random().toString(16).slice(2, 26);
+            state.secretShown = true;
+            document.getElementById('secret-value').textContent = c.secret;
+            document.getElementById('btn-toggle-secret').textContent = '隐藏';
+            Proto.toast('密钥已轮换');
+          }
+        });
+      });
+
+      document.addEventListener('click', function (e) {
+        var close = e.target.closest('[data-close]');
+        if (close) { Proto.closeDialog(close.dataset.close); return; }
+
+        var btn = e.target.closest('[data-act]');
+        if (!btn) return;
+        var c = state.rows.filter(function (x) { return x.id === btn.dataset.id; })[0];
+        if (!c) return;
+
+        if (btn.dataset.act === 'edit') {
+          openForm(c);
+        } else if (btn.dataset.act === 'secret') {
+          openSecret(c);
+        } else if (btn.dataset.act === 'del') {
+          Proto.confirm({
+            title: '删除 Client',
+            text: '确定删除 Client「' + c.clientId + '」吗？使用该 Client 的应用将立即无法登录。',
+            okText: '删除'
+          }).then(function (ok) {
+            if (!ok) return;
+            state.rows = state.rows.filter(function (x) { return x.id !== c.id; });
+            Proto.toast('删除成功');
+            render();
+          });
+        }
+      });
+
+      render();
+    });
+  </script>
+</body>
+</html>

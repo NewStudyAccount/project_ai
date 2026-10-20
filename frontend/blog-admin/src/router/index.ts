@@ -7,6 +7,7 @@ import AuditList from '@/views/audit/AuditList.vue'
 import MenuList from '@/views/menu/MenuList.vue'
 import RoleList from '@/views/role/RoleList.vue'
 import FileList from '@/views/file/FileList.vue'
+import StorageProviderList from '@/views/storage/StorageProviderList.vue'
 import CategoryList from '@/views/content/CategoryList.vue'
 import TagList from '@/views/content/TagList.vue'
 import ArticleList from '@/views/content/ArticleList.vue'
@@ -22,6 +23,7 @@ const componentByPath: Record<string, unknown> = {
   'views/menu/MenuList.vue': MenuList,
   'views/role/RoleList.vue': RoleList,
   'views/file/FileList.vue': FileList,
+  'views/storage/StorageProviderList.vue': StorageProviderList,
   'views/content/CategoryList.vue': CategoryList,
   'views/content/TagList.vue': TagList,
   'views/content/ArticleList.vue': ArticleList,
@@ -42,6 +44,7 @@ const staticRoutes: RouteRecordRaw[] = [
       { path: 'menus', name: 'Menus', component: MenuList },
       { path: 'roles', name: 'Roles', component: RoleList },
       { path: 'files', name: 'Files', component: FileList },
+      { path: 'storage/providers', name: 'StorageProviders', component: StorageProviderList },
       { path: 'categories', name: 'Categories', component: CategoryList },
       { path: 'tags', name: 'Tags', component: TagList },
       { path: 'articles', name: 'Articles', component: ArticleList },

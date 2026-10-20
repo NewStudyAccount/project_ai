@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>角色管理 · 后端管理系统</title>
+<link rel="stylesheet" href="assets/css/proto.css" />
+</head>
+<body data-nav="role-list">
+  <div id="app">
+    <!-- P-List + D-Form + D-Panel（admin-ui-design.md §4.3） -->
+    <div class="page-card">
+      <div class="page-header">
+        <div class="page-title">角色管理</div>
+        <div class="page-desc">角色定义与菜单/按钮权限授权（RBAC：用户 → 角色 → 菜单/按钮）。数据范围语义随首个数据权限变更锁定，此处为示意。</div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn btn-primary" id="btn-create">新建角色</button>
+        <span class="spacer"></span>
+        <input class="input" id="f-keyword" placeholder="角色编码 / 名称" style="width: 200px" />
+        <select class="select" id="f-status" style="width: 120px">
+          <option value="">全部状态</option>
+          <option value="1">启用</option>
+          <option value="0">停用</option>
+        </select>
+        <button class="btn" id="btn-search">查询</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width: 80px">角色 ID</th>
+              <th style="width: 130px">角色编码</th>
+              <th style="width: 120px">角色名称</th>
+              <th style="width: 130px">数据范围</th>
+              <th style="width: 80px">用户数</th>
+              <th style="width: 80px">状态</th>
+              <th>备注</th>
+              <th class="col-op" style="width: 190px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div class="table-empty" id="empty" style="display: none">暂无符合条件的数据</div>
+      </div>
+
+      <div class="pagination" id="pager"></div>
+    </div>
+
+    <!-- D-Form：新建 / 编辑角色 -->
+    <div class="dialog-mask" id="form-dialog">
+      <div class="dialog">
+        <div class="dialog-hd" id="form-title">新建角色</div>
+        <div class="dialog-bd">
+          <div class="form-item" id="fi-code">
+            <label class="form-label is-required">角色编码</label>
+            <div class="form-control">
+              <input class="input" id="fm-code" placeholder="全小写，如 content-admin" />
+              <div class="form-error">请输入角色编码</div>
+              <div class="form-hint js-code-hint">编码创建后不可修改</div>
+            </div>
+          </div>
+          <div class="form-item" id="fi-name">
+            <label class="form-label is-required">角色名称</label>
+            <div class="form-control">
+              <input class="input" id="fm-name" placeholder="显示名" />
+              <div class="form-error">请输入角色名称</div>
+            </div>
+          </div>
+          <div class="form-item">
+            <label class="form-label">数据范围</label>
+            <div class="form-control">
+              <select class="select" id="fm-scope">
+                <option>全部数据</option>
+                <option>本部门及以下</option>
+                <option>仅本人</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-item">
+            <label class="form-label">状态</label>
+            <div class="form-control">
+              <div class="switch-row" id="fm-status">
+                <span class="radio-pill is-on" data-val="1">启用</span>
+                <span class="radio-pill" data-val="0">停用</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-item">
+            <label class="form-label">备注</label>
+            <div class="form-control">
+              <textarea class="textarea" id="fm-remark" placeholder="选填，说明职责边界"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="dialog-ft">
+          <button class="btn" data-close="form-dialog">取消</button>
+          <button class="btn btn-primary" id="btn-save">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- D-Panel：角色菜单授权（admin-ui-design.md §3.4） -->
+    <div class="dialog-mask" id="perm-dialog">
+      <div class="dialog dialog-lg">
+        <div class="dialog-hd">角色菜单授权 · <span id="perm-role-name" style="font-weight: 400; color: var(--text-secondary)"></span></div>
+        <div class="dialog-bd" style="max-height: 52vh">
+          <div class="perm-tree" id="perm-tree"></div>
+        </div>
+        <div class="dialog-ft">
+          <button class="btn" data-close="perm-dialog">取消</button>
+          <button class="btn btn-primary" id="btn-perm-save">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var state = { current: 1, size: 8, editingId: null, rows: MOCK.roles.slice(), permRoleId: null };
+
+      /* ---------- 列表 ---------- */
+      function filtered() {
+        var kw = document.getElementById('f-keyword').value.trim().toLowerCase();
+        var status = document.getElementById('f-status').value;
+        return state.rows.filter(function (r) {
+          if (kw && r.code.indexOf(kw) < 0 && r.name.indexOf(kw) < 0) return false;
+          if (status !== '' && String(r.status) !== status) return false;
+          return true;
+        });
+      }
+
+      function render() {
+        var list = filtered();
+        var pages = Math.max(1, Math.ceil(list.length / state.size));
+        if (state.current > pages) state.current = pages;
+        var page = list.slice((state.current - 1) * state.size, state.current * state.size);
+
+        document.getElementById('tbody').innerHTML = page.map(function (r) {
+          return '<tr>' +
+            '<td class="cell-mono">' + Proto.esc(r.id) + '</td>' +
+            '<td class="cell-main">' + Proto.esc(r.code) + '</td>' +
+            '<td>' + Proto.esc(r.name) + '</td>' +
+            '<td class="cell-muted">' + Proto.esc(r.dataScope) + '</td>' +
+            '<td class="cell-muted">' + r.userCount + '</td>' +
+            '<td>' + Proto.statusPill(r.status) + '</td>' +
+            '<td class="cell-muted cell-ellipsis" title="' + Proto.esc(r.remark) + '">' + Proto.esc(r.remark) + '</td>' +
+            '<td class="col-op">' +
+              '<button class="btn-text" data-act="edit" data-id="' + r.id + '">编辑</button>' +
+              '<button class="btn-text" data-act="perm" data-id="' + r.id + '">授权</button>' +
+              '<button class="btn-text is-danger" data-act="del" data-id="' + r.id + '">删除</button>' +
+            '</td>' +
+          '</tr>';
+        }).join('');
+
+        document.getElementById('empty').style.display = list.length ? 'none' : 'block';
+        Proto.paginate(document.getElementById('pager'), {
+          total: list.length, current: state.current, size: state.size,
+          onChange: function (p) { state.current = p; render(); }
+        });
+      }
+
+      /* ---------- 表单 ---------- */
+      function openForm(role) {
+        state.editingId = role ? role.id : null;
+        document.getElementById('form-title').textContent = role ? '编辑角色' : '新建角色';
+        document.getElementById('fm-code').value = role ? role.code : '';
+        document.getElementById('fm-code').disabled = !!role;   // 编辑锁定编码
+        document.querySelector('.js-code-hint').style.display = role ? 'none' : 'block';
+        document.getElementById('fm-name').value = role ? role.name : '';
+        document.getElementById('fm-scope').value = role ? role.dataScope : '仅本人';
+        document.getElementById('fm-remark').value = role ? role.remark : '';
+        setStatus(role ? role.status : 1);
+        ['fi-code', 'fi-name'].forEach(function (id) {
+          document.getElementById(id).classList.remove('has-error');
+        });
+        Proto.openDialog('form-dialog');
+      }
+
+      function setStatus(val) {
+        document.querySelectorAll('#fm-status .radio-pill').forEach(function (el) {
+          el.classList.toggle('is-on', el.dataset.val === String(val));
+        });
+      }
+
+      function save() {
+        var code = document.getElementById('fm-code').value.trim();
+        var name = document.getElementById('fm-name').value.trim();
+        document.getElementById('fi-code').classList.toggle('has-error', !code);
+        document.getElementById('fi-name').classList.toggle('has-error', !name);
+        if (!code || !name) return;
+
+        var payload = {
+          code: code, name: name,
+          dataScope: document.getElementById('fm-scope').value,
+          status: Number(document.querySelector('#fm-status .radio-pill.is-on').dataset.val),
+          remark: document.getElementById('fm-remark').value.trim() || '—'
+        };
+
+        if (state.editingId) {
+          state.rows = state.rows.map(function (r) {
+            return r.id === state.editingId ? Object.assign({}, r, payload) : r;
+          });
+        } else {
+          state.rows.unshift(Object.assign({
+            id: String(1007 + state.rows.length), userCount: 0,
+            createTime: '2026-10-20 15:02:50'
+          }, payload));
+        }
+        Proto.closeDialog('form-dialog');
+        Proto.toast('保存成功');
+        render();
+      }
+
+      /* ---------- 授权树（D-Panel） ---------- */
+      function renderPermTree() {
+        // 简化回显：admin 全选，其余角色按数据范围示意勾选部分节点
+        var checkedIds = state.permRoleId === '1001'
+          ? ['10', '1001', '100101', '100102', '100103', '100104', '1002', '100201', '100202', '100203', '1003', '100301', '100302', '20', '2001', '200101', '30', '3001', '300101', '300102']
+          : ['10', '1001', '1002', '20', '2001', '200101'];
+
+        function nodeHtml(n) {
+          var checked = checkedIds.indexOf(n.id) >= 0 ? ' checked' : '';
+          var kids = (n.children && n.children.length)
+            ? '<div class="perm-children">' + n.children.map(nodeHtml).join('') + '</div>'
+            : '';
+          return '<div class="perm-node" data-id="' + n.id + '">' +
+            '<div class="perm-row">' +
+              '<input type="checkbox" class="checkbox js-perm"' + checked + ' data-id="' + n.id + '" />' +
+              '<span class="perm-label">' + Proto.esc(n.name) + '</span>' +
+              (n.permission ? '<span class="type-tag">' + Proto.esc(n.permission) + '</span>' : '') +
+            '</div>' + kids +
+          '</div>';
+        }
+
+        document.getElementById('perm-tree').innerHTML = MOCK.menus.map(nodeHtml).join('');
+      }
+
+      // 父子联动（只绑定一次）：勾选节点 → 同步全部后代；勾选子 → 校正父
+      document.getElementById('perm-tree').addEventListener('change', function (e) {
+          if (!e.target.classList.contains('js-perm')) return;
+          var node = e.target.closest('.perm-node');
+          node.querySelectorAll('.js-perm').forEach(function (c) { c.checked = e.target.checked; });
+          var parent = node.parentElement.closest('.perm-node');
+          while (parent) {
+            var boxes = parent.querySelectorAll(':scope > .perm-children .js-perm');
+            var all = Array.prototype.every.call(boxes, function (b) { return b.checked; });
+            parent.querySelector(':scope > .perm-row .js-perm').checked = all;
+            parent = parent.parentElement.closest('.perm-node');
+          }
+      });
+
+      /* ---------- 事件 ---------- */
+      document.getElementById('btn-create').addEventListener('click', function () { openForm(null); });
+      document.getElementById('btn-save').addEventListener('click', save);
+      document.getElementById('btn-search').addEventListener('click', function () {
+        state.current = 1; render(); Proto.toast('已按条件筛选');
+      });
+      document.getElementById('f-keyword').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { state.current = 1; render(); }
+      });
+      document.getElementById('f-status').addEventListener('change', function () { state.current = 1; render(); });
+      document.querySelectorAll('#fm-status .radio-pill').forEach(function (el) {
+        el.addEventListener('click', function () { setStatus(el.dataset.val); });
+      });
+      document.getElementById('btn-perm-save').addEventListener('click', function () {
+        Proto.closeDialog('perm-dialog');
+        Proto.toast('授权已保存');
+      });
+
+      document.addEventListener('click', function (e) {
+        var close = e.target.closest('[data-close]');
+        if (close) { Proto.closeDialog(close.dataset.close); return; }
+
+        var btn = e.target.closest('[data-act]');
+        if (!btn) return;
+        var role = state.rows.filter(function (r) { return r.id === btn.dataset.id; })[0];
+        if (!role) return;
+
+        if (btn.dataset.act === 'edit') {
+          openForm(role);
+        } else if (btn.dataset.act === 'perm') {
+          state.permRoleId = role.id;
+          document.getElementById('perm-role-name').textContent = role.name + '（' + role.code + '）';
+          renderPermTree();
+          Proto.openDialog('perm-dialog');
+        } else if (btn.dataset.act === 'del') {
+          Proto.confirm({
+            title: '删除角色',
+            text: '确定删除角色「' + role.name + '」吗？已绑定该角色的 ' + role.userCount + ' 个账号将失去对应权限。',
+            okText: '删除'
+          }).then(function (ok) {
+            if (!ok) return;
+            state.rows = state.rows.filter(function (r) { return r.id !== role.id; });
+            Proto.toast('删除成功');
+            render();
+          });
+        }
+      });
+
+      render();
+    });
+  </script>
+</body>
+</html>

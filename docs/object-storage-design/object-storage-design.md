@@ -20,7 +20,7 @@
 - **S3 协议多服务商**：以 **S3 协议**为唯一客户端契约，支持 MinIO、AWS S3、阿里云 OSS（S3 兼容）、腾讯云 COS（S3 兼容）、华为 OBS（S3 兼容）及其它 S3 兼容服务；通过服务商类型 + endpoint/region/path-style 等参数适配，**不**为每家厂商单开一套业务代码
 - **服务商可配置**：存储服务商接入信息可经管理端配置页维护（库表真相源 + 引导默认），支持测试连通性、启用/停用、指定默认服务商
 - **文件生命周期**：上传（校验 + UUID 对象名）→ 元数据落库 → **公开永久 URL** 访问 → **逻辑删除**
-- **安全基线**：MIME/大小白名单、对象键 UUID 防枚举、密钥加密存储与脱敏展示、敏感信息不入日志、生产密钥不入仓；**读公开、写/删/管仍鉴权**
+- **安全基线**：MIME/大小白名单、对象键 UUID 防枚举、SK 明文存储（dev/test 阶段）与脱敏展示、敏感信息不入日志、生产密钥不入仓；**读公开、写/删/管仍鉴权**
 - **链路正确性**：读取走**公开 URL 直连对象存储/CDN**，上传走业务 multipart；**不经网关/业务服务中转 body**
 - **横切接线**：上传/列表/服务商配置限流，关键写幂等 + 操作审计
 - **管理端双页**：**文件管理展示页**（上传/列表/预览下载/逻辑删除）+ **对象存储服务商配置页**（服务商 CRUD/连通性/默认项）
@@ -79,7 +79,7 @@ Nginx ──► {system}-gateway ──► {domain}-service
 2. 浏览器/客户端 MUST NOT 获得对象存储 **AK/SK 或写权限**；只经**公开读 URL** 取对象，或业务 multipart 上传。公开 URL 不是凭证，但**等于公开可读**——禁止把敏感/合规/未脱敏数据放入公开桶。
 3. 对象名 MUST 使用 UUID（或等价随机唯一名），MUST NOT 使用用户可控原始文件名作对象键（防路径穿越与枚举）。
 4. 元数据与对象的一致性以**库为真相源**；对象存在性探测失败不静默当作成功。
-5. 服务商 `secret-key` MUST 加密落库；接口出参 MUST 脱敏；日志 MUST NOT 打印 SK。
+5. 服务商 `secret-key` dev/test 阶段明文落库（生产另开加密变更）；接口出参 MUST 脱敏；日志 MUST NOT 打印 SK。
 6. 运行时切换默认服务商 **只影响新上传**；历史文件 MUST 按自身 `storage_code` 与已登记 `publicBaseUrl` 拼 URL，禁止批量静默改写。
 7. **撤权手段只有**：逻辑删除 + 运维物理清理、或变更桶/CDN 公开策略；**无**单 URL 吊销。敏感文件不得依赖「链接过期」做保护。
 
@@ -139,7 +139,7 @@ Nginx ──► {system}-gateway ──► {domain}-service
 | `endpoint` | Y | S3 API 入口（含协议与端口） |
 | `region` | 视类型 | AWS/OSS/COS/OBS 通常必填；MinIO 可空（或与服务端 region 对齐，否则可能 `SignatureDoesNotMatch`） |
 | `bucket` | Y | 默认桶；可按业务分桶并在服务商或文件上登记 |
-| `accessKey` / `secretKey` | Y | 凭证；SK 加密存储 |
+| `accessKey` / `secretKey` | Y | 凭证；SK 直接存储（dev/test 阶段；生产另开加密变更），出参掩码 |
 | `pathStyle` | Y | `1` path-style / `0` virtual-hosted-style |
 | `publicBaseUrl` | Y | **公开读基址**（无尾斜杠），用于 `publicUrl`；与桶策略/CDN 一致 |
 | `connectTimeout` / `readTimeout` | 建议 | 必须有默认上限；禁止无限等待 |
@@ -435,7 +435,7 @@ Controller 收 multipart → Service 校验大小/MIME
 | region | VARCHAR(64) | N | `''` | 区域；类型要求必填时校验 |
 | bucket | VARCHAR(64) | N | `''` | 默认桶 |
 | access_key | VARCHAR(128) | N | `''` | AK |
-| secret_key | VARCHAR(255) | N | `''` | SK，**密文存储** |
+| secret_key | VARCHAR(255) | N | `''` | SK，**明文存储**（dev/test 阶段；生产另开加密变更） |
 | path_style | TINYINT | N | 1 | 1=path-style / 0=virtual-hosted |
 | public_base_url | VARCHAR(255) | N | `''` | **公开读基址**；拼稳定 `url` 用 |
 | status | TINYINT | N | 1 | 0 停用 / 1 启用（**控制新上传**） |
@@ -464,7 +464,7 @@ sys_file 1 ──── * 审计日志（target_type=FILE / STORAGE_PROVIDER）
 | 服务商 VO | `id`（String）、`code`、`name`、`providerType`、`endpoint`、`region`、`bucket`、`pathStyle`、**`publicBaseUrl`**、`status`、`isDefault`、`description`、`createTime`、`updateTime`、**`secretKeyMasked`（如 `****` 或尾 4 位策略，禁止全文）** |
 | 访问地址 | `{ url }`（§4.2，无 `expireAt`） |
 
-- 创建/更新服务商时 `secretKey` 为**只写**字段：传空表示不修改；非空则加密存储。
+- 创建/更新服务商时 `secretKey` 为**只写**字段：传空表示不修改；非空则直接存储。
 - **禁止**任何接口返回明文 SK；禁止 SK 进审计 `detail` 与应用日志。
 
 ---
@@ -477,7 +477,7 @@ sys_file 1 ──── * 审计日志（target_type=FILE / STORAGE_PROVIDER）
 |----|------|------|
 | 引导/本地默认 | `application.yml` / `application-local.yml` / `application-test.yml` | 无密钥公共项 + local/test 连接；**生产敏感项不入仓** |
 | 运行时服务商 | **DB `sys_storage_provider`**（管理端配置页） | 多服务商 CRUD、默认项、启停 |
-| 生产密钥 | Nacos / 密钥管理 / Jenkins Credentials | 引导密钥或 SK 加密主密钥 |
+| 生产密钥 | Nacos / 密钥管理 / Jenkins Credentials | 引导密钥 |
 
 - 三份 yml 仍遵守 `CLAUDE.md` §6.10：公共 `application.yml` **无**主机/账号密码。
 - 连接信息真相源（测试环境）：`docs/test-env.md`；端口：`docs/port-registry.md`。
@@ -509,10 +509,6 @@ sys_file 1 ──── * 审计日志（target_type=FILE / STORAGE_PROVIDER）
       - application/pdf
     connect-timeout: 5s
     read-timeout: 30s
-    secret-crypto:
-      # SK 落库加密主密钥来源：环境变量 / Nacos；禁止明文入仓
-      key-source: env
-      key-env: OBJECT_STORAGE_SK_KEY
 ```
 
 | 键 | 要求 |
@@ -521,7 +517,6 @@ sys_file 1 ──── * 审计日志（target_type=FILE / STORAGE_PROVIDER）
 | `upload-max-bytes` | 默认 ≤ 10MB（单文件）；调整须走变更 |
 | providers[].public-base-url | **必配**（公开读基址）；与桶策略/CDN 一致；缺省则 `publicUrl` 失败 |
 | providers[].endpoint / AK / SK | 仅 local/test 或 Nacos；**生产禁止入仓** |
-| `secret-crypto` | SK 加密算法与主密钥来源必须显式；主密钥本身禁止入仓 |
 
 ---
 
@@ -664,7 +659,7 @@ sys_file 1 ──── * 审计日志（target_type=FILE / STORAGE_PROVIDER）
 ## 9. 安全约定
 
 - **密钥分级**（唯一权威 `CLAUDE.md` §6.7）：生产 AK/SK/连接串禁止入仓；测试/开发账密仅 `docs/test-env.md` / `application-local|test.yml`，须标注环境。
-- **SK 存储**：DB 落**密文**（AES-GCM 或同级）；主密钥走环境变量/Nacos，禁止入仓；接口只收明文、只回掩码。
+- **SK 存储**：DB 落**明文**（dev/test 阶段；生产部署前须经独立加密变更重引入加密层）；接口只收明文、只回掩码。
 - **上传安全**：白名单 + 大小上限双校验；对象名 UUID，防路径穿越与覆盖；`Content-Type` 与白名单一致；按 §4.1 写入 `Content-Disposition`。
 - **访问安全**：读**公共读**（public-read/匿名只读）；AK/SK 仅服务端；敏感/合规数据**禁止**入公开桶；撤权 = 逻辑删除 + 运维物理清理 / 改桶策略。协议 `http`/`https` 均可，**不强制 HTTPS**。
 - **权限**：上传/删除/列表/服务商配置接口仍走网关登录态 + 权限码软校验；**读对象不再走业务鉴权**（URL 公开）。
@@ -679,7 +674,7 @@ sys_file 1 ──── * 审计日志（target_type=FILE / STORAGE_PROVIDER）
 ### 10.1 部署要点
 
 1. 准备任一 S3 兼容存储：建桶并设为**公共读**（§4.2）；网络策略保证**读者能访问** `publicBaseUrl`（内网或必要出口）；测试账密入 `docs/test-env.md` 或 Nacos。
-2. 冷启动：yml 引导默认服务商或先在配置页建 `sys_storage_provider`；配置 SK 加密主密钥来源。
+2. 冷启动：yml 引导默认服务商或先在配置页建 `sys_storage_provider`。
 3. 服务健康检查不依赖对象存储强可用（避免启动即失败；客户端可懒加载）。
 4. 联调：上传 → 列表（按服务商筛选）→ 公开 URL 访问 → 逻辑删除 → 配置页测连通/切默认（确认仅影响新上传）。
 5. 运维侧准备**清理/补偿脚本**（§4.5）：按 `storage_code` 分组、dry-run、保留窗口、失败清单。
@@ -696,7 +691,7 @@ cd frontend/<system> && npm run lint && npm run type-check
 - [ ] 版本与 `docs/version-baseline.md` 一致（SDK 坐标已登记）
 - [ ] 仅一套 SDK 底座（AWS S3 SDK v2 或 MinIO SDK），无双栈
 - [ ] `allowed-content-types` 非空；`upload-max-bytes` / `public-base-url` 已配
-- [ ] `sys_storage_provider.secret_key` 密文存储；出参掩码；无生产 AK/SK 入仓
+- [ ] `sys_storage_provider.secret_key` 明文存储（dev/test；生产另开加密变更）；出参掩码；无生产 AK/SK 入仓
 - [ ] 无 Secret 进日志（公开 URL 无签名段，可记 objectKey）
 - [ ] 业务删除为逻辑删除；未引入分布式定时清理
 - [ ] 大文件未走网关/Nginx 中转 body；读取未由业务服务反向代理

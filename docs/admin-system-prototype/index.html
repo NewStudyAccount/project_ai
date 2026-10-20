@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>首页 · 后端管理系统</title>
+<link rel="stylesheet" href="assets/css/proto.css" />
+</head>
+<body data-nav="index">
+  <!-- 页面内容由 app.js 壳（侧栏 + 顶栏）包裹 -->
+  <div id="app">
+    <!-- 说明卡（admin-ui-design.md §4.1） -->
+    <div class="page-card">
+      <div class="page-header" style="margin-bottom: 0">
+        <div class="page-title">后端管理系统 · 统一管理台</div>
+        <div class="page-desc">承载账号 / 角色 / 菜单权限、操作审计与认证 Client 管理；权限模型 RBAC（用户 → 角色 → 菜单/按钮权限），菜单与按钮按后端下发的 permission 标识渲染。</div>
+      </div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div style="padding: 0 16px">
+      <div class="stat-grid" id="stat-grid"></div>
+    </div>
+
+    <!-- 快捷入口 -->
+    <div class="page-card">
+      <div class="section-title">快捷入口</div>
+      <div class="quick-grid">
+        <div class="quick-item" data-href="user-list.html">
+          <div class="quick-name">账号管理</div>
+          <div class="quick-desc">系统账号、部门归属与启停</div>
+        </div>
+        <div class="quick-item" data-href="role-list.html">
+          <div class="quick-name">角色管理</div>
+          <div class="quick-desc">角色定义、数据范围与菜单授权</div>
+        </div>
+        <div class="quick-item" data-href="menu-list.html">
+          <div class="quick-name">菜单管理</div>
+          <div class="quick-desc">目录 / 菜单 / 按钮 / 接口点维护</div>
+        </div>
+        <div class="quick-item" data-href="audit-log.html">
+          <div class="quick-name">操作审计</div>
+          <div class="quick-desc">关键写操作留痕与追溯</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 最近操作 -->
+    <div class="page-card">
+      <div class="section-title">最近操作</div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width: 170px">时间</th>
+              <th style="width: 110px">操作人</th>
+              <th style="width: 110px">模块</th>
+              <th style="width: 130px">动作</th>
+              <th>详情</th>
+              <th style="width: 70px">结果</th>
+            </tr>
+          </thead>
+          <tbody id="recent-body"></tbody>
+        </table>
+      </div>
+      <div style="margin-top: 12px; text-align: right">
+        <a class="btn-text" href="audit-log.html">查看全部审计记录 →</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // 统计卡片
+      document.getElementById('stat-grid').innerHTML = MOCK.stats.map(function (s) {
+        return '<div class="stat-card">' +
+          '<div class="stat-label">' + Proto.esc(s.label) + '</div>' +
+          '<div class="stat-value">' + Proto.esc(s.value) + '</div>' +
+          '<div class="stat-trend' + (s.down ? ' is-down' : '') + '">' + Proto.esc(s.trend) + '</div>' +
+        '</div>';
+      }).join('');
+
+      // 最近操作（取前 6 条）
+      document.getElementById('recent-body').innerHTML = MOCK.audits.slice(0, 6).map(function (a) {
+        return '<tr>' +
+          '<td class="cell-muted">' + Proto.esc(a.time) + '</td>' +
+          '<td class="cell-main">' + Proto.esc(a.operator) + '</td>' +
+          '<td>' + Proto.esc(a.module) + '</td>' +
+          '<td>' + Proto.esc(a.action) + '</td>' +
+          '<td class="cell-muted cell-ellipsis" title="' + Proto.esc(a.detail) + '">' + Proto.esc(a.detail) + '</td>' +
+          '<td>' + Proto.resultPill(a.result) + '</td>' +
+        '</tr>';
+      }).join('');
+
+      // 快捷入口跳转
+      document.querySelectorAll('.quick-item').forEach(function (el) {
+        el.addEventListener('click', function () { location.href = el.dataset.href; });
+      });
+    });
+  </script>
+</body>
+</html>

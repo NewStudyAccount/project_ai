@@ -12,7 +12,6 @@ import com.qjj.blog.framework.idempotent.RateLimit;
 import com.qjj.blog.objectstorage.ObjectStorageClient;
 import com.qjj.blog.objectstorage.ObjectStorageException;
 import com.qjj.blog.objectstorage.ProviderClientRegistry;
-import com.qjj.blog.objectstorage.SecretKeyCipher;
 import com.qjj.blog.service.dto.StorageProviderPageQuery;
 import com.qjj.blog.service.dto.StorageProviderRequest;
 import com.qjj.blog.service.entity.SysFile;
@@ -50,7 +49,6 @@ public class StorageProviderServiceImpl implements StorageProviderService {
     private final SysStorageProviderMapper providerMapper;
     private final SysFileMapper fileMapper;
     private final IdGenerator idGenerator;
-    private final SecretKeyCipher cipher;
     private final ObjectStorageClient storageClient;
     private final ProviderClientRegistry registry;
     private final AuditService auditService;
@@ -107,7 +105,7 @@ public class StorageProviderServiceImpl implements StorageProviderService {
         entity.setRegion(request.getRegion() == null ? "" : request.getRegion());
         entity.setBucket(request.getBucket());
         entity.setAccessKey(request.getAccessKey());
-        entity.setSecretKey(encryptSafely(request.getSecretKey()));
+        entity.setSecretKey(request.getSecretKey());
         entity.setPathStyle(normalizePathStyle(request.getPathStyle()));
         entity.setPublicBaseUrl(request.getPublicBaseUrl());
         entity.setStatus(request.getStatus() == null ? 1 : request.getStatus());
@@ -136,9 +134,9 @@ public class StorageProviderServiceImpl implements StorageProviderService {
         entity.setRegion(request.getRegion() == null ? "" : request.getRegion());
         entity.setBucket(request.getBucket());
         entity.setAccessKey(request.getAccessKey());
-        // secretKey 空=不修改；非空则加密存储
+        // secretKey 空=不修改；非空则直接存储（dev/test 阶段明文落库）
         if (request.getSecretKey() != null && !request.getSecretKey().isBlank()) {
-            entity.setSecretKey(encryptSafely(request.getSecretKey()));
+            entity.setSecretKey(request.getSecretKey());
         }
         entity.setPathStyle(normalizePathStyle(request.getPathStyle()));
         entity.setPublicBaseUrl(request.getPublicBaseUrl());
@@ -305,18 +303,5 @@ public class StorageProviderServiceImpl implements StorageProviderService {
             return "";
         }
         return "****";
-    }
-
-    /** 加密 SK；主密钥缺失时翻译为业务错误码（而非 500） */
-    private String encryptSafely(String plaintext) {
-        try {
-            return cipher.encrypt(plaintext);
-        } catch (ObjectStorageException e) {
-            if (e.getReason() == ObjectStorageException.Reason.MASTER_KEY_MISSING) {
-                throw new BizException(BlogErrorCodeEnum.PROVIDER_CONFIG_INVALID,
-                        "SK 主密钥未配置：" + e.getMessage());
-            }
-            throw e;
-        }
     }
 }

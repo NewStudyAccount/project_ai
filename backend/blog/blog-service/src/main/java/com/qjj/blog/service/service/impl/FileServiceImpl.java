@@ -46,7 +46,6 @@ public class FileServiceImpl implements FileService {
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final Set<String> ALLOWED_CONTENT_TYPES =
             Set.of("image/png", "image/jpeg", "image/gif", "application/pdf");
-    private static final long UPLOAD_MAX_BYTES = 10L * 1024 * 1024;
 
     private final SysFileMapper fileMapper;
     private final IdGenerator idGenerator;
@@ -82,9 +81,6 @@ public class FileServiceImpl implements FileService {
             provider = resolver.resolveForUpload(storageCode);
         } catch (ObjectStorageException e) {
             throw translateStorageException(e);
-        }
-        if (file.getSize() > UPLOAD_MAX_BYTES) {
-            throw new BizException(BlogErrorCodeEnum.FILE_TOO_LARGE);
         }
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {

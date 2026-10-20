@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>账号管理 · 后端管理系统</title>
+<link rel="stylesheet" href="assets/css/proto.css" />
+</head>
+<body data-nav="user-list">
+  <div id="app">
+    <!-- P-List（admin-ui-design.md §3.1 / generic-admin-page-design.md §2） -->
+    <div class="page-card">
+      <div class="page-header">
+        <div class="page-title">账号管理</div>
+        <div class="page-desc">系统账号的增删改查与启停。按钮按权限标识渲染（system:user:create / update / delete），无权限整钮不渲染。</div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn btn-primary" id="btn-create">新建账号</button>
+        <span class="spacer"></span>
+        <input class="input" id="f-keyword" placeholder="用户名 / 姓名" style="width: 180px" />
+        <select class="select" id="f-role" style="width: 150px">
+          <option value="">全部角色</option>
+          <option value="admin">超级管理员</option>
+          <option value="ops">运维工程师</option>
+          <option value="auditor">审计员</option>
+          <option value="content-admin">内容管理员</option>
+          <option value="editor">内容编辑</option>
+          <option value="guest">访客</option>
+        </select>
+        <select class="select" id="f-status" style="width: 120px">
+          <option value="">全部状态</option>
+          <option value="1">启用</option>
+          <option value="0">停用</option>
+        </select>
+        <input class="input" id="f-begin" type="date" style="width: 150px" />
+        <span class="filter-label">至</span>
+        <input class="input" id="f-end" type="date" style="width: 150px" />
+        <button class="btn" id="btn-search">查询</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width: 210px">用户 ID</th>
+              <th style="width: 110px">用户名</th>
+              <th style="width: 90px">姓名</th>
+              <th style="width: 130px">部门</th>
+              <th style="width: 120px">角色</th>
+              <th style="width: 120px">手机号</th>
+              <th style="width: 80px">状态</th>
+              <th style="width: 165px">创建时间</th>
+              <th class="col-op" style="width: 190px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div class="table-empty" id="empty" style="display: none">暂无符合条件的数据</div>
+      </div>
+
+      <div class="pagination" id="pager"></div>
+    </div>
+
+    <!-- D-Form：新建 / 编辑共用（admin-ui-design.md §3.3） -->
+    <div class="dialog-mask" id="form-dialog">
+      <div class="dialog">
+        <div class="dialog-hd" id="form-title">新建账号</div>
+        <div class="dialog-bd">
+          <div class="form-item" id="fi-username">
+            <label class="form-label is-required">用户名</label>
+            <div class="form-control">
+              <input class="input" id="fm-username" placeholder="登录名，小写字母/数字" />
+              <div class="form-error">请输入用户名</div>
+            </div>
+          </div>
+          <div class="form-item" id="fi-name">
+            <label class="form-label is-required">姓名</label>
+            <div class="form-control">
+              <input class="input" id="fm-name" placeholder="显示名" />
+              <div class="form-error">请输入姓名</div>
+            </div>
+          </div>
+          <div class="form-item">
+            <label class="form-label">所属部门</label>
+            <div class="form-control">
+              <select class="select" id="fm-dept">
+                <option>平台研发部</option>
+                <option>内容运营部</option>
+                <option>质量管理部</option>
+                <option>市场运营部</option>
+                <option>人力资源部</option>
+                <option>财务管理部</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-item">
+            <label class="form-label">角色</label>
+            <div class="form-control">
+              <select class="select" id="fm-role">
+                <option value="admin">超级管理员</option>
+                <option value="ops">运维工程师</option>
+                <option value="auditor">审计员</option>
+                <option value="content-admin">内容管理员</option>
+                <option value="editor">内容编辑</option>
+                <option value="guest">访客</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-item" id="fi-phone">
+            <label class="form-label">手机号</label>
+            <div class="form-control">
+              <input class="input" id="fm-phone" placeholder="11 位手机号" maxlength="11" />
+              <div class="form-error">手机号格式不正确</div>
+            </div>
+          </div>
+          <div class="form-item">
+            <label class="form-label">状态</label>
+            <div class="form-control">
+              <div class="switch-row" id="fm-status">
+                <span class="radio-pill is-on" data-val="1">启用</span>
+                <span class="radio-pill" data-val="0">停用</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-item">
+            <label class="form-label">备注</label>
+            <div class="form-control">
+              <textarea class="textarea" id="fm-remark" placeholder="选填，最多 200 字"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="dialog-ft">
+          <button class="btn" data-close="form-dialog">取消</button>
+          <button class="btn btn-primary" id="btn-save">保存</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var state = { current: 1, size: 6, editingId: null, rows: MOCK.users.slice() };
+
+      var ROLE_NAME = {
+        admin: '超级管理员', ops: '运维工程师', auditor: '审计员',
+        'content-admin': '内容管理员', editor: '内容编辑', guest: '访客'
+      };
+
+      /* ---------- 筛选（变更即查，current 重置 1） ---------- */
+      function filtered() {
+        var kw = document.getElementById('f-keyword').value.trim().toLowerCase();
+        var role = document.getElementById('f-role').value;
+        var status = document.getElementById('f-status').value;
+        var begin = document.getElementById('f-begin').value;
+        var end = document.getElementById('f-end').value;
+        return state.rows.filter(function (u) {
+          if (kw && u.username.toLowerCase().indexOf(kw) < 0 && u.name.indexOf(kw) < 0) return false;
+          if (role && u.roleName !== role) return false;
+          if (status !== '' && String(u.status) !== status) return false;
+          var day = u.createTime.slice(0, 10);
+          if (begin && day < begin) return false;
+          if (end && day > end) return false;
+          return true;
+        });
+      }
+
+      /* ---------- 表格渲染 ---------- */
+      function render() {
+        var list = filtered();
+        var pages = Math.max(1, Math.ceil(list.length / state.size));
+        if (state.current > pages) state.current = pages;
+        var page = list.slice((state.current - 1) * state.size, state.current * state.size);
+
+        document.getElementById('tbody').innerHTML = page.map(function (u) {
+          return '<tr>' +
+            '<td class="cell-mono">' + Proto.esc(u.id) + '</td>' +
+            '<td class="cell-main">' + Proto.esc(u.username) + '</td>' +
+            '<td>' + Proto.esc(u.name) + '</td>' +
+            '<td class="cell-muted">' + Proto.esc(u.dept) + '</td>' +
+            '<td>' + Proto.esc(u.role) + '</td>' +
+            '<td class="cell-muted">' + Proto.esc(u.phone) + '</td>' +
+            '<td>' + Proto.statusPill(u.status) + '</td>' +
+            '<td class="cell-muted cell-nowrap">' + Proto.esc(u.createTime) + '</td>' +
+            '<td class="col-op">' +
+              '<button class="btn-text" data-act="edit" data-id="' + u.id + '">编辑</button>' +
+              '<button class="btn-text" data-act="reset" data-id="' + u.id + '">重置密码</button>' +
+              '<button class="btn-text is-danger" data-act="del" data-id="' + u.id + '">删除</button>' +
+            '</td>' +
+          '</tr>';
+        }).join('');
+
+        document.getElementById('empty').style.display = list.length ? 'none' : 'block';
+        Proto.paginate(document.getElementById('pager'), {
+          total: list.length,
+          current: state.current,
+          size: state.size,
+          onChange: function (p) { state.current = p; render(); }
+        });
+      }
+
+      /* ---------- 表单弹窗 ---------- */
+      function openForm(user) {
+        state.editingId = user ? user.id : null;
+        document.getElementById('form-title').textContent = user ? '编辑账号' : '新建账号';
+        document.getElementById('fm-username').value = user ? user.username : '';
+        document.getElementById('fm-username').disabled = !!user; // 编辑时锁定用户名
+        document.getElementById('fm-name').value = user ? user.name : '';
+        document.getElementById('fm-dept').value = user ? user.dept : '平台研发部';
+        document.getElementById('fm-role').value = user ? user.roleName : 'guest';
+        document.getElementById('fm-phone').value = user ? user.phone : '';
+        document.getElementById('fm-remark').value = '';
+        setStatus(user ? user.status : 1);
+        ['fi-username', 'fi-name', 'fi-phone'].forEach(function (id) {
+          document.getElementById(id).classList.remove('has-error');
+        });
+        Proto.openDialog('form-dialog');
+      }
+
+      function setStatus(val) {
+        document.querySelectorAll('#fm-status .radio-pill').forEach(function (el) {
+          el.classList.toggle('is-on', el.dataset.val === String(val));
+        });
+      }
+
+      function save() {
+        var username = document.getElementById('fm-username').value.trim();
+        var name = document.getElementById('fm-name').value.trim();
+        var phone = document.getElementById('fm-phone').value.trim();
+        var ok = true;
+
+        document.getElementById('fi-username').classList.toggle('has-error', !username);
+        document.getElementById('fi-name').classList.toggle('has-error', !name);
+        var phoneBad = !!phone && !/^1\d{10}$/.test(phone);
+        document.getElementById('fi-phone').classList.toggle('has-error', phoneBad);
+        if (!username || !name || phoneBad) ok = false;
+        if (!ok) return;
+
+        var status = Number(document.querySelector('#fm-status .radio-pill.is-on').dataset.val);
+        var payload = {
+          username: username, name: name,
+          dept: document.getElementById('fm-dept').value,
+          role: ROLE_NAME[document.getElementById('fm-role').value],
+          roleName: document.getElementById('fm-role').value,
+          phone: phone ? phone.slice(0, 3) + '****' + phone.slice(7) : '—',
+          status: status
+        };
+
+        if (state.editingId) {
+          state.rows = state.rows.map(function (u) {
+            return u.id === state.editingId ? Object.assign({}, u, payload) : u;
+          });
+        } else {
+          // 发号示意：16 位 = yyyyMMdd + 8 位序列（framework 发号，前端只接收 string）
+          state.rows.unshift(Object.assign({
+            id: '2026102000000' + String(113 + state.rows.length),
+            createTime: '2026-10-20 15:02:50',
+            lastLogin: '—'
+          }, payload));
+        }
+        Proto.closeDialog('form-dialog');
+        Proto.toast(state.editingId ? '保存成功' : '账号创建成功');
+        state.current = 1;
+        render();
+      }
+
+      /* ---------- 事件绑定（委托，壳重建不受影响） ---------- */
+      document.getElementById('btn-create').addEventListener('click', function () { openForm(null); });
+      document.getElementById('btn-save').addEventListener('click', save);
+      document.getElementById('btn-search').addEventListener('click', function () {
+        state.current = 1; render(); Proto.toast('已按条件筛选');
+      });
+      ['f-keyword'].forEach(function (id) {
+        document.getElementById(id).addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') { state.current = 1; render(); }
+        });
+      });
+      ['f-role', 'f-status', 'f-begin', 'f-end'].forEach(function (id) {
+        document.getElementById(id).addEventListener('change', function () { state.current = 1; render(); });
+      });
+      document.querySelectorAll('#fm-status .radio-pill').forEach(function (el) {
+        el.addEventListener('click', function () { setStatus(el.dataset.val); });
+      });
+      document.addEventListener('click', function (e) {
+        var close = e.target.closest('[data-close]');
+        if (close) { Proto.closeDialog(close.dataset.close); return; }
+
+        var btn = e.target.closest('[data-act]');
+        if (!btn) return;
+        var user = state.rows.filter(function (u) { return u.id === btn.dataset.id; })[0];
+        if (!user) return;
+
+        if (btn.dataset.act === 'edit') {
+          openForm(user);
+        } else if (btn.dataset.act === 'reset') {
+          Proto.confirm({
+            title: '重置密码',
+            text: '确定重置账号「' + user.name + '」的登录密码吗？重置后将发送初始密码通知。',
+            okText: '重置'
+          }).then(function (ok) {
+            if (ok) Proto.toast('密码已重置，初始密码已下发');
+          });
+        } else if (btn.dataset.act === 'del') {
+          Proto.confirm({
+            title: '删除账号',
+            text: '确定删除账号「' + user.name + '（' + user.username + '）」吗？删除后不可恢复。',
+            okText: '删除'
+          }).then(function (ok) {
+            if (!ok) return;
+            state.rows = state.rows.filter(function (u) { return u.id !== user.id; });
+            Proto.toast('删除成功');
+            render();
+          });
+        }
+      });
+
+      render();
+    });
+  </script>
+</body>
+</html>

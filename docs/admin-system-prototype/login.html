@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>登录 · 统一认证中心</title>
+<link rel="stylesheet" href="assets/css/proto.css" />
+</head>
+<body>
+  <!-- 登录门面（admin-ui-design.md §4.5）：全浅底 + 居中白卡片 380px -->
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-title">统一认证中心</div>
+      <div class="login-desc">后端管理系统原型 · Mock 演示环境，任意账密均可进入</div>
+
+      <div class="login-field">
+        <div class="login-label">用户名</div>
+        <input class="input" id="username" value="zhangwei" placeholder="请输入用户名" autocomplete="off" />
+      </div>
+      <div class="login-field">
+        <div class="login-label">密码</div>
+        <input class="input" id="password" type="password" value="demo1234" placeholder="请输入密码" />
+      </div>
+
+      <button class="btn btn-primary login-btn" id="login-btn">登 录</button>
+
+      <div class="login-foot">
+        <span>统一账密门面（auth-portal）</span>
+        <a href="index.html">跳过登录，直接预览 →</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      function doLogin() {
+        var u = document.getElementById('username').value.trim();
+        var p = document.getElementById('password').value.trim();
+        if (!u || !p) {
+          Proto.toast('请输入用户名和密码', 'error');
+          return;
+        }
+        Proto.toast('登录成功，正在进入管理台…');
+        setTimeout(function () { location.href = 'index.html'; }, 600);
+      }
+      document.getElementById('login-btn').addEventListener('click', doLogin);
+      document.getElementById('password').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') doLogin();
+      });
+    });
+  </script>
+</body>
+</html>

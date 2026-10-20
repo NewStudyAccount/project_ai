@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>操作审计 · 后端管理系统</title>
+<link rel="stylesheet" href="assets/css/proto.css" />
+</head>
+<body data-nav="audit-log">
+  <div id="app">
+    <!-- P-List（审计类：筛选放 toolbar 第二行，时间范围筛选） -->
+    <div class="page-card">
+      <div class="page-header">
+        <div class="page-title">操作审计</div>
+        <div class="page-desc">关键写操作留痕（操作人 / 时间 / 动作 / 结果），按 traceId 与链路追踪对照；敏感字段已脱敏。</div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn" id="btn-export">导出记录</button>
+        <span class="spacer"></span>
+        <input class="input" id="f-operator" placeholder="操作人" style="width: 150px" />
+        <select class="select" id="f-module" style="width: 140px">
+          <option value="">全部模块</option>
+          <option>认证中心</option>
+          <option>系统管理</option>
+          <option>内容管理</option>
+          <option>文件管理</option>
+          <option>审计中心</option>
+        </select>
+        <select class="select" id="f-result" style="width: 120px">
+          <option value="">全部结果</option>
+          <option value="1">成功</option>
+          <option value="0">失败</option>
+        </select>
+        <input class="input" id="f-begin" type="date" style="width: 150px" />
+        <span class="filter-label">至</span>
+        <input class="input" id="f-end" type="date" style="width: 150px" />
+        <button class="btn" id="btn-search">查询</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width: 165px">时间</th>
+              <th style="width: 110px">操作人</th>
+              <th style="width: 110px">模块</th>
+              <th style="width: 140px">动作</th>
+              <th style="width: 130px">IP</th>
+              <th>详情</th>
+              <th style="width: 70px">结果</th>
+              <th class="col-op" style="width: 80px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div class="table-empty" id="empty" style="display: none">暂无符合条件的审计记录</div>
+      </div>
+
+      <div class="pagination" id="pager"></div>
+    </div>
+
+    <!-- D-Panel：审计详情 -->
+    <div class="dialog-mask" id="detail-dialog">
+      <div class="dialog">
+        <div class="dialog-hd">审计详情</div>
+        <div class="dialog-bd">
+          <div class="kv-list" id="detail-kv"></div>
+        </div>
+        <div class="dialog-ft">
+          <button class="btn btn-primary" data-close="detail-dialog">关闭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var state = { current: 1, size: 8 };
+
+      function filtered() {
+        var operator = document.getElementById('f-operator').value.trim().toLowerCase();
+        var module = document.getElementById('f-module').value;
+        var result = document.getElementById('f-result').value;
+        var begin = document.getElementById('f-begin').value;
+        var end = document.getElementById('f-end').value;
+        return MOCK.audits.filter(function (a) {
+          if (operator && a.operator.toLowerCase().indexOf(operator) < 0) return false;
+          if (module && a.module !== module) return false;
+          if (result !== '' && String(a.result) !== result) return false;
+          var day = a.time.slice(0, 10);
+          if (begin && day < begin) return false;
+          if (end && day > end) return false;
+          return true;
+        });
+      }
+
+      function render() {
+        var list = filtered();
+        var pages = Math.max(1, Math.ceil(list.length / state.size));
+        if (state.current > pages) state.current = pages;
+        var page = list.slice((state.current - 1) * state.size, state.current * state.size);
+
+        document.getElementById('tbody').innerHTML = page.map(function (a) {
+          return '<tr>' +
+            '<td class="cell-muted cell-nowrap">' + Proto.esc(a.time) + '</td>' +
+            '<td class="cell-main">' + Proto.esc(a.operator) + '</td>' +
+            '<td>' + Proto.esc(a.module) + '</td>' +
+            '<td>' + Proto.esc(a.action) + '</td>' +
+            '<td class="cell-mono">' + Proto.esc(a.ip) + '</td>' +
+            '<td class="cell-muted cell-ellipsis" title="' + Proto.esc(a.detail) + '">' + Proto.esc(a.detail) + '</td>' +
+            '<td>' + Proto.resultPill(a.result) + '</td>' +
+            '<td class="col-op"><button class="btn-text" data-act="detail" data-id="' + a.id + '">详情</button></td>' +
+          '</tr>';
+        }).join('');
+
+        document.getElementById('empty').style.display = list.length ? 'none' : 'block';
+        Proto.paginate(document.getElementById('pager'), {
+          total: list.length, current: state.current, size: state.size,
+          onChange: function (p) { state.current = p; render(); }
+        });
+      }
+
+      function openDetail(a) {
+        var rows = [
+          ['记录 ID', a.id],
+          ['发生时间', a.time],
+          ['操作人', a.operator],
+          ['所属模块', a.module],
+          ['动作', a.action],
+          ['来源 IP', a.ip],
+          ['执行结果', a.result === 1 ? '成功' : '失败'],
+          ['操作详情', a.detail],
+          ['TraceId', '4b9c2e71f5a84d30-' + a.id.slice(-6)]
+        ];
+        document.getElementById('detail-kv').innerHTML = rows.map(function (kv) {
+          return '<div class="kv-key">' + Proto.esc(kv[0]) + '</div><div class="kv-val">' + Proto.esc(kv[1]) + '</div>';
+        }).join('');
+        Proto.openDialog('detail-dialog');
+      }
+
+      document.getElementById('btn-search').addEventListener('click', function () {
+        state.current = 1; render(); Proto.toast('已按条件筛选');
+      });
+      document.getElementById('btn-export').addEventListener('click', function () {
+        Proto.confirm({
+          title: '导出审计记录',
+          text: '将按当前筛选条件导出审计记录（原型演示，不产生真实文件）。',
+          okText: '导出'
+        }).then(function (ok) { if (ok) Proto.toast('导出任务已提交，请稍后查看'); });
+      });
+      ['f-operator'].forEach(function (id) {
+        document.getElementById(id).addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') { state.current = 1; render(); }
+        });
+      });
+      ['f-module', 'f-result', 'f-begin', 'f-end'].forEach(function (id) {
+        document.getElementById(id).addEventListener('change', function () { state.current = 1; render(); });
+      });
+
+      document.addEventListener('click', function (e) {
+        var close = e.target.closest('[data-close]');
+        if (close) { Proto.closeDialog(close.dataset.close); return; }
+        var btn = e.target.closest('[data-act="detail"]');
+        if (!btn) return;
+        var a = MOCK.audits.filter(function (x) { return x.id === btn.dataset.id; })[0];
+        if (a) openDetail(a);
+      });
+
+      render();
+    });
+  </script>
+</body>
+</html>

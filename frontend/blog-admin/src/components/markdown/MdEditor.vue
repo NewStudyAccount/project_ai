@@ -108,10 +108,6 @@ async function onUploadImg(files: File[], callback: UploadImgCallBack) {
   try {
     const results: Array<{ url: string; alt: string; title: string }> = []
     for (const file of accepted) {
-      if (file.size > 10 * 1024 * 1024) {
-        ElMessage.error(`「${file.name}」超过 10MB`)
-        continue
-      }
       const meta = await uploadFile(file, 'ARTICLE_IMAGE', props.bizId || undefined)
       const imgSrc = publicFileUrl(meta)
       if (!isSafeUrl(imgSrc)) {
