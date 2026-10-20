@@ -23,15 +23,15 @@
 
 ## 4. auth-admin 换装
 
-- [ ] 4.1 `frontend/auth-admin/src/styles/main.css`：同 2.1
-- [ ] 4.2 `frontend/auth-admin/src/components/AppLayout.vue`：同 2.2
-- [ ] 4.3 组件视觉对齐：同 2.3
-- [ ] 4.4 旧色值清底：同 2.4
-- [ ] 4.5 `cd frontend/auth-admin && npm run lint && npm run type-check` 通过；独立提交 `feat(auth-admin): 切换极光 Aurora 视觉基线`
+- [x] 4.1 `frontend/auth-admin/src/styles/main.css`：同 2.1
+- [x] 4.2 `frontend/auth-admin/src/components/AppLayout.vue`：同 2.2
+- [x] 4.3 组件视觉对齐：同 2.3
+- [x] 4.4 旧色值清底：同 2.4
+- [x] 4.5 `cd frontend/auth-admin && npm run lint && npm run type-check` 通过；独立提交 `feat(auth-admin): 切换极光 Aurora 视觉基线`
 
 ## 5. 自检
 
-- [ ] 5.1 三端一致性走查：token 表逐字一致、壳样式逐字一致（系统名/菜单除外）、骨架三件（CrudPage/CrudForm/DetailDialog）无结构性 diff（色值 token 化除外）
-- [ ] 5.2 行为零变化对照：布局/交互/请求/权限判定与换装前一致；统计卡降级语义保持；`hasPermission` 整钮不渲染语义不变
-- [ ] 5.3 渐变纪律走查：`--accent-gradient`/`--stat-grad-*` 之外无渐变；毛玻璃仅侧栏激活项；无过重投影/第三方图标包/彩色 emoji
-- [ ] 5.4 提交自查：三笔独立提交、改动仅限三端 `src/styles/main.css`、`AppLayout.vue` 及清底命中的视图样式文件；不碰后端/门户/骨架结构/其他变更制品
+- [x] 5.1 三端一致性走查：token 表逐字一致、壳样式逐字一致（系统名/菜单除外）、骨架三件（CrudPage/CrudForm/DetailDialog）无结构性 diff（色值 token 化除外）
+- [x] 5.2 行为零变化对照：布局/交互/请求/权限判定与换装前一致；统计卡降级语义保持；`hasPermission` 整钮不渲染语义不变
+- [x] 5.3 渐变纪律走查：`--accent-gradient`/`--stat-grad-*` 之外无渐变；毛玻璃仅侧栏激活项；无过重投影/第三方图标包/彩色 emoji
+- [x] 5.4 提交自查：三笔独立提交、改动仅限三端 `src/styles/main.css`、`AppLayout.vue` 及清底命中的视图样式文件；不碰后端/门户/骨架结构/其他变更制品

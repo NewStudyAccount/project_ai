@@ -69,9 +69,20 @@ function normalizePath(path: string): string {
   min-height: 100vh;
 }
 
+/* 侧栏：深靛紫极光渐变（纯色兜底）+ 顶部极光光晕 */
 .aside {
-  background: var(--bg-sidebar, #fff);
-  border-right: 1px solid var(--border, #e4e4e7);
+  background-color: var(--bg-sidebar);
+  background-image: var(--bg-sidebar-gradient);
+  position: relative;
+  overflow: hidden;
+}
+
+.aside::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--sidebar-glow);
+  pointer-events: none;
 }
 
 .brand {
@@ -80,7 +91,8 @@ function normalizePath(path: string): string {
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  border-bottom: 1px solid var(--border, #e4e4e7);
+  color: var(--text-sidebar);
+  border-bottom: 1px solid var(--bg-sidebar-active);
 }
 
 .menu {
@@ -93,19 +105,19 @@ function normalizePath(path: string): string {
   align-items: center;
   justify-content: space-between;
   height: 56px;
-  background: var(--bg-surface, #fff);
-  border-bottom: 1px solid var(--border, #e4e4e7);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
 }
 
 .operator {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--text-regular, #3f3f46);
+  color: var(--text-regular);
 }
 
 .main {
-  background: var(--bg-page, #f6f7f9);
+  background: var(--bg-page);
   padding: 0;
 }
 </style>
