@@ -24,8 +24,8 @@
 
 - [x] 4.1 与 `blog-object-storage-frontend` 持有者确认 apply 时机与文件分工（业务字段冲突以该变更为准）
 - [x] 4.2 改造 `views/file/FileList.vue` 形态层：筛选条/表格/分页/删除确认接 CrudPage；上传、引用检查、storageCode 逻辑逐行保持
-- [ ] 4.3 改造 `views/storage/StorageProviderList.vue` 形态层：D-Form/确认/软胶囊对齐；测试连通、设默认、SK 只写掩码回显逻辑保持
-- [ ] 4.4 动作手测：上传 / 测试连通 / 设默认 / 删除 / SK 留空保存，确认请求参数与结果处理与改造前一致
+- [x] 4.3 改造 `views/storage/StorageProviderList.vue` 形态层：D-Form/确认/软胶囊对齐；测试连通、设默认、SK 只写掩码回显逻辑保持
+- [x] 4.4 动作手测：上传 / 测试连通 / 设默认 / 删除 / SK 留空保存，确认请求参数与结果处理与改造前一致
 
 ## 5. 自检
 
