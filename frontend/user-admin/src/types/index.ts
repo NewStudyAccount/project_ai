@@ -11,6 +11,12 @@ export interface PageResult<T> {
   current: number
 }
 
+/** 分页入参（current 从 1 起，CLAUDE.md §6.4.6） */
+export interface PageQuery {
+  current: number
+  size: number
+}
+
 export interface UserVO {
   id: string
   username: string

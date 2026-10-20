@@ -11,7 +11,9 @@
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-button v-if="hasPermission('auth:role:assign')" type="primary" @click="save">保存分配</el-button>
+        <el-button v-if="hasPermission('auth:role:assign')" type="primary" :loading="saving" @click="save">
+          保存分配
+        </el-button>
       </el-form-item>
     </el-form>
 
@@ -21,21 +23,24 @@
       <el-table-column prop="roleCode" label="编码" width="140" />
       <el-table-column prop="roleName" label="名称" width="140" />
       <el-table-column prop="status" label="状态" width="80">
-        <template #default="{ row }"><span :class="['status-pill', row.status === 1 ? 'is-on' : 'is-off']">{{ row.status === 1 ? '启用' : '停用' }}</span></template>
+        <template #default="{ row }">
+          <span :class="['status-pill', row.status === 1 ? 'is-on' : 'is-off']">{{ row.status === 1 ? '启用' : '停用' }}</span>
+        </template>
       </el-table-column>
-      <el-table-column prop="remark" label="备注" min-width="160" />
+      <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
     </el-table>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { rbacApi } from '@/api/rbac'
 import { hasPermission } from '@/utils/permission'
 import type { RoleVO } from '@/types'
 
 const roles = ref<RoleVO[]>([])
+const saving = ref(false)
 const form = reactive({ userId: '', ids: [] as string[] })
 
 async function load() {
@@ -47,8 +52,24 @@ async function save() {
     ElMessage.warning('请填写用户 ID')
     return
   }
-  await rbacApi.assignUserRoles(form.userId, form.ids)
-  ElMessage.success('已保存用户角色')
+  // 全量覆盖属于破坏性操作：先确认再提交（danger 文案含用户 ID）
+  try {
+    await ElMessageBox.confirm(
+      `确认保存用户 ${form.userId} 的角色分配？将全量覆盖该用户现有角色集合（选中 ${form.ids.length} 个角色）。`,
+      '保存分配',
+      { type: 'warning' },
+    )
+  } catch {
+    return
+  }
+  if (saving.value) return
+  saving.value = true
+  try {
+    await rbacApi.assignUserRoles(form.userId, form.ids)
+    ElMessage.success({ message: '已保存用户角色', duration: 2000 })
+  } finally {
+    saving.value = false
+  }
 }
 
 onMounted(load)
