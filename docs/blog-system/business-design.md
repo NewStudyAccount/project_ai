@@ -146,8 +146,9 @@ GET /api/v1/public/articles/{idOrSlug}
   → 校验 status=1（id 或 slug 解析）
   → 读 blog_article + detail + tags
   → content_file_id → sys_file（ARTICLE_LIVE）→ object_key
-  → ObjectStorageClient 读对象 → 组装 content
-  → 返回 ArticleDetailVO
+  → ObjectStorageClient 读对象（Markdown 源文）
+  → 服务端渲染 HTML（转义 + URL 消毒，见 §E.5）→ 组装 content
+  → 返回 ArticleDetailVO（content = 渲染 HTML）
 ```
 
 **写路径（管理端）——主表 / 详细表 / 正文严格分步：**
@@ -266,7 +267,7 @@ GET /api/v1/public/articles/{idOrSlug}
 | 布局 | **左源码 / 右预览** 分栏（编辑器分屏/编辑+预览；窄屏可切换） |
 | 输入 | Markdown **源码**编辑；**不做**产品级所见即所得（WYSIWYG）提交 |
 | 工具栏 | 加粗、斜体、标题、链接、行内代码、代码块、图片引用、列表等；**只插入 Markdown 语法**，不写 HTML 标签 |
-| 预览 | 编辑器预览仅辅助；对外保存仍是源文。用户端渲染见 §6 portal |
+| 预览 | 编辑器预览仅辅助（md-editor-v3 内建）；对外保存仍是源文。对外渲染**唯一真相** = 服务端渲染器（§E.5） |
 | 禁止 | 粘贴/输入 **HTML 标签作为正文结构**（`<div>`、`<script>`、内联样式等）；粘贴富文本时**降为纯文本 + Markdown**；关闭直传存储 |
 
 **2. 正文内容与语法范围**
@@ -277,7 +278,7 @@ GET /api/v1/public/articles/{idOrSlug}
 | 允许语法 | 标题 `#`–`######`、段落、有序/无序列表、引用、围栏代码块、行内代码、链接、图片、粗体/斜体、分隔线、表格（可选） |
 | 图片 | 仅允许 **http(s) 相对站内/白名单外链**；**推荐**编辑器「上传」→ `POST /api/v1/files`（`bizType=ARTICLE_IMAGE`）后插入稳定地址 `/api/v1/public/files/{id}`；禁止 base64 内嵌大图（防超 500KB） |
 | 链接 | 默认 `http/https`；禁止 `javascript:` 等可执行协议 |
-| HTML | **一律视为文本**（源文可含转义，渲染时不得当 HTML 执行）；用户端渲染必须转义后再生成（与 portal `renderMarkdown` 一致） |
+| HTML | **一律视为文本**（源文可含转义，渲染时不得当 HTML 执行）；服务端渲染必须**转义后再生成**（渲染器配置口径见 §E.5） |
 | 长度 | 单篇源文 **≤500KB**（UTF-8 字节数）；超限拒绝（`CONTENT_TOO_LARGE`），不截断 |
 
 **3. 字数与元信息**
@@ -297,10 +298,13 @@ GET /api/v1/public/articles/{idOrSlug}
 | 前端 | 保存前可提示字数/大小；**禁止**把 HTML 渲染结果当 content 提交 |
 | 失败 | 超限/空内容返回业务/校验码；对象存储失败记 error 含 providerCode/objectKey（对象存储补偿见 `object-storage-design.md`） |
 
-**5. 与用户端渲染边界**
+**5. 渲染边界（服务端渲染，已裁决）**
 
-- 管理端预览、用户端详情共用「Markdown → HTML」策略：**先转义再渲染**，不执行原生 HTML。
-- 用户端不提供「按 HTML 原文展示」；`content` 字段始终是 Markdown 源文。
+- 「Markdown → HTML」转换**唯一发生在服务端**（`blog-framework` 封装渲染器，禁业务各转各的）；前端**不再**自带渲染逻辑，只注入服务端返回的 HTML。
+- 公开详情 `content` = **服务端渲染后的 HTML**：先转义再生成，不执行原生 HTML；`javascript:` 等可执行协议丢弃（URL 消毒）。
+- 管理端读写 `content` 仍为 **Markdown 源文**（编辑器回写需要源文）；两端字段语义差异见 api-design §3.3 / §6.4。
+- 存储对象不变：OSS 仍只存 **Markdown 源文**（`text/markdown`），不落 `.html` 对象（预转存/SSR 不在本期）。
+- 原「与 portal `renderMarkdown` 一致」口径**废止**：portal 自研渲染器随本裁决移除。
 
 ---
 
@@ -445,7 +449,7 @@ GET /api/v1/public/articles/{idOrSlug}
 | GET | `/public/categories` | 启用分类树 |
 | GET | `/public/tags` | 启用标签（可带文章数） |
 | GET | `/public/articles` | 分页：`categoryId` / `tagId` / `keyword`；仅 `status=1`；排序 `is_top DESC, publish_time DESC` |
-| GET | `/public/articles/{idOrSlug}` | 详情：主表+正文 content+标签；仅已发布；**id 或 slug 均可**（见下） |
+| GET | `/public/articles/{idOrSlug}` | 详情：主表+正文 content（**服务端渲染 HTML**，见 §E.5）+标签；仅已发布；**id 或 slug 均可**（见下） |
 | GET | `/public/articles/{idOrSlug}/content-url` | 稳定公开 `{url}`（无 expireAt） |
 | GET | `/public/site-config` | 站点配置（站名/关于/备案） |
 
@@ -455,7 +459,7 @@ GET /api/v1/public/articles/{idOrSlug}
 
 **ArticleVO（列表）**：`id, title, slug, summary, coverFileId, categoryId, categoryName, tags[]{id,name}, authorName, status, publishTime, isTop, hasDraft`
 
-**ArticleDetailVO**：`ArticleVO + content, wordCount, seoTitle, seoDescription`（用户端 `content` 只来自 `content_file_id`；正文为 Markdown）
+**ArticleDetailVO**：`ArticleVO + content, wordCount, seoTitle, seoDescription`（用户端 `content` 只来自 `content_file_id`，为**服务端渲染后的 HTML**（§E.5）；管理端 `ArticleAdminDetailVO.content` 仍为 Markdown 源文）
 
 **新建主表入参（POST /admin/articles）**：`title, slug?, categoryId?, summary?, coverFileId?, tagIds?, isTop?` → 仅主表；**不含**正文
 
@@ -481,7 +485,7 @@ GET /api/v1/public/articles/{idOrSlug}
 ```
 /                    首页：置顶 + 最新
 /articles            列表（支持 ?category=&tag=&keyword=）
-/articles/:idOrSlug  详情（Markdown 渲染；id 或 slug）
+/articles/:idOrSlug  详情（注入服务端渲染 HTML；id 或 slug）
 /categories          分类导航
 /tags                标签云
 ```
@@ -511,7 +515,7 @@ GET /api/v1/public/articles/{idOrSlug}
 
 ```
 blog-common     枚举（ArticleStatusEnum…）、常量、DTO 校验注解（纯）
-blog-framework  ObjectStorageClient（已有）、发号/审计/幂等/限流（已有）
+blog-framework  ObjectStorageClient（已有）、发号/审计/幂等/限流（已有）、Markdown→HTML 渲染器封装（本裁决新增，§E.5）
 blog-service    entity + mapper + service + controller（内容业务 + 站点配置）
                 package: com.qjj.blog.service.{controller,dto,vo,service,mapper,entity,enums,constants,converter}
 blog-api        本期无新增 Feign（作者不反查）

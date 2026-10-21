@@ -1,5 +1,6 @@
 package com.qjj.blog.framework.core;
 
+import com.qjj.blog.framework.markdown.MarkdownRenderer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -13,5 +14,14 @@ public class FrameworkConfiguration {
     @Bean
     public UserContextFilter userContextFilter() {
         return new UserContextFilter();
+    }
+
+    /**
+     * 服务端 Markdown→HTML 渲染器（business-design §E.5 唯一转换点；
+     * escapeHtml/sanitizeUrls 固化于实现，业务禁止另配）。
+     */
+    @Bean
+    public MarkdownRenderer markdownRenderer() {
+        return new MarkdownRenderer();
     }
 }

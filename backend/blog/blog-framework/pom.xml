@@ -62,6 +62,15 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-tracing-bridge-brave</artifactId>
         </dependency>
+        <!-- 服务端 Markdown→HTML 渲染（business-design §E.5；仅核心+表格扩展，禁 flexmark-all） -->
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-ext-tables</artifactId>
+        </dependency>
         <!-- MinIO SDK 已迁独立模块 blog-object-storage（object-storage-design.md §3.1） -->
         <dependency>
             <groupId>org.projectlombok</groupId>

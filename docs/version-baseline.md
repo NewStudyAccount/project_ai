@@ -18,6 +18,7 @@
 | springdoc-openapi | 2.9.1 | `springdoc-openapi-starter-webmvc-ui`（2.x 线对应 Boot 3） |
 | MapStruct | 1.6.3 | 1.7.0 仅 Beta |
 | MinIO SDK | 9.0.3 | 如遇 API 变动可退 8.5.17 |
+| flexmark-java | 0.64.8 | `flexmark` 核心 + `flexmark-ext-tables`（表格扩展）；**服务端 Markdown→HTML 渲染**（escapeHtml + sanitizeUrls，口径见 `docs/blog-system/business-design.md` §E.5）；0.64.x 要求 Java 11+，与 JDK 21 兼容 |
 | Spring Authorization Server | 随 Spring Boot BOM（3.5.16 → 1.5.8） | 认证中心 OAuth2/OIDC 协议内核（`spring-boot-starter-oauth2-authorization-server`）；**仅 auth 系统引入**，业务服务禁止依赖 |
 | spring-security-oauth2-jose（Nimbus） | 随 Spring Boot BOM | JWT JOSE 栈（与 SAS 同源）；业务服务经 `spring-boot-starter-oauth2-resource-server`（随 Boot BOM）本地验签，不引 SAS |
 | RocketMQ | 客户端 5.3.1（SCA BOM 管理） | `rocketmq-spring-boot-starter` 2.3.6；收发与消费重试/死信统一 `framework` 封装（CLAUDE.md 6.11） |
@@ -56,3 +57,4 @@
 | 2026-09-24 | 「随 BOM」行补实据解析值（mysql-connector-j 9.7.0 等）；用户中心组件清单按模块锁定 | 用户确认（Spring Cloud 方式：一域一服务 + 独立网关） |
 | 2026-09-24 | 新增前端主框架版本行（Vue3/Vite/TS/Pinia/Element Plus 等），随 `scaffold-user-center` 首个前端工程登记 | 规则：新增前端工程时登记（§2） |
 | 2026-10-19 | 前端依赖登记 **md-editor-v3 ^7.1.x**（blog-admin 写正文 Markdown 编辑器） | 变更 `adopt-markdown-editor` 技术选型 |
+| 2026-10-21 | 新增 **flexmark-java 0.64.8**（`flexmark` + `flexmark-ext-tables`，服务端正文 Markdown→HTML 渲染） | 变更 `article-content-server-render` 技术选型 |

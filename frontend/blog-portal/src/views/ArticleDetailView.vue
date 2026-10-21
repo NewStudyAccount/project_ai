@@ -2,13 +2,13 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchArticle, type ArticleDetailVO } from '@/api/public'
-import { renderMarkdown } from '@/utils/markdown'
 
 const route = useRoute()
 const article = ref<ArticleDetailVO | null>(null)
 const notFound = ref(false)
 
-const html = computed(() => renderMarkdown(article.value?.content || ''))
+// content 已是服务端渲染 HTML（转义 + URL 消毒，article-content-server-render），前端只注入
+const html = computed(() => article.value?.content || '')
 
 async function load() {
   notFound.value = false
@@ -42,7 +42,7 @@ onMounted(load)
           #{{ t.name }}
         </router-link>
       </div>
-      <!-- eslint-disable-next-line vue/no-v-html -- 正文经 renderMarkdown 先转义再生成 HTML -->
+      <!-- eslint-disable-next-line vue/no-v-html -- 正文为服务端渲染并消毒后的 HTML（api-design §6.4） -->
       <div class="markdown" v-html="html"></div>
     </template>
   </div>

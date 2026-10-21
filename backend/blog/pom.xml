@@ -38,6 +38,7 @@
         <springdoc.version>2.9.1</springdoc.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <minio.version>8.5.17</minio.version>
+        <flexmark.version>0.64.8</flexmark.version>
     </properties>
 
     <dependencyManagement>
@@ -90,6 +91,17 @@
                 <groupId>io.minio</groupId>
                 <artifactId>minio</artifactId>
                 <version>${minio.version}</version>
+            </dependency>
+            <!-- 服务端 Markdown→HTML 渲染（版本基线 docs/version-baseline.md） -->
+            <dependency>
+                <groupId>com.vladsch.flexmark</groupId>
+                <artifactId>flexmark</artifactId>
+                <version>${flexmark.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.vladsch.flexmark</groupId>
+                <artifactId>flexmark-ext-tables</artifactId>
+                <version>${flexmark.version}</version>
             </dependency>
 
             <dependency>

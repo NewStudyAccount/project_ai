@@ -33,7 +33,7 @@
 | 无草稿可放弃 | DRAFT_NOT_FOUND |
 | 已发布不可直接删 | ARTICLE_PUBLISHED |
 
-**正文格式/大小：** `content` 为 JSON 字符串，≤500KB；正文一律 **Markdown 源文**（服务端 put 对象 MIME `text/markdown`，对象键 `…/{uuid}.md`），**无** `contentFormat` 入参。编写/语法约定见 [business-design.md](./business-design.md) **§E Markdown 编写约定**。封面等附件走既有 `POST /api/v1/files`（multipart，既有 MIME 白名单）。
+**正文格式/大小：** `content` 为 JSON 字符串，≤500KB；**存储与写入一律 Markdown 源文**（服务端 put 对象 MIME `text/markdown`，对象键 `…/{uuid}.md`），**无** `contentFormat` 入参。**出参语义分端**：管理端详情（3.3）返回 Markdown 源文（编辑回写）；公开详情（6.4）返回**服务端渲染后的 HTML**。编写/语法约定见 [business-design.md](./business-design.md) **§E Markdown 编写约定**，渲染边界见其 **§E.5**。封面等附件走既有 `POST /api/v1/files`（multipart，既有 MIME 白名单）。
 
 ---
 
@@ -330,7 +330,7 @@
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | （主表字段） | | 同 ArticleVO |
-| content | string | **当前编辑器内容**（Markdown）：有草稿读草稿正文，否则线上正文，否则空 |
+| content | string | **当前编辑器内容**（Markdown **源文**，编辑回写；渲染 HTML 只出现在公开详情 6.4）：有草稿读草稿正文，否则线上正文，否则空 |
 | contentFrom | string | `draft` \| `live` \| `none` |
 | wordCount | number | 对应轨字数 |
 | seoTitle / seoDescription | string | 对应轨 SEO |
@@ -595,14 +595,14 @@
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | 主表字段 | | 同 ArticleVO |
-| content | string | **线上正文**（content_file_id → sys_file → MinIO） |
+| content | string | **线上正文渲染 HTML**（服务端 Markdown→HTML：先转义、URL 消毒，见 business-design §E.5；content_file_id → sys_file → MinIO 读**源文**后渲染） |
 | wordCount | | |
 | seoTitle / seoDescription | | 空则回退 title/summary |
 
 **逻辑**
 
 1. `status=1 AND deleted=0`，否则按「不存在」处理
-2. detail.`content_file_id` → sys_file(ARTICLE_LIVE) → 读对象
+2. detail.`content_file_id` → sys_file(ARTICLE_LIVE) → 读对象（Markdown 源文）→ **服务端渲染 HTML**（escapeHtml + sanitizeUrls）填 `content`
 3. **忽略** `draft_file_id`
 4. 审计可选 view（本期 view_count 不写）
 
@@ -620,7 +620,7 @@
 
 **出参**：`{ url: string }`（稳定公开，无 expireAt）
 
-**逻辑**：仅已发布 + `content_file_id` → 稳定公开 `{url}`（`publicBaseUrl` + objectKey，无 expireAt）；寻址同 6.4
+**逻辑**：仅已发布 + `content_file_id` → 稳定公开 `{url}`（`publicBaseUrl` + objectKey，无 expireAt）；寻址同 6.4。**注意**：该 URL 指向 **Markdown 源文对象**（导出/留档等特殊用途）；常规阅读一律走 6.4 渲染 HTML
 
 ---
 

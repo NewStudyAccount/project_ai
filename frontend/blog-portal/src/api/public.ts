@@ -28,6 +28,7 @@ export interface ArticleVO {
 }
 
 export interface ArticleDetailVO extends ArticleVO {
+  /** 正文：服务端渲染后的 HTML（转义 + URL 消毒），前端直接注入展示 */
   content?: string
   seoTitle?: string
   seoDescription?: string

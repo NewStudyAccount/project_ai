@@ -11,7 +11,7 @@
 | [er-diagram.html](./er-diagram.html) | 表关系 ER 图（浏览器打开） | 与 table-design 同步 |
 | [prototype.html](./prototype.html) | 管理端 + 用户端页面原型（浏览器打开） | 布局参照，效力低于设计正文 |
 
-> **实施状态：** OpenSpec 变更 `openspec/changes/blog-content-domain/` 已落码（SQL + 后端 + blog-admin 内容页 + blog-portal）；`article-content-markdown-only` 已收敛正文唯一 Markdown（去格式字段/列）；**联调冒烟待环境就绪**。契约偏差以代码 + 变更 specs 为准回写本目录。
+> **实施状态：** OpenSpec 变更 `openspec/changes/blog-content-domain/` 已落码（SQL + 后端 + blog-admin 内容页 + blog-portal）；`article-content-markdown-only` 已收敛正文唯一 Markdown（去格式字段/列）；`article-content-server-render`（正文改**服务端渲染**，公开详情 `content`=HTML）已提案待实施；**联调冒烟待环境就绪**。契约偏差以代码 + 变更 specs 为准回写本目录。
 
 **阅读顺序：** business-design → table-design → api-design → er-diagram → prototype。
 

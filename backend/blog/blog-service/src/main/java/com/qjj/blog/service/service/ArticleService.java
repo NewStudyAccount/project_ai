@@ -8,6 +8,7 @@ import com.qjj.blog.common.result.PageResult;
 import com.qjj.blog.framework.core.IdGenerator;
 import com.qjj.blog.framework.core.UserContext;
 import com.qjj.blog.framework.idempotent.Idempotent;
+import com.qjj.blog.framework.markdown.MarkdownRenderer;
 import com.qjj.blog.service.dto.ArticleContentRequest;
 import com.qjj.blog.service.dto.ArticlePageQuery;
 import com.qjj.blog.service.dto.ArticleRequest;
@@ -59,6 +60,7 @@ public class ArticleService {
     private final IdGenerator idGenerator;
     private final AuditService auditService;
     private final ArticleContentStorageService contentStorage;
+    private final MarkdownRenderer markdownRenderer;
 
     public PageResult<ArticleVO> pageAdmin(ArticlePageQuery query) {
         long current = query.getCurrent() < 1 ? 1 : query.getCurrent();
@@ -342,7 +344,8 @@ public class ArticleService {
         BlogArticleDetail detail = loadDetail(article.getId());
         String content = "";
         if (detail != null && detail.getContentFileId() != null && detail.getContentFileId() > 0) {
-            content = nullToEmpty(contentStorage.readContent(detail.getContentFileId()));
+            // 服务端渲染（business-design §E.5）：读 OSS Markdown 源文 → 渲染 HTML（转义 + URL 消毒）
+            content = markdownRenderer.renderToHtml(nullToEmpty(contentStorage.readContent(detail.getContentFileId())));
         }
         ArticleDetailVO vo = new ArticleDetailVO();
         copyArticle(article, vo, detail, loadTags(article.getId()), loadCategoryName(article.getCategoryId()));
