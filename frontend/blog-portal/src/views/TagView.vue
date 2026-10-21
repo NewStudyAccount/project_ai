@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { fetchTags, type TagVO } from '@/api/public'
+import TagCloud from '@/components/TagCloud.vue'
 
 const tags = ref<TagVO[]>([])
 
@@ -10,32 +11,43 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="card">
-    <h3>标签</h3>
-    <div class="cloud">
-      <router-link
-        v-for="t in tags"
-        :key="t.id"
-        class="tag"
-        :to="{ path: '/articles', query: { tag: t.id } }"
-      >
-        {{ t.name }}{{ t.articleCount != null ? ` (${t.articleCount})` : '' }}
-      </router-link>
+  <div class="page-body">
+    <div class="page-title-row">
+      <h1>标签</h1>
+      <span class="sub">字号随文章数权重 · 仅已发布计数</span>
+    </div>
+
+    <div class="tagwall">
+      <TagCloud :tags="tags" weighted />
+      <p v-if="!tags.length" class="empty-inline">暂无标签</p>
     </div>
   </div>
 </template>
 
 <style scoped>
-.cloud {
+.page-title-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 16px;
 }
-.tag {
-  background: var(--primary-light);
-  color: var(--primary);
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 13px;
+.page-title-row h1 {
+  margin: 0;
+  font-size: 23px;
+}
+.page-title-row .sub {
+  color: var(--text-secondary);
+  font-size: 12.5px;
+}
+.tagwall {
+  background: var(--bg-surface);
+  border-radius: var(--page-radius);
+  box-shadow: var(--shadow-card);
+  padding: 30px 32px;
+}
+.empty-inline {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin: 0;
 }
 </style>

@@ -1,19 +1,27 @@
-/* 极光 Aurora · blog-portal 全局样式（品牌色轻量对齐，公开博客不套管理端壳）
- * 权威：docs/template/tokens-aurora.css（--bg-code 为本门户子集扩展）
+/* 极光 Aurora · blog-portal 全局样式（品牌色轻量对齐 + 页面布局重设计）
+ * token 权威：docs/template/tokens-aurora.css（--bg-code 为本门户唯一子集扩展，不新增色值）
+ * 布局/排版契约：docs/blog-system/prototype-portal-redesign.html（redesign-portal-pages）
+ * 装饰色一律 color-mix / opacity 从 token 派生
  */
 
 :root {
   --bg-page: #f3f5fb;
   --bg-surface: #ffffff;
-  --bg-code: #f2f1fb; /* 子集扩展：markdown 代码块底（浅紫灰） */
+  --bg-code: #f2f1fb; /* 子集扩展：markdown 行内代码底（浅紫灰） */
   --text-primary: #1c1740;
   --text-regular: #3f3a6b;
   --text-secondary: #8580ad;
   --border: #e6e4f4;
   --primary: #6d5df6;
+  --primary-hover: #5a49e8;
   --primary-light: #eeecff;
+  --accent-bar: #22d3ee;
+  --accent-gradient: linear-gradient(135deg, #6d5df6 0%, #8b5cf6 45%, #22d3ee 100%);
   --page-radius: 16px;
+  --control-radius: 10px;
+  --button-radius: 999px;
   --shadow-card: 0 1px 2px rgba(28, 23, 64, 0.05), 0 12px 28px rgba(88, 70, 200, 0.09);
+  --shadow-card-hover: 0 2px 4px rgba(28, 23, 64, 0.06), 0 18px 40px rgba(88, 70, 200, 0.16);
 }
 
 * {
@@ -29,30 +37,247 @@ a {
   color: var(--primary);
   text-decoration: none;
 }
-.container {
-  max-width: 960px;
+
+/* ============ 布局骨架 ============ */
+.page-body {
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 26px 24px 48px;
 }
-.card {
+.layout-2 {
+  display: grid;
+  grid-template-columns: 1fr 292px;
+  gap: 24px;
+  align-items: start;
+}
+.reading-wrap {
+  max-width: 808px;
+  margin: 0 auto;
+  padding: 30px 24px 48px;
+}
+
+@media (max-width: 1200px) {
+  .layout-2 {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 768px) {
+  .page-body,
+  .reading-wrap {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+/* ============ 通用元件 ============ */
+.chip {
+  display: inline-block;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: var(--button-radius);
+  padding: 2.5px 11px;
+  font-size: 11.5px;
+  text-decoration: none;
+  margin-right: 6px;
+}
+.chip.plain {
+  background: var(--bg-page);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.btn-primary {
+  background: var(--accent-gradient);
+  color: var(--bg-surface);
+  border: none;
+  border-radius: var(--button-radius);
+  padding: 11px 26px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--primary) 35%, transparent);
+}
+.btn-ghost {
   background: var(--bg-surface);
-  border-radius: var(--page-radius);
-  box-shadow: var(--shadow-card);
-  padding: 16px;
-  margin-bottom: 16px;
+  color: var(--text-regular);
+  border: 1px solid var(--border);
+  border-radius: var(--button-radius);
+  padding: 11px 22px;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
 }
+.empty-state {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 56px 0;
+  font-size: 13px;
+}
+
+/* ============ 正文排版体系（吃服务端渲染 HTML，api-design §6.4） ============ */
 .markdown {
-  line-height: 1.75;
+  font-size: 15.5px;
+  line-height: 1.88;
+  color: var(--text-regular);
   word-break: break-word;
 }
-.markdown pre {
-  background: var(--bg-code);
-  padding: 12px;
-  border-radius: 6px;
-  overflow: auto;
+.markdown > :first-child {
+  margin-top: 8px;
+}
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin: 30px 0 14px;
+}
+.markdown h1 {
+  font-size: 25px;
+}
+.markdown h2 {
+  font-size: 21px;
+  padding-left: 13px;
+  position: relative;
+}
+.markdown h2::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 5px;
+  border-radius: 3px;
+  background: var(--accent-gradient);
+}
+.markdown h3 {
+  font-size: 17.5px;
+}
+.markdown h4 {
+  font-size: 15.5px;
+}
+.markdown h5,
+.markdown h6 {
+  font-size: 14.5px;
+}
+.markdown p {
+  margin: 0 0 17px;
+}
+.markdown a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--primary) 35%, transparent);
+}
+.markdown a:hover {
+  text-decoration-color: var(--primary);
+}
+.markdown strong {
+  color: var(--text-primary);
+}
+.markdown img {
+  display: block;
+  max-width: 100%;
+  border-radius: 12px;
+  margin: 22px auto;
+  box-shadow: var(--shadow-card);
+}
+.markdown ul,
+.markdown ol {
+  padding-left: 26px;
+  margin: 0 0 17px;
+}
+.markdown li {
+  margin: 5px 0;
+}
+.markdown blockquote {
+  margin: 22px 0;
+  padding: 13px 20px;
+  border-left: 4px solid var(--primary);
+  background: var(--primary-light);
+  border-radius: 0 12px 12px 0;
+  color: var(--text-regular);
+}
+.markdown blockquote p:last-child {
+  margin-bottom: 0;
 }
 .markdown code {
   background: var(--bg-code);
-  padding: 1px 4px;
-  border-radius: 4px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 13px;
+  color: var(--primary-hover);
+}
+.markdown pre {
+  background: var(--text-primary);
+  color: color-mix(in srgb, var(--bg-surface) 88%, var(--primary-light));
+  padding: 18px 20px;
+  border-radius: 13px;
+  overflow: auto;
+  position: relative;
+  margin: 22px 0;
+  box-shadow: var(--shadow-card);
+}
+.markdown pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: 12.8px;
+  line-height: 1.75;
+}
+.markdown pre[data-lang]::after {
+  content: attr(data-lang);
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  font-size: 10.5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--bg-surface) 55%, transparent);
+  font-family: ui-monospace, Consolas, monospace;
+}
+.markdown hr {
+  border: none;
+  height: 1px;
+  background: var(--border);
+  margin: 32px 0;
+}
+.markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 22px 0;
+  font-size: 13.5px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+.markdown th {
+  background: var(--primary-light);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.markdown th,
+.markdown td {
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  text-align: left;
+}
+.markdown tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--primary-light) 30%, var(--bg-surface));
+}
+
+@media (max-width: 768px) {
+  .markdown {
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  .markdown h1 {
+    font-size: 22px;
+  }
+  .markdown h2 {
+    font-size: 19px;
+  }
 }

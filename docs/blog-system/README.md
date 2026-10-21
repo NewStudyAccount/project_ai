@@ -10,8 +10,9 @@
 | [api-design.md](./api-design.md) | **接口文档**：接口名、入参、出参、逻辑、涉及表 | 设计稿 |
 | [er-diagram.html](./er-diagram.html) | 表关系 ER 图（浏览器打开） | 与 table-design 同步 |
 | [prototype.html](./prototype.html) | 管理端 + 用户端页面原型（浏览器打开） | 布局参照，效力低于设计正文 |
+| [prototype-portal-redesign.html](./prototype-portal-redesign.html) | **用户端页面重设计原型**（六路由 + 契约锚点标注，浏览器打开） | 重设计提案，效力低于设计正文 |
 
-> **实施状态：** OpenSpec 变更 `openspec/changes/blog-content-domain/` 已落码（SQL + 后端 + blog-admin 内容页 + blog-portal）；`article-content-markdown-only` 已收敛正文唯一 Markdown（去格式字段/列）；`article-content-server-render`（正文改**服务端渲染**，公开详情 `content`=HTML）已提案待实施；**联调冒烟待环境就绪**。契约偏差以代码 + 变更 specs 为准回写本目录。
+> **实施状态：** OpenSpec 变更 `openspec/changes/blog-content-domain/` 已落码（SQL + 后端 + blog-admin 内容页 + blog-portal）；`article-content-markdown-only` 已收敛正文唯一 Markdown（去格式字段/列）；`article-content-server-render`（正文改**服务端渲染**，公开详情 `content`=HTML）已落码；`redesign-portal-pages`（用户端六路由按 `prototype-portal-redesign.html` 改版）已落码，实装与原型唯一差异：hero 统计条（篇数/分类数/标签数）未实现，属可选装饰；**联调冒烟待环境就绪**。契约偏差以代码 + 变更 specs 为准回写本目录。
 
 **阅读顺序：** business-design → table-design → api-design → er-diagram → prototype。
 

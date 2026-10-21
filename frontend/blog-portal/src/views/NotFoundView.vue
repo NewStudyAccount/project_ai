@@ -1,11 +1,14 @@
 <template>
-  <div class="card empty">页面不存在</div>
+  <div class="page-body">
+    <div class="empty-state">
+      页面不存在
+      <router-link to="/">返回首页</router-link>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-.empty {
-  text-align: center;
-  color: var(--text-secondary);
-  padding: 40px 0;
+.empty-state a {
+  margin-left: 8px;
 }
 </style>

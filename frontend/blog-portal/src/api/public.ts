@@ -2,8 +2,13 @@ import { get } from '@/api/request'
 
 export interface CategoryVO {
   id: string
+  parentId?: string
   name: string
   slug: string
+  description?: string
+  sort?: number
+  status?: number
+  articleCount?: number
   children?: CategoryVO[]
 }
 
@@ -20,6 +25,7 @@ export interface ArticleVO {
   slug?: string
   summary?: string
   coverFileId?: string
+  categoryId?: string
   categoryName?: string
   tags?: TagVO[]
   authorName?: string
@@ -30,8 +36,12 @@ export interface ArticleVO {
 export interface ArticleDetailVO extends ArticleVO {
   /** 正文：服务端渲染后的 HTML（转义 + URL 消毒），前端直接注入展示 */
   content?: string
+  contentFrom?: string
+  wordCount?: number
   seoTitle?: string
   seoDescription?: string
+  draftFileId?: string
+  contentFileId?: string
 }
 
 export interface SiteConfigVO {
