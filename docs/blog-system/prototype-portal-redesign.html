@@ -56,7 +56,7 @@
   .stage {
     max-width: 1280px; margin: 22px auto 40px; background: var(--bg-page);
     border-radius: 20px; box-shadow: 0 24px 64px rgba(28, 23, 64, .18);
-    overflow: hidden; min-height: 720px;
+    overflow: clip; min-height: 720px;
   }
 
   /* ============ 设计说明面板 ============ */
@@ -289,7 +289,6 @@
 
   /* 详情底部 */
   .article-foot { margin-top: 38px; padding-top: 22px; border-top: 1px solid var(--border); }
-  .back-row { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; }
 
   /* ============ 分类 / 标签 / 关于 ============ */
   .cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
@@ -321,7 +320,10 @@
     max-width: 1120px; margin: 0 auto; padding: 30px 24px 48px; align-items: start;
   }
   .detail-grid .reading-wrap { max-width: 760px; margin: 0; padding: 0; }
-  .demo-rail { position: sticky; top: 20px; display: grid; gap: 14px; }
+  .demo-rail {
+    position: sticky; top: 64px; display: grid; gap: 14px;
+    max-height: calc(100vh - 88px); overflow-y: auto;
+  }
   .rail-card {
     background: var(--bg-surface); border-radius: var(--page-radius);
     box-shadow: var(--shadow-card); padding: 16px 18px;
@@ -757,10 +759,6 @@
       <div class="article-foot">
         <div>
           <span class="chip">Spring</span><span class="chip">网关</span><span class="chip">鉴权</span>
-        </div>
-        <div class="back-row">
-          <a class="btn-ghost" href="#" style="text-decoration:none">← 返回文章列表</a>
-          <span style="color:var(--text-secondary);font-size:12px">site.copyright</span>
         </div>
       </div>
       </div>

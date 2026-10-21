@@ -98,20 +98,15 @@ onMounted(load)
         <!-- eslint-disable-next-line vue/no-v-html -- 正文为服务端渲染并消毒后的 HTML（api-design §6.4） -->
         <div id="article-content" class="markdown" v-html="html"></div>
 
-        <div class="article-foot">
-          <div v-if="article.tags?.length" class="foot-tags">
-            <router-link
-              v-for="t in article.tags"
-              :key="t.id"
-              class="chip"
-              :to="{ path: '/articles', query: { tag: t.id } }"
-            >
-              {{ t.name }}
-            </router-link>
-          </div>
-          <div class="back-row">
-            <router-link class="btn-ghost" to="/articles">← 返回文章列表</router-link>
-          </div>
+        <div v-if="article.tags?.length" class="article-foot">
+          <router-link
+            v-for="t in article.tags"
+            :key="t.id"
+            class="chip"
+            :to="{ path: '/articles', query: { tag: t.id } }"
+          >
+            {{ t.name }}
+          </router-link>
         </div>
       </template>
     </div>
@@ -180,13 +175,7 @@ onMounted(load)
   padding-top: 22px;
   border-top: 1px solid var(--border);
 }
-.back-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 22px;
-}
-@media (max-width: 1200px) {
+@media (max-width: 1023px) {
   .detail-grid {
     grid-template-columns: 1fr;
     padding-left: 14px;

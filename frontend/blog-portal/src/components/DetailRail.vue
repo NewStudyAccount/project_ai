@@ -48,6 +48,13 @@ defineProps<{
   top: 84px;
   display: grid;
   gap: 14px;
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+}
+@media (max-width: 1023px) {
+  .detail-rail {
+    display: none;
+  }
 }
 .rail-card {
   background: var(--bg-surface);

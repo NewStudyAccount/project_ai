@@ -21,11 +21,12 @@
 
 ## Decisions
 
-1. **布局**：详情页容器扩为约 1120px 双列 `grid-template-columns: minmax(0,1fr) 240px`，阅读列维持约 760px；右轨 `position: sticky; top`（避开 60px 固定头部）；**<1200px 隐藏右轨**（面包屑、文末标签与返回按钮兜底），保证窄屏无横向滚动。
-   - 备选：窄屏右轨下沉文末——与文末返回/标签重复，噪音大，否决。
+1. **布局**：详情页容器扩为约 1120px 双列 `grid-template-columns: minmax(0,1fr) 240px`，阅读列维持约 760px；右轨 `position: sticky; top`（避开 60px 固定头部）+ `max-height: calc(100vh - 110px)`（轨内滚动，短视口也能整轨跟随）；**<1024px 隐藏右轨**（面包屑、文末标签与顶部固定导航兜底；返回入口唯一归右轨，详情底部不重复——评审裁决），保证窄屏无横向滚动。
+   - 备选：窄屏右轨下沉文末——与文末标签重复、噪音大，否决。
+   - **sticky 杀手约束**：悬浮轨祖先链上 MUST NOT 出现 `overflow: hidden/auto/scroll`（会吞掉滚动容器导致 sticky 失效；原型 `.stage` 曾因 `overflow: hidden` 复现此坑，已改 `overflow: clip`）。
 2. **目录生成（`ArticleToc.vue`）**：注入渲染 HTML 后扫 `.markdown` 的 **h2/h3**（两级，对齐正文标题层级使用习惯）；标题缺 id 时补 `sec-{n}-{slug}` 锚点（slug 取文本安全化 + 序号防重）；条目点击 `scrollIntoView({behavior:'smooth'})`；正文无 h2/h3 时整块 `v-if` 收起。
    - 备选：服务端渲染时输出 id（改 flexmark 配置/后端）——动 `article-content-server-render` 契约面，收益低，否决。
-3. **三块内容（`DetailRail.vue`）**：①分类（`categoryId`→`/articles?category=`，无则仅文字）+ 标签 chips（`tag.id`→`/articles?tag=`）；②`<ArticleToc>`；③返回列表（`to="/articles"`）。无分类且无标签时①块优雅隐藏（不占空壳）。
+3. **三块内容（`DetailRail.vue`）**：①分类（`categoryId`→`/articles?category=`，无则仅文字）+ 标签 chips（`tag.id`→`/articles?tag=`）；②`<ArticleToc>`；③返回列表（`to="/articles"`，**全页唯一返回入口**，详情底部不再放返回钮——评审裁决）。无分类且无标签时①块优雅隐藏（不占空壳）。
 4. **组件拆分**：`DetailRail.vue`（三块容器）+ `ArticleToc.vue`（目录扫描/锚点/跳转），组合式 SFC、Props 向下（`ArticleDetailVO` 传必要字段）；样式 scoped，目录锚点滚动偏移用 `scroll-margin-top`（避开固定头部）。
 5. **性能/时机**：目录扫描在 `content` 注入后 `nextTick` 一次完成（复用现有 `decorateCodeBlocks` 同一时机）；无轮询、无全局监听（无 scroll-spy，红线 §7.3）。
 
