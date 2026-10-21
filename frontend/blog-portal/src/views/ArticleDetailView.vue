@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchArticle, type ArticleDetailVO } from '@/api/public'
+import DetailRail from '@/components/DetailRail.vue'
 
 const route = useRoute()
 const article = ref<ArticleDetailVO | null>(null)
@@ -11,7 +12,7 @@ const notFound = ref(false)
 const html = computed(() => article.value?.content || '')
 
 function decorateCodeBlocks() {
-  const root = document.querySelector('.markdown')
+  const root = document.getElementById('article-content')
   if (!root) return
   root.querySelectorAll('pre > code[class*="language-"]').forEach((code) => {
     const m = /language-([\w-]+)/.exec(code.className)
@@ -37,67 +38,53 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="reading-wrap">
-    <template v-if="notFound">
-      <div class="empty-state">文章不存在或未发布</div>
-    </template>
-    <template v-else-if="article">
-      <div class="crumb">
-        <router-link to="/">首页</router-link>
-        <span class="sep">/</span>
-        <router-link to="/articles">文章</router-link>
-        <template v-if="article.categoryName">
+  <div class="detail-grid">
+    <div class="reading-wrap">
+      <template v-if="notFound">
+        <div class="empty-state">文章不存在或未发布</div>
+      </template>
+      <template v-else-if="article">
+        <div class="crumb">
+          <router-link to="/">首页</router-link>
           <span class="sep">/</span>
-          <router-link
-            v-if="article.categoryId"
-            :to="{ path: '/articles', query: { category: article.categoryId } }"
-          >
-            {{ article.categoryName }}
-          </router-link>
-          <span v-else>{{ article.categoryName }}</span>
-        </template>
-      </div>
-
-      <article class="article-head">
-        <h1>{{ article.title }}</h1>
-        <div class="article-meta">
-          <span v-if="article.authorName">{{ article.authorName }}</span>
-          <span v-if="article.authorName" class="dot">·</span>
-          <span>{{ article.publishTime }}</span>
+          <router-link to="/articles">文章</router-link>
           <template v-if="article.categoryName">
-            <span class="dot">·</span>
+            <span class="sep">/</span>
             <router-link
               v-if="article.categoryId"
-              class="cat-link"
               :to="{ path: '/articles', query: { category: article.categoryId } }"
             >
               {{ article.categoryName }}
             </router-link>
             <span v-else>{{ article.categoryName }}</span>
           </template>
-          <template v-if="article.wordCount">
-            <span class="dot">·</span>
-            <span>{{ article.wordCount }} 字</span>
-          </template>
         </div>
-      </article>
 
-      <div v-if="article.tags?.length" class="article-tags">
-        <router-link
-          v-for="t in article.tags"
-          :key="t.id"
-          class="chip"
-          :to="{ path: '/articles', query: { tag: t.id } }"
-        >
-          {{ t.name }}
-        </router-link>
-      </div>
+        <article class="article-head">
+          <h1>{{ article.title }}</h1>
+          <div class="article-meta">
+            <span v-if="article.authorName">{{ article.authorName }}</span>
+            <span v-if="article.authorName" class="dot">·</span>
+            <span>{{ article.publishTime }}</span>
+            <template v-if="article.categoryName">
+              <span class="dot">·</span>
+              <router-link
+                v-if="article.categoryId"
+                class="cat-link"
+                :to="{ path: '/articles', query: { category: article.categoryId } }"
+              >
+                {{ article.categoryName }}
+              </router-link>
+              <span v-else>{{ article.categoryName }}</span>
+            </template>
+            <template v-if="article.wordCount">
+              <span class="dot">·</span>
+              <span>{{ article.wordCount }} 字</span>
+            </template>
+          </div>
+        </article>
 
-      <!-- eslint-disable-next-line vue/no-v-html -- 正文为服务端渲染并消毒后的 HTML（api-design §6.4） -->
-      <div class="markdown" v-html="html"></div>
-
-      <div class="article-foot">
-        <div v-if="article.tags?.length" class="foot-tags">
+        <div v-if="article.tags?.length" class="article-tags">
           <router-link
             v-for="t in article.tags"
             :key="t.id"
@@ -107,15 +94,47 @@ onMounted(load)
             {{ t.name }}
           </router-link>
         </div>
-        <div class="back-row">
-          <router-link class="btn-ghost" to="/articles">← 返回文章列表</router-link>
+
+        <!-- eslint-disable-next-line vue/no-v-html -- 正文为服务端渲染并消毒后的 HTML（api-design §6.4） -->
+        <div id="article-content" class="markdown" v-html="html"></div>
+
+        <div class="article-foot">
+          <div v-if="article.tags?.length" class="foot-tags">
+            <router-link
+              v-for="t in article.tags"
+              :key="t.id"
+              class="chip"
+              :to="{ path: '/articles', query: { tag: t.id } }"
+            >
+              {{ t.name }}
+            </router-link>
+          </div>
+          <div class="back-row">
+            <router-link class="btn-ghost" to="/articles">← 返回文章列表</router-link>
+          </div>
         </div>
-      </div>
-    </template>
+      </template>
+    </div>
+
+    <DetailRail v-if="article && !notFound" :article="article" :html="html" />
   </div>
 </template>
 
 <style scoped>
+.detail-grid {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 30px 24px 48px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 28px;
+  align-items: start;
+}
+.detail-grid .reading-wrap {
+  max-width: 760px;
+  margin: 0;
+  padding: 0;
+}
 .crumb {
   color: var(--text-secondary);
   font-size: 12.5px;
@@ -166,6 +185,13 @@ onMounted(load)
   justify-content: space-between;
   align-items: center;
   margin-top: 22px;
+}
+@media (max-width: 1200px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
 }
 @media (max-width: 768px) {
   .article-head h1 {
