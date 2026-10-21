@@ -13,24 +13,9 @@ defineProps<{
   <aside class="detail-rail">
     <section v-if="article.categoryName || article.tags?.length" class="rail-card">
       <h4>分类 / 标签</h4>
-      <div v-if="article.categoryName" class="rail-cat">
-        <router-link
-          v-if="article.categoryId"
-          :to="{ path: '/articles', query: { category: article.categoryId } }"
-        >
-          {{ article.categoryName }}
-        </router-link>
-        <span v-else>{{ article.categoryName }}</span>
-      </div>
+      <div v-if="article.categoryName" class="rail-cat">{{ article.categoryName }}</div>
       <div v-if="article.tags?.length" class="rail-tags">
-        <router-link
-          v-for="t in article.tags"
-          :key="t.id"
-          class="chip"
-          :to="{ path: '/articles', query: { tag: t.id } }"
-        >
-          {{ t.name }}
-        </router-link>
+        <span v-for="t in article.tags" :key="t.id" class="chip">{{ t.name }}</span>
       </div>
     </section>
 

@@ -50,13 +50,7 @@ onMounted(load)
           <router-link to="/articles">文章</router-link>
           <template v-if="article.categoryName">
             <span class="sep">/</span>
-            <router-link
-              v-if="article.categoryId"
-              :to="{ path: '/articles', query: { category: article.categoryId } }"
-            >
-              {{ article.categoryName }}
-            </router-link>
-            <span v-else>{{ article.categoryName }}</span>
+            <span>{{ article.categoryName }}</span>
           </template>
         </div>
 
@@ -68,14 +62,7 @@ onMounted(load)
             <span>{{ article.publishTime }}</span>
             <template v-if="article.categoryName">
               <span class="dot">·</span>
-              <router-link
-                v-if="article.categoryId"
-                class="cat-link"
-                :to="{ path: '/articles', query: { category: article.categoryId } }"
-              >
-                {{ article.categoryName }}
-              </router-link>
-              <span v-else>{{ article.categoryName }}</span>
+              <span>{{ article.categoryName }}</span>
             </template>
             <template v-if="article.wordCount">
               <span class="dot">·</span>
@@ -84,30 +71,8 @@ onMounted(load)
           </div>
         </article>
 
-        <div v-if="article.tags?.length" class="article-tags">
-          <router-link
-            v-for="t in article.tags"
-            :key="t.id"
-            class="chip"
-            :to="{ path: '/articles', query: { tag: t.id } }"
-          >
-            {{ t.name }}
-          </router-link>
-        </div>
-
         <!-- eslint-disable-next-line vue/no-v-html -- 正文为服务端渲染并消毒后的 HTML（api-design §6.4） -->
         <div id="article-content" class="markdown" v-html="html"></div>
-
-        <div v-if="article.tags?.length" class="article-foot">
-          <router-link
-            v-for="t in article.tags"
-            :key="t.id"
-            class="chip"
-            :to="{ path: '/articles', query: { tag: t.id } }"
-          >
-            {{ t.name }}
-          </router-link>
-        </div>
       </template>
     </div>
 
@@ -163,17 +128,6 @@ onMounted(load)
 }
 .article-meta .dot {
   opacity: 0.5;
-}
-.cat-link {
-  color: var(--primary);
-}
-.article-tags {
-  padding: 16px 0 4px;
-}
-.article-foot {
-  margin-top: 38px;
-  padding-top: 22px;
-  border-top: 1px solid var(--border);
 }
 @media (max-width: 1023px) {
   .detail-grid {
