@@ -520,7 +520,7 @@ sshagent(credentials: ["${SSH_CRED}"]) {
 | `blog-admin-cd` | blog-admin | blog 管理端 | Job 内嵌 | test/prod | docker | qjj |
 | `auth-service-cd` | auth | auth-service | Job 内嵌 | test/prod | docker | qjj |
 | `blog-gateway-cd` | blog | blog-gateway | Job 内嵌 | test/prod | docker | qjj |
-| `blog-service-cd` | blog | blog-service | Job 内嵌 | test/prod | docker | qjj |
+| `blog-service-cd` | blog | blog-server | Job 内嵌 | test/prod | docker | qjj |
 | `user-gateway-cd` | user | user-gateway | Job 内嵌 | test/prod | docker | qjj |
 | `user-service-cd` | user | user-service | Job 内嵌 | test/prod | docker | qjj |
 

@@ -61,14 +61,15 @@ example-service（业务 + RBAC + 文件 + 审计；身份只用 X-User-*，不�
 
 ---
 
-## 3. 模块划分（五模块 + 一个管理端前端）
+## 3. 模块划分（六模块 + 一个管理端前端）
 
 ```
 backend/example/                       # Maven 多模块，包名 com.qjj.example.*
 ├── example-common                     # Result/错误码/异常/分页契约/BaseEnum/常量/工具（零配置纯基础）
 ├── example-framework                  # 基础设施装配（见下表）
 ├── example-api                        # 对内契约：DTO/VO + Feign + Fallback（无 Entity）
-├── example-service                    # 本域 Entity/Mapper/Service/Controller（可运行，三份 yml）
+├── example-service                    # 本域 Entity/Mapper/Service/Controller（纯业务，启动职责在 example-server）
+├── example-server                     # 启动模块：启动类 + 三份 yml + logback + Dockerfile + 打包（finalName=example-service）
 └── example-gateway                    # 薄边缘治理（设计 = gateway-design.md 裁剪，见下表）
 frontend/example-admin/                # 管理端（Vue3 + TS + Pinia + Element Plus）
 ```
@@ -78,7 +79,8 @@ frontend/example-admin/                # 管理端（Vue3 + TS + Pinia + Element
 | `example-common` | Lombok + 注解类（jakarta.validation / jackson-annotations）；⛔ 禁 MP/Redis/数据源/Actuator/MQ/MinIO/JWT 库/Hutool |
 | `example-framework` | starter-web / validation / aop / actuator / data-redis + **Redisson** + **MyBatis-Plus（boot3 starter）** + OpenFeign + **springdoc** + **micrometer-tracing** + **MinIO SDK 封装**（上传/预签名/删除策略统一封装于此，禁止业务直绑 SDK；契约按 `object-storage-design.md` §3）；具体坐标与版本见基线 |
 | `example-api` | spring-cloud-starter-openfeign + Lombok |
-| `example-service` | example-common/framework/api + mysql-connector-j + MapStruct + nacos-discovery/config（SCA，版本见基线） |
+| `example-service` | example-common/framework/api + MapStruct（纯业务；启动职责在 `example-server`） |
+| `example-server` | example-service（传递带入 framework/common/api）+ **nacos-discovery/config（SCA）** + **mysql-connector-j**(runtime) + **spring-boot-maven-plugin**（`finalName`=example-service）；启动类 + 三份 yml + logback + Dockerfile |
 | `example-gateway` | **按 `gateway-design.md` §3.2 依赖清单**：spring-cloud-starter-gateway + **spring-cloud-starter-loadbalancer（`lb://` 必需）** + nacos-discovery + oauth2-resource-server（JWKS，**不引 SAS**）+ actuator + Micrometer Tracing；只依赖 `example-common`，**不依赖** `example-framework` |
 
 **`example-gateway` 落地裁剪（细则一律见 `gateway-design.md`，此处仅 example 取值）：**
@@ -182,7 +184,7 @@ frontend/example-admin/                # 管理端（Vue3 + TS + Pinia + Element
 
 **错误码：** 系统段 `1xxxx` / 校验 `3xxxx` 对齐 `docs/error-code-ranges.md` 与 `example-common`；业务段 `2xxxxx` 实施时先登记系统号再进 `ExampleErrorCodeEnum`（不预占）。
 
-### 5.3 配置契约（`example-service` / 可运行模块）
+### 5.3 配置契约（`example-server` / 启动模块）
 
 三份 yml（`CLAUDE.md` §6.10）：`application.yml`（无主机/账密）/ `application-local.yml` / `application-test.yml`。  
 连接信息真相源：`docs/test-env.md`；端口登记：`docs/port-registry.md`。

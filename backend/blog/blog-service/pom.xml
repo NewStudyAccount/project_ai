@@ -11,7 +11,7 @@
 
     <artifactId>blog-service</artifactId>
     <name>blog-service</name>
-    <description>blog 可运行服务（RBAC + 文件 + 审计；本域 Entity 自持）</description>
+    <description>blog 业务模块（Controller/Service/Mapper/Entity；本域 Entity 自持；启动职责在 blog-server）</description>
 
     <dependencies>
         <dependency>
@@ -33,15 +33,6 @@
         <dependency>
             <groupId>com.qjj</groupId>
             <artifactId>user-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba.cloud</groupId>
-            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
         <dependency>
             <groupId>org.mapstruct</groupId>

@@ -26,6 +26,7 @@
         <module>blog-api</module>
         <module>blog-service</module>
         <module>blog-gateway</module>
+        <module>blog-server</module>
     </modules>
 
     <properties>
@@ -124,11 +125,21 @@
                 <artifactId>blog-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.qjj</groupId>
+                <artifactId>blog-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <!-- 选人只读契约：用户中心 -->
             <dependency>
                 <groupId>com.qjj</groupId>
                 <artifactId>user-api</artifactId>
                 <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.qjj</groupId>
+                <artifactId>blog-server</artifactId>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

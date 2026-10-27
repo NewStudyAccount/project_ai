@@ -111,7 +111,7 @@
 ```bash
 # 后端
 cd backend/<system> && mvn clean install -DskipTests
-cd backend/<system> && mvn spring-boot:run -pl <module>
+cd backend/<system> && mvn spring-boot:run -pl <system>-server
 
 # 前端
 cd frontend/<system> && npm install && npm run dev
@@ -156,7 +156,8 @@ cd backend/<system> && mvn -q compile
 │       ├── <system>-framework/  # 必选：基础设施（见 5.4）
 │       ├── <system>-gateway/    # 建议有：边缘治理（见 5.2）
 │       ├── <system>-{domain}-api/   # 按需：DTO/VO + Feign 契约（无 Entity）
-│       └── <system>-…-service/  # 业务模块（自带本域 Entity）
+│       ├── <system>-…-service/  # 业务模块（自带本域 Entity）
+│       └── <system>-server/     # 必选：启动模块（启动类+配置+Dockerfile+打包，见 5.4）
 ├── docs/                        # 流程 + 环境信息（test-env.md 为组件账密真相源；无生产密钥）
 ├── deploy/                      # 部署配置（nginx.conf、compose、Jenkins 共享脚本等）
 ├── openspec/                    # SDD 制品（见第 8 节）
@@ -336,9 +337,11 @@ cd backend/<system> && mvn -q compile
 | `{system}-framework` | **必须** | 需配置组件统一装配与横切实现（见 2.1 / 6.4 / 6.11） |
 | `{system}-object-storage` | 按需 | 对象存储能力独立模块：S3 多服务商适配/客户端/配置解析/连通性探测；**SDK 唯一落点**（object-storage-design.md §3.1；已采用：blog） |
 | `{system}-gateway` | 建议有 | 仅 5.2 边缘治理 |
-| `{system}-{domain}-service` | 按需 | 本域 Entity/Mapper；业务规则 |
+| `{system}-{domain}-service` | 按需 | 本域 Entity/Mapper；业务规则（启动职责在 `{system}-server`） |
+| `{system}-server` | **必须** | 启动模块：启动类、三份 `application-*.yml`、`logback-spring.xml`、`Dockerfile`、`spring-boot-maven-plugin`（`finalName`=服务名）、服务注册（nacos-discovery）、运行时驱动（mysql runtime）；依赖本系统业务模块 |
 | `{system}-{domain}-api` | 按需 | DTO/VO、Feign、Fallback、常量；**无** Entity/Mapper/实现 |
 
+**启动模块与业务模块分离（`{system}-server` vs `{domain}-service`）：** 启动类、三份 yml、logback、Dockerfile、`spring-boot-maven-plugin`、服务注册与运行时驱动一律归属 `{system}-server`；业务模块 `{domain}-service` 只承载 Controller/Service/Mapper/Entity/DTO/VO。`{system}-server` 依赖 `{domain}-service`（传递带入 framework/common）；服务名（`spring.application.name`）保持 `{domain}-service` 不变（模块名 ≠ 服务名，Nacos 注册名与网关 `lb://` 路由依赖此名）。  
 **common 边界：** 打开即用的纯逻辑/类型。  
 **framework 边界：** 与业务无关的封装；业务规则禁止下沉；变更须走变更流程。  
 **实体归属：** 见 **5.6**。

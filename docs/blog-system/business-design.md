@@ -516,8 +516,9 @@ GET /api/v1/public/articles/{idOrSlug}
 ```
 blog-common     枚举（ArticleStatusEnum…）、常量、DTO 校验注解（纯）
 blog-framework  ObjectStorageClient（已有）、发号/审计/幂等/限流（已有）、Markdown→HTML 渲染器封装（本裁决新增，§E.5）
-blog-service    entity + mapper + service + controller（内容业务 + 站点配置）
+blog-service    entity + mapper + service + controller（内容业务 + 站点配置；纯业务，启动职责在 blog-server）
                 package: com.qjj.blog.service.{controller,dto,vo,service,mapper,entity,enums,constants,converter}
+blog-server     启动模块：BlogApplication（com.qjj.blog.server）+ 三份 application-*.yml + logback + Dockerfile + 打包（finalName=blog-service）；依赖 blog-service
 blog-api        本期无新增 Feign（作者不反查）
 blog-gateway    放行 /api/v1/public/**；其余鉴权不变
 ```
