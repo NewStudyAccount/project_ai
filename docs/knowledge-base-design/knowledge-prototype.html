@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>knowledge-base · 页面原型（blog-admin / blog-portal 内嵌）</title>
+<style>
+  /* ============ Token 子集（唯一取处处：docs/template/tokens-aurora.css） ============ */
+  :root {
+    --bg-page: #f3f5fb;
+    --bg-surface: #ffffff;
+    --bg-code: #f2f1fb;
+    --text-primary: #1c1740;
+    --text-regular: #3f3a6b;
+    --text-secondary: #8580ad;
+    --border: #e6e4f4;
+    --primary: #6d5df6;
+    --primary-hover: #5a49e8;
+    --primary-light: #eeecff;
+    --ok: #0f9960;
+    --ok-light: #e3f7ef;
+    --warn: #b7791f;
+    --warn-light: #fdf3e3;
+    --danger: #e05260;
+    --danger-light: #fdeef0;
+    --info: #2b7fd4;
+    --info-light: #e9f3fc;
+    --accent-gradient: linear-gradient(135deg, #6d5df6 0%, #8b5cf6 45%, #22d3ee 100%);
+    --page-radius: 16px;
+    --control-radius: 10px;
+    --button-radius: 999px;
+    --shadow-card: 0 1px 2px rgba(28,23,64,.05), 0 12px 28px rgba(88,70,200,.09);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #eceaf6; color: var(--text-primary); font-size: 14px; line-height: 1.6; }
+
+  /* ============ 原型外壳（仅评审用，非页面本体） ============ */
+  .proto-bar { position: sticky; top: 0; z-index: 50; background: #241a52; color: #edeaff; padding: 10px 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .proto-title { font-weight: 600; font-size: 14px; letter-spacing: .3px; }
+  .proto-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .proto-tab { border: 1px solid rgba(255,255,255,.18); background: transparent; color: #cfc9f2; border-radius: 999px; padding: 5px 14px; font-size: 12.5px; cursor: pointer; }
+  .proto-tab.on { background: var(--accent-gradient); color: #fff; border-color: transparent; }
+  .proto-note { width: 100%; font-size: 11.5px; color: #a9a2d8; }
+  .panel { display: none; }
+  .panel.show { display: block; }
+  .stage { max-width: 1280px; margin: 22px auto 40px; background: var(--bg-page); border-radius: 20px; box-shadow: 0 24px 64px rgba(28,23,64,.18); overflow: clip; min-height: 720px; }
+
+  /* ============ admin 布局 ============ */
+  .admin-layout { display: grid; grid-template-columns: 216px 1fr; min-height: 720px; }
+  .side { background: #241a52; color: #cfc9f2; padding: 18px 12px; }
+  .side-brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; font-size: 15px; padding: 4px 10px 16px; }
+  .side-brand i { width: 22px; height: 22px; border-radius: 7px; background: var(--accent-gradient); display: inline-block; }
+  .side-group { font-size: 11px; color: #8a80c8; letter-spacing: 1px; padding: 14px 10px 6px; }
+  .side-item { display: block; color: #cfc9f2; text-decoration: none; padding: 8px 10px; border-radius: 8px; font-size: 13px; margin: 1px 0; }
+  .side-item:hover { background: rgba(255,255,255,.07); color: #fff; }
+  .side-item.on { background: rgba(109,93,246,.4); color: #fff; font-weight: 600; }
+  .side-item .badge { float: right; font-size: 10px; background: #e05260; color: #fff; border-radius: 999px; padding: 0 6px; }
+  .admin-main { padding: 0; display: flex; flex-direction: column; }
+  .admin-top { background: var(--bg-surface); border-bottom: 1px solid var(--border); padding: 14px 26px; display: flex; align-items: center; gap: 12px; }
+  .admin-top h2 { margin: 0; font-size: 17px; }
+  .admin-top .crumb { color: var(--text-secondary); font-size: 12px; }
+  .admin-top .who { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-regular); }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-gradient); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+  .admin-body { padding: 22px 26px 30px; }
+
+  /* 统计卡 */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+  .stat { background: var(--bg-surface); border-radius: var(--page-radius); box-shadow: var(--shadow-card); padding: 16px 18px; }
+  .stat .k { color: var(--text-secondary); font-size: 12px; }
+  .stat .v { font-size: 24px; font-weight: 700; margin-top: 4px; }
+  .stat .v small { font-size: 12px; color: var(--text-secondary); font-weight: 400; }
+  .stat .v.ok { color: var(--ok); }
+  .stat .v.warn { color: var(--warn); }
+
+  /* 筛选条 / 工具行 */
+  .toolbar { background: var(--bg-surface); border-radius: var(--page-radius); box-shadow: var(--shadow-card); padding: 14px 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+  .select, .input { border: 1px solid var(--border); border-radius: var(--control-radius); padding: 8px 12px; font-size: 13px; background: var(--bg-page); color: var(--text-regular); min-width: 130px; }
+  .input { flex: 1; min-width: 200px; }
+  .btn { border: none; border-radius: var(--button-radius); padding: 8px 18px; font-size: 13px; cursor: pointer; font-weight: 600; }
+  .btn.primary { background: var(--primary); color: #fff; }
+  .btn.primary:hover { background: var(--primary-hover); }
+  .btn.ghost { background: var(--primary-light); color: var(--primary); }
+  .btn.mini { padding: 4px 12px; font-size: 12px; }
+  .btn.danger-ghost { background: var(--danger-light); color: var(--danger); }
+
+  /* 表格 */
+  .table-card { background: var(--bg-surface); border-radius: var(--page-radius); box-shadow: var(--shadow-card); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 11px 14px; font-size: 12.5px; border-bottom: 1px solid var(--border); }
+  th { background: var(--primary-light); color: var(--text-primary); font-weight: 600; font-size: 12px; white-space: nowrap; }
+  td { color: var(--text-regular); }
+  tr:last-child td { border-bottom: none; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 2px 10px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+  .tag.ok { background: var(--ok-light); color: var(--ok); }
+  .tag.warn { background: var(--warn-light); color: var(--warn); }
+  .tag.danger { background: var(--danger-light); color: var(--danger); }
+  .tag.info { background: var(--info-light); color: var(--info); }
+  .tag.muted { background: #eeecf6; color: var(--text-secondary); }
+  .tag.purple { background: var(--primary-light); color: var(--primary); }
+  .mono { font-family: 'JetBrains Mono', Consolas, monospace; font-size: 11.5px; }
+  .health { display: inline-flex; align-items: center; gap: 6px; }
+  .bar { width: 54px; height: 6px; border-radius: 999px; background: #e6e4f4; overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 999px; background: var(--ok); }
+  .bar i.partial { background: var(--warn); }
+  .row-actions { display: flex; gap: 6px; white-space: nowrap; }
+  .link { color: var(--primary); cursor: pointer; font-size: 12px; text-decoration: none; }
+  .link.danger { color: var(--danger); }
+
+  /* 表单 / 编辑器 */
+  .form-card { background: var(--bg-surface); border-radius: var(--page-radius); box-shadow: var(--shadow-card); padding: 20px 22px; margin-bottom: 16px; }
+  .form-row { display: grid; grid-template-columns: 90px 1fr; gap: 12px; align-items: center; margin-bottom: 14px; }
+  .form-row label { font-size: 13px; color: var(--text-regular); font-weight: 600; }
+  .md-shell { border: 1px solid var(--border); border-radius: var(--control-radius); overflow: hidden; margin-top: 4px; }
+  .md-toolbar { display: flex; gap: 4px; padding: 8px 10px; background: var(--bg-page); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .md-toolbar span { font-size: 12px; padding: 3px 9px; border-radius: 6px; color: var(--text-regular); cursor: default; }
+  .md-toolbar span:hover { background: var(--primary-light); color: var(--primary); }
+  .md-panes { display: grid; grid-template-columns: 1fr 1fr; min-height: 260px; }
+  .md-src { background: var(--bg-code); padding: 14px 16px; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 12px; color: var(--text-primary); line-height: 1.8; white-space: pre-wrap; border-right: 1px solid var(--border); }
+  .md-pre { padding: 14px 18px; font-size: 13px; }
+  .md-pre h3 { margin: 0 0 8px; font-size: 15px; }
+  .md-pre code { background: var(--bg-code); border-radius: 4px; padding: 1px 5px; font-size: 12px; }
+  .hint { font-size: 12px; color: var(--text-secondary); }
+  .hint b { color: var(--warn); }
+
+  /* 上传区 */
+  .drop { border: 2px dashed #c9c3ee; border-radius: var(--control-radius); background: var(--bg-page); padding: 38px 20px; text-align: center; color: var(--text-secondary); transition: border-color .15s, background .15s; }
+  .drop .big { font-size: 34px; line-height: 1; margin-bottom: 10px; }
+  .drop b { color: var(--primary); }
+  .drop.over { border-color: var(--primary); background: var(--primary-light); }
+  .file-row { display: flex; align-items: center; gap: 12px; padding: 10px 4px; border-bottom: 1px solid var(--border); }
+  .file-row:last-child { border-bottom: none; }
+  .file-ico { flex: none; width: 34px; height: 34px; border-radius: 9px; background: var(--primary-light); color: var(--primary); display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+  .file-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .file-meta { font-size: 11.5px; color: var(--text-secondary); }
+
+  /* ============ portal 布局 ============ */
+  .site-header { background: var(--bg-surface); border-bottom: 1px solid var(--border); }
+  .site-header-inner { max-width: 1120px; margin: 0 auto; padding: 0 24px; height: 60px; display: flex; align-items: center; gap: 28px; }
+  .brand { font-size: 19px; font-weight: 700; display: flex; align-items: center; gap: 9px; }
+  .brand-dot { width: 26px; height: 26px; border-radius: 9px; background: var(--accent-gradient); box-shadow: 0 4px 12px rgba(109,93,246,.35); }
+  .site-nav { display: flex; gap: 4px; }
+  .site-nav a { color: var(--text-regular); text-decoration: none; padding: 7px 13px; border-radius: 999px; font-size: 13.5px; }
+  .site-nav a.on { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+  .me { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-regular); }
+
+  .ask-wrap { max-width: 860px; margin: 0 auto; padding: 34px 24px 46px; }
+  .ask-hero { text-align: center; margin-bottom: 26px; }
+  .ask-hero h1 { margin: 0 0 8px; font-size: 28px; }
+  .ask-hero h1 .grad { background: var(--accent-gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .ask-hero p { margin: 0; color: var(--text-regular); font-size: 14px; }
+
+  .chat-card { background: var(--bg-surface); border-radius: var(--page-radius); box-shadow: var(--shadow-card); padding: 22px 24px; }
+  .msg { display: flex; gap: 12px; margin-bottom: 18px; }
+  .msg .av { flex: none; width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #fff; }
+  .msg.user .av { background: #8a84c9; }
+  .msg.ai .av { background: var(--accent-gradient); }
+  .bubble { flex: 1; min-width: 0; }
+  .bubble .who { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+  .bubble .body { background: var(--bg-page); border-radius: 12px 12px 12px 4px; padding: 12px 16px; font-size: 13.5px; color: var(--text-regular); }
+  .msg.user .body { background: var(--primary-light); color: var(--text-primary); border-radius: 12px 12px 4px 12px; }
+  .cursor { display: inline-block; width: 8px; height: 15px; background: var(--primary); vertical-align: -2px; margin-left: 2px; animation: blink 1s step-end infinite; border-radius: 2px; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .refs { margin-top: 10px; border-top: 1px dashed var(--border); padding-top: 10px; }
+  .refs .rt { font-size: 11.5px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600; letter-spacing: .5px; }
+  .ref-list { display: grid; gap: 8px; }
+  .ref { display: flex; gap: 10px; align-items: center; background: var(--bg-page); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; }
+  .ref .no { width: 20px; height: 20px; border-radius: 50%; background: var(--primary-light); color: var(--primary); font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+  .ref .t { font-size: 12.5px; color: var(--text-primary); font-weight: 600; flex: 1; }
+  .ref .frag { font-size: 11.5px; color: var(--text-secondary); flex: 2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ref .sim { font-size: 11px; color: var(--primary); font-weight: 700; }
+
+  .ask-input { margin-top: 18px; background: var(--bg-surface); border-radius: var(--page-radius); box-shadow: var(--shadow-card); padding: 16px 18px; }
+  .ask-input textarea { width: 100%; border: 1px solid var(--border); border-radius: var(--control-radius); padding: 10px 12px; font-size: 13.5px; font-family: inherit; resize: none; min-height: 64px; color: var(--text-primary); background: var(--bg-page); }
+  .ask-input .row { display: flex; align-items: center; margin-top: 10px; }
+  .quota { font-size: 12px; color: var(--text-secondary); }
+  .quota b { color: var(--primary); }
+  .ask-input .row .btn { margin-left: auto; }
+
+  /* ============ 契约锚点注释 ============ */
+  .anchor { margin: 18px auto 40px; max-width: 1280px; }
+  .anchor .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .anchor .chip { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 999px; padding: 5px 13px; font-size: 11.5px; color: var(--text-regular); box-shadow: var(--shadow-card); }
+  .anchor .chip b { color: var(--primary); font-family: 'JetBrains Mono', Consolas, monospace; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div class="proto-bar">
+  <span class="proto-title">knowledge-base · 页面原型</span>
+  <div class="proto-tabs">
+    <button class="proto-tab on" data-panel="admin-docs">admin · 知识文档</button>
+    <button class="proto-tab" data-panel="admin-import">admin · 手动导入</button>
+    <button class="proto-tab" data-panel="admin-provider">admin · AI 服务商</button>
+    <button class="proto-tab" data-panel="portal-ask">portal · 问知识库</button>
+  </div>
+  <span class="proto-note">原型外壳仅评审用 · 视觉取值：docs/template/tokens-aurora.css（极光）· 布局参照，效力低于 knowledge-base-design.md 正文 · 菜单/页面嵌 blog-admin 与 blog-portal，不建独立前端</span>
+</div>
+
+<!-- ================= 面板 1：admin · 知识文档列表 ================= -->
+<div class="panel show" id="admin-docs">
+  <div class="stage">
+    <div class="admin-layout">
+      <aside class="side">
+        <div class="side-brand"><i></i>blog-admin</div>
+        <div class="side-group">内容管理</div>
+        <a class="side-item">文章列表</a>
+        <a class="side-item">分类 / 标签</a>
+        <div class="side-group">知识库</div>
+        <a class="side-item on">知识文档</a>
+        <a class="side-item">手动导入</a>
+        <a class="side-item">AI 服务商 <span class="badge">1</span></a>
+        <div class="side-group">系统</div>
+        <a class="side-item">存储服务商</a>
+        <a class="side-item">角色 / 菜单</a>
+        <a class="side-item">审计日志</a>
+      </aside>
+      <div class="admin-main">
+        <div class="admin-top">
+          <h2>知识文档</h2>
+          <span class="crumb">知识库 / 知识文档</span>
+          <span class="who"><span class="avatar">Q</span> qjj · 超级管理员</span>
+        </div>
+        <div class="admin-body">
+          <div class="stat-grid">
+            <div class="stat"><div class="k">知识文档</div><div class="v">128</div></div>
+            <div class="stat"><div class="k">知识块 chunk</div><div class="v">2,431</div></div>
+            <div class="stat"><div class="k">向量就绪率</div><div class="v ok">98.2% <small>2,387 / 2,431</small></div></div>
+            <div class="stat"><div class="k">今日问答（登录用户）</div><div class="v">46 <small>次</small></div></div>
+          </div>
+
+          <div class="toolbar">
+            <select class="select"><option>来源：全部</option><option>文章</option><option>手动导入</option></select>
+            <select class="select"><option>状态：全部</option><option>待向量化</option><option>向量化中</option><option>就绪</option><option>失败</option><option>失效</option></select>
+            <input class="input" placeholder="搜索标题 / 标签…" />
+            <button class="btn ghost mini">同步对账（拉取 blog 已发布 diff）</button>
+            <button class="btn primary mini">全量重建索引</button>
+          </div>
+
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>标题</th><th>来源</th><th>状态</th><th>块数</th><th>向量健康</th><th>模型</th><th>更新时间</th><th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Spring Cloud Gateway 网关鉴权设计</td>
+                  <td><span class="tag info">文章</span></td>
+                  <td><span class="tag ok">就绪</span></td>
+                  <td class="mono">18</td>
+                  <td><span class="health"><span class="bar"><i style="width:100%"></i></span>18/18</span></td>
+                  <td class="mono">bge-m3 · 1024</td>
+                  <td class="mono">10-26 14:22</td>
+                  <td><div class="row-actions"><a class="link">重建</a><a class="link">详情</a></div></td>
+                </tr>
+                <tr>
+                  <td>MinIO SignatureDoesNotMatch 排查实录</td>
+                  <td><span class="tag info">文章</span></td>
+                  <td><span class="tag danger">失败</span></td>
+                  <td class="mono">12</td>
+                  <td><span class="health"><span class="bar"><i class="partial" style="width:83%"></i></span>10/12</span></td>
+                  <td class="mono">bge-m3 · 1024</td>
+                  <td class="mono">10-26 09:41</td>
+                  <td><div class="row-actions"><a class="link">重试</a><a class="link">详情</a></div></td>
+                </tr>
+                <tr>
+                  <td>团队 Markdown 协作规范</td>
+                  <td><span class="tag purple">手动导入</span></td>
+                  <td><span class="tag info">向量化中</span></td>
+                  <td class="mono">9</td>
+                  <td><span class="health"><span class="bar"><i class="partial" style="width:67%"></i></span>6/9</span></td>
+                  <td class="mono">bge-m3 · 1024</td>
+                  <td class="mono">10-27 11:03</td>
+                  <td><div class="row-actions"><a class="link">详情</a><a class="link">编辑</a><a class="link danger">删除</a></div></td>
+                </tr>
+                <tr>
+                  <td>JWT 与会话安全最佳实践（旧版）</td>
+                  <td><span class="tag info">文章</span></td>
+                  <td><span class="tag muted">失效（文章已下架）</span></td>
+                  <td class="mono">15</td>
+                  <td><span class="health"><span class="bar"><i style="width:0"></i></span>—</span></td>
+                  <td class="mono">bge-m3 · 1024</td>
+                  <td class="mono">10-24 18:20</td>
+                  <td><div class="row-actions"><a class="link">恢复入库</a></div></td>
+                </tr>
+                <tr>
+                  <td>发号器分段分配与事务边界</td>
+                  <td><span class="tag info">文章</span></td>
+                  <td><span class="tag ok">就绪</span></td>
+                  <td class="mono">11</td>
+                  <td><span class="health"><span class="bar"><i style="width:100%"></i></span>11/11</span></td>
+                  <td class="mono">bge-m3 · 1024</td>
+                  <td class="mono">10-25 16:08</td>
+                  <td><div class="row-actions"><a class="link">重建</a><a class="link">详情</a></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="anchor">
+    <div class="chip-row">
+      <span class="chip">接口 <b>GET /api/v1/admin/knowledge/docs</b>（分页 + status/source 筛选）</span>
+      <span class="chip">权限 <b>blog:knowledge:list</b></span>
+      <span class="chip">重建 <b>POST /docs/{id}/revectorize</b> · 全量 <b>POST /reindex</b></span>
+      <span class="chip">对账 <b>POST /sync-articles</b>（Feign 推送失败兜底）</span>
+      <span class="chip">状态机 <b>PENDING→VECTORIZING→READY/FAILED/INVALID</b></span>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 面板 2：admin · 手动导入 ================= -->
+<div class="panel" id="admin-import">
+  <div class="stage">
+    <div class="admin-layout">
+      <aside class="side">
+        <div class="side-brand"><i></i>blog-admin</div>
+        <div class="side-group">内容管理</div>
+        <a class="side-item">文章列表</a>
+        <a class="side-item">分类 / 标签</a>
+        <div class="side-group">知识库</div>
+        <a class="side-item">知识文档</a>
+        <a class="side-item on">手动导入</a>
+        <a class="side-item">AI 服务商 <span class="badge">1</span></a>
+        <div class="side-group">系统</div>
+        <a class="side-item">存储服务商</a>
+        <a class="side-item">角色 / 菜单</a>
+        <a class="side-item">审计日志</a>
+      </aside>
+      <div class="admin-main">
+        <div class="admin-top">
+          <h2>手动导入知识</h2>
+          <span class="crumb">知识库 / 手动导入</span>
+          <span class="who"><span class="avatar">Q</span> qjj · 超级管理员</span>
+        </div>
+        <div class="admin-body">
+          <div class="form-card">
+            <div class="form-row">
+              <label>标签（可选）</label>
+              <input class="input" style="min-width:0" placeholder="逗号分隔，应用到本次上传的全部文件，如：规范, 协作" />
+            </div>
+            <div class="form-row" style="align-items: flex-start">
+              <label>知识文件 *</label>
+              <div style="flex:1">
+                <div class="drop">
+                  <div class="big">📄</div>
+                  <div>点击选择或拖拽 <b>.md 文件</b>到此处 · 支持多选</div>
+                  <div class="file-meta" style="margin-top:6px">仅 Markdown（text/markdown）· 不限文件大小 · 标题默认取文件名（去扩展名），入库后可改</div>
+                </div>
+                <div style="margin-top:14px">
+                  <div class="file-row">
+                    <span class="file-ico">MD</span>
+                    <div style="flex:1">
+                      <div class="file-name">团队 Markdown 协作规范.md</div>
+                      <div class="file-meta">86.3 KB · 标题：团队 Markdown 协作规范</div>
+                    </div>
+                    <span class="tag ok">已入库 · 9 块</span>
+                    <a class="link danger" style="flex:none">移除</a>
+                  </div>
+                  <div class="file-row">
+                    <span class="file-ico">MD</span>
+                    <div style="flex:1">
+                      <div class="file-name">架构评审纪要-1024.md</div>
+                      <div class="file-meta">42.1 KB · 标题：架构评审纪要-1024</div>
+                    </div>
+                    <span class="tag info">上传中… 64%</span>
+                    <a class="link danger" style="flex:none">取消</a>
+                  </div>
+                  <div class="file-row">
+                    <span class="file-ico" style="background:var(--danger-light); color:var(--danger)">TXT</span>
+                    <div style="flex:1">
+                      <div class="file-name">old-notes-backup.txt</div>
+                      <div class="file-meta">128.0 KB · text/plain</div>
+                    </div>
+                    <span class="tag danger">失败 · 仅支持 .md 文件</span>
+                    <a class="link danger" style="flex:none">移除</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <label></label>
+              <div style="display:flex; gap:10px">
+                <button class="btn primary">开始上传</button>
+                <button class="btn ghost">清空列表</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-card" style="padding:16px 20px">
+            <p class="hint" style="margin:0">
+              存储路径：每个文件 put MinIO <b>knowledge/{docId}/{uuid}.md</b>（桶 blog）→ 登记 <b>knowledge_file</b>（original_name 留存上传文件名，put 必登记，禁止业务表裸存 object_key）→ 创建 doc（source=MANUAL）。
+              入库后自动切块 + 向量化（doc=PENDING → 异步任务）；重新上传同文档触发重建。PDF/Word 等格式解析归 P1。
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="anchor">
+    <div class="chip-row">
+      <span class="chip">接口 <b>POST /api/v1/admin/knowledge/docs</b>（multipart：file .md 不限大小 + tags?）</span>
+      <span class="chip">重新上传 <b>PUT /docs/{id}</b>（触发重建）· 删除 <b>DELETE /docs/{id}</b>（仅 source=MANUAL）</span>
+      <span class="chip">权限 <b>blog:knowledge:create / update / delete</b></span>
+      <span class="chip">写入铁律 <b>put MinIO 必须 INSERT knowledge_file</b></span>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 面板 3：admin · AI 服务商 ================= -->
+<div class="panel" id="admin-provider">
+  <div class="stage">
+    <div class="admin-layout">
+      <aside class="side">
+        <div class="side-brand"><i></i>blog-admin</div>
+        <div class="side-group">内容管理</div>
+        <a class="side-item">文章列表</a>
+        <a class="side-item">分类 / 标签</a>
+        <div class="side-group">知识库</div>
+        <a class="side-item">知识文档</a>
+        <a class="side-item">手动导入</a>
+        <a class="side-item on">AI 服务商 <span class="badge">1</span></a>
+        <div class="side-group">系统</div>
+        <a class="side-item">存储服务商</a>
+        <a class="side-item">角色 / 菜单</a>
+        <a class="side-item">审计日志</a>
+      </aside>
+      <div class="admin-main">
+        <div class="admin-top">
+          <h2>AI 服务商</h2>
+          <span class="crumb">知识库 / AI 服务商</span>
+          <span class="who"><span class="avatar">Q</span> qjj · 超级管理员</span>
+        </div>
+        <div class="admin-body">
+          <div class="toolbar">
+            <span class="hint" style="flex:1">Embedding 全局仅一个生效默认（dim/model 混存破坏检索语义）；切换默认后须 <b>全量重建索引</b></span>
+            <button class="btn primary mini">新建服务商</button>
+          </div>
+
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr><th>code</th><th>类型</th><th>厂商</th><th>模型</th><th>dim</th><th>默认</th><th>状态</th><th>连通测试</th><th>操作</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="mono">siliconflow-default</td>
+                  <td><span class="tag purple">Embedding + LLM</span></td>
+                  <td>SiliconFlow</td>
+                  <td class="mono">bge-m3</td>
+                  <td class="mono">1024</td>
+                  <td><span class="tag ok">★ 默认</span></td>
+                  <td><span class="tag ok">启用</span></td>
+                  <td><span class="tag ok">通过 · 86ms</span></td>
+                  <td><div class="row-actions"><a class="link">测试</a><a class="link">编辑</a><a class="link danger">删除</a></div></td>
+                </tr>
+                <tr>
+                  <td class="mono">dashscope-emb</td>
+                  <td><span class="tag info">Embedding</span></td>
+                  <td>阿里百炼</td>
+                  <td class="mono">text-embedding-v3</td>
+                  <td class="mono">1024</td>
+                  <td><span class="tag muted">—</span></td>
+                  <td><span class="tag muted">停用</span></td>
+                  <td><span class="tag muted">未测</span></td>
+                  <td><div class="row-actions"><a class="link">测试</a><a class="link">编辑</a><a class="link danger">删除</a></div></td>
+                </tr>
+                <tr>
+                  <td class="mono">siliconflow-llm</td>
+                  <td><span class="tag purple">LLM</span></td>
+                  <td>SiliconFlow</td>
+                  <td class="mono">Qwen2.5-7B（示例）</td>
+                  <td class="mono">—</td>
+                  <td><span class="tag ok">★ 默认</span></td>
+                  <td><span class="tag ok">启用</span></td>
+                  <td><span class="tag ok">通过 · 214ms</span></td>
+                  <td><div class="row-actions"><a class="link">测试</a><a class="link">编辑</a><a class="link danger">删除</a></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="form-card" style="margin-top:16px; padding:16px 20px">
+            <p class="hint" style="margin:0">
+              API Key：dev/test 明文落库（对齐 SK 现状），出参 <b>apiKeyMasked（****）</b>，明文不回显、不入日志/审计；生产加密另开变更。
+              引导默认：<b>siliconflow-default · bge-m3 · dim=1024 · 免费额度</b>（批量节流 + 失败重试）。
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="anchor">
+    <div class="chip-row">
+      <span class="chip">接口 <b>GET/POST/PUT/DELETE /api/v1/admin/knowledge/ai-providers</b></span>
+      <span class="chip">连通测试 <b>POST /ai-providers/{id}/test</b></span>
+      <span class="chip">权限 <b>blog:ai-provider:list / create / update / delete / test</b></span>
+      <span class="chip">交互对齐 <b>存储服务商（sys_storage_provider）模式</b></span>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 面板 4：portal · 问知识库 ================= -->
+<div class="panel" id="portal-ask">
+  <div class="stage" style="background: var(--bg-page)">
+    <div class="site-header">
+      <div class="site-header-inner">
+        <div class="brand"><span class="brand-dot"></span>极光博客</div>
+        <nav class="site-nav">
+          <a>首页</a><a>分类</a><a>标签</a><a class="on">知识问答</a>
+        </nav>
+        <div class="me"><span class="avatar">张</span> 张三 · 已登录</div>
+      </div>
+    </div>
+
+    <div class="ask-wrap">
+      <div class="ask-hero">
+        <h1>问<span class="grad">知识库</span></h1>
+        <p>基于已入库的博客文章与知识条目作答 · 登录用户可用 · 答案附引用出处</p>
+      </div>
+
+      <div class="chat-card">
+        <div class="msg user">
+          <span class="av">张</span>
+          <div class="bubble">
+            <div class="who">张三 · 14:02</div>
+            <div class="body">知识库的向量检索为什么不用 Elasticsearch？</div>
+          </div>
+        </div>
+
+        <div class="msg ai">
+          <span class="av">AI</span>
+          <div class="bubble">
+            <div class="who">知识库助手 · 流式生成中</div>
+            <div class="body">
+              根据知识库设计文档的选型记录：向量存储采用 <b>MySQL 行内 BLOB + 应用层余弦检索</b>，而非引入 Elasticsearch。核心理由有三：
+              其一，当前量级约 2 万 chunk（1536 维 float32 约 120MB），Java 流式全表余弦预期 &lt;100ms，尚不到 ANN 索引发挥优势的量级；
+              其二，项目既有裁决是「检索先 DB，量级不够再开变更」，引入 ES 意味着单机环境多养一个最重的中间件；
+              其三，doc 状态机与向量回写同库同事务，无跨存储一致性问题。ES 与 pgvector 一起留档为升级路径候选，触发判据是 chunk 超 10 万或检索 P95 超 500ms。<span class="cursor"></span>
+            </div>
+            <div class="refs">
+              <div class="rt">引用来源 · 3 条命中</div>
+              <div class="ref-list">
+                <div class="ref"><span class="no">1</span><span class="t">知识库设计 §5.1 向量存储</span><span class="frag">「MySQL 存 BLOB + 应用层余弦 · 零新增 · 同库事务」</span><span class="sim">0.92</span></div>
+                <div class="ref"><span class="no">2</span><span class="t">Spring Cloud Gateway 网关鉴权设计（文章）</span><span class="frag">「blog 业务设计 §1.2：检索先 DB，量级不够再开变更」</span><span class="sim">0.88</span></div>
+                <div class="ref"><span class="no">3</span><span class="t">团队 Markdown 协作规范（知识条目）</span><span class="frag">「正文唯一 Markdown，切块 500–800 字」</span><span class="sim">0.71</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ask-input">
+        <textarea placeholder="向知识库提问…（Enter 发送 / Shift+Enter 换行）">知识库的向量检索为什么不用 Elasticsearch？</textarea>
+        <div class="row">
+          <span class="quota">今日剩余 <b>17 / 20</b> 次 · 每分钟 ≤ 5 次</span>
+          <button class="btn primary">发送</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="anchor">
+    <div class="chip-row">
+      <span class="chip">接口 <b>POST /api/v1/knowledge/ask</b>（SSE 流式 + 末尾 refs[]）</span>
+      <span class="chip">鉴权 <b>登录用户（网关 JWT）· 不允许匿名</b></span>
+      <span class="chip">限流 <b>20 次/天/用户 + 5 次/分钟/用户</b></span>
+      <span class="chip">登录 <b>blog-portal 接 auth-center SSO（blog-portal-spa）</b></span>
+      <span class="chip">出处 <b>文章→portal 详情 / 手动导入→知识条目</b></span>
+    </div>
+  </div>
+</div>
+
+<script>
+  var tabs = document.querySelectorAll('.proto-tab');
+  var panels = document.querySelectorAll('.panel');
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () {
+      tabs.forEach(function (x) { x.classList.remove('on'); });
+      t.classList.add('on');
+      panels.forEach(function (p) { p.classList.toggle('show', p.id === t.dataset.panel); });
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>knowledge-base · ER 图</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --border: #e2e8f0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 24px;
+  }
+  header { max-width: 1200px; margin: 0 auto 16px; }
+  h1 { font-size: 20px; font-weight: 600; }
+  .sub { margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    margin: 12px auto 0; max-width: 1200px;
+    font-size: 12px; color: var(--muted);
+  }
+  .legend span {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 999px; padding: 4px 10px;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 2px; }
+  .wrap {
+    max-width: 1200px; margin: 16px auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: auto;
+  }
+  svg { display: block; width: 100%; min-width: 980px; height: auto; }
+  .card-title { font-size: 13px; font-weight: 600; fill: #f8fafc; }
+  .field { font-size: 11px; fill: #334155; font-family: "JetBrains Mono", Consolas, monospace; }
+  .field.pk { fill: #1d4ed8; font-weight: 600; }
+  .field.fk { fill: #b45309; font-weight: 600; }
+  .note { font-size: 11px; fill: #64748b; }
+  .rel-label { font-size: 11px; fill: #475569; }
+  .foot { max-width: 1200px; margin: 0 auto 32px; color: #64748b; font-size: 12px; line-height: 1.7; }
+  code { font-family: "JetBrains Mono", Consolas, monospace; background: #e2e8f0; padding: 1px 6px; border-radius: 4px; font-size: 11px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>知识库（knowledge_db）· ER 图</h1>
+  <p class="sub">
+    与 <code>knowledge-base-design.md</code> §6 草案同步 · 6 张知识库表 + 3 个跨库引用（blog_db 既有表 / 用户 / 云 API）·
+    审计字段 5 列未画入（全表齐套）· <b>独立 knowledge_db，向量在 chunk 行内 BLOB（非表外键）</b>
+  </p>
+</header>
+<div class="legend">
+  <span><i class="dot" style="background:#1d4ed8"></i>主键 PK</span>
+  <span><i class="dot" style="background:#b45309"></i>逻辑关联（无物理外键）</span>
+  <span><i class="dot" style="background:#334155"></i>业务字段</span>
+  <span><i class="dot" style="border:1.5px dashed #94a3b8; background:#f8fafc"></i>外部既有表（跨库/跨系统）</span>
+  <span><i class="dot" style="background:#0ea5e9"></i>外部服务（云 API / OSS）</span>
+</div>
+
+<div class="wrap">
+<svg viewBox="0 0 1180 1070" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="knowledge base ER diagram">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#64748b" />
+    </marker>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#0ea5e9" />
+    </marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#b45309" />
+    </marker>
+    <marker id="arrowPurple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#7c3aed" />
+    </marker>
+    <style>
+      .box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1; }
+      .box-head { fill: #0f172a; }
+      .box-ext { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1; stroke-dasharray: 6 4; }
+      .box-head-ext { fill: #64748b; }
+      .box-head-oss { fill: #0ea5e9; }
+      .rel { fill: none; stroke: #64748b; stroke-width: 1.5; }
+      .rel-ext { fill: none; stroke: #b45309; stroke-width: 1.5; stroke-dasharray: 5 4; }
+      .rel-oss { fill: none; stroke: #0ea5e9; stroke-width: 1.5; stroke-dasharray: 5 4; }
+      .loop { fill: none; stroke: #7c3aed; stroke-width: 1.5; }
+    </style>
+  </defs>
+
+  <!-- 外部：blog_db.blog_article -->
+  <g transform="translate(40,40)">
+    <rect class="box-ext" width="220" height="200" rx="8" />
+    <rect class="box-head-ext" width="220" height="32" rx="8" />
+    <rect class="box-head-ext" y="16" width="220" height="16" />
+    <text class="card-title" x="12" y="21">blog_article 文章（blog_db）</text>
+    <text class="field pk" x="12" y="52">id  PK</text>
+    <text class="field" x="12" y="72">status（1=已发布）</text>
+    <text class="field" x="12" y="92">title / category_id</text>
+    <text class="field fk" x="12" y="112">content_file_id  FK</text>
+    <text class="note" x="12" y="140">发布/下架事件 Feign 推送</text>
+    <text class="note" x="12" y="158">→ /internal/knowledge/docs/sync</text>
+    <text class="note" x="12" y="176">失败不阻断 blog 业务</text>
+  </g>
+
+  <!-- 外部：blog_db.sys_file -->
+  <g transform="translate(40,310)">
+    <rect class="box-ext" width="220" height="150" rx="8" />
+    <rect class="box-head-ext" width="220" height="32" rx="8" />
+    <rect class="box-head-ext" y="16" width="220" height="16" />
+    <text class="card-title" x="12" y="21">sys_file 对象登记（blog_db）</text>
+    <text class="field pk" x="12" y="52">id  PK</text>
+    <text class="field" x="12" y="72">object_key</text>
+    <text class="field" x="12" y="92">biz_type=ARTICLE_LIVE</text>
+    <text class="note" x="12" y="120">live id = 文章内容版本指纹</text>
+    <text class="note" x="12" y="138">正文经内部接口取源文</text>
+  </g>
+
+  <!-- 外部：登录用户 -->
+  <g transform="translate(40,860)">
+    <rect class="box-ext" width="220" height="130" rx="8" />
+    <rect class="box-head-ext" width="220" height="32" rx="8" />
+    <rect class="box-head-ext" y="16" width="220" height="16" />
+    <text class="card-title" x="12" y="21">登录用户（网关透传）</text>
+    <text class="field pk" x="12" y="52">userId  (X-User-Id)</text>
+    <text class="note" x="12" y="80">问答不允许匿名（已裁决）</text>
+    <text class="note" x="12" y="98">配额限流：20 次/天/用户</text>
+  </g>
+
+  <!-- knowledge_doc -->
+  <g transform="translate(340,40)">
+    <rect class="box" width="240" height="350" rx="8" />
+    <rect class="box-head" width="240" height="32" rx="8" />
+    <rect class="box-head" y="16" width="240" height="16" />
+    <text class="card-title" x="12" y="21">knowledge_doc 知识文档</text>
+    <text class="field pk" x="12" y="52">id  PK（发号）</text>
+    <text class="field" x="12" y="72">source（1文章/2手动/3文件）</text>
+    <text class="field fk" x="12" y="92">source_id → blog_article.id</text>
+    <text class="field" x="12" y="112">title</text>
+    <text class="field fk" x="12" y="132">content_version(live file_id)</text>
+    <text class="field fk" x="12" y="152">file_id → knowledge_file.id</text>
+    <text class="field" x="12" y="172">tags</text>
+    <text class="field" x="12" y="192">status（状态机 5 态）</text>
+    <text class="field" x="12" y="212">chunk_count</text>
+    <text class="field" x="12" y="232">embed_model / embed_dim</text>
+    <text class="note" x="12" y="260">uk(source, source_id)</text>
+    <text class="note" x="12" y="278">content_version 变更触发重建</text>
+    <text class="note" x="12" y="296">文章下架 → INVALID（不物理删）</text>
+    <text class="note" x="12" y="314">手动导入编辑 → 重新 PENDING</text>
+    <text class="note" x="12" y="332">审计 ×5 未画</text>
+  </g>
+
+  <!-- knowledge_chunk -->
+  <g transform="translate(340,470)">
+    <rect class="box" width="240" height="310" rx="8" />
+    <rect class="box-head" width="240" height="32" rx="8" />
+    <rect class="box-head" y="16" width="240" height="16" />
+    <text class="card-title" x="12" y="21">knowledge_chunk 知识块</text>
+    <text class="field pk" x="12" y="52">id  PK（发号）</text>
+    <text class="field fk" x="12" y="72">doc_id → knowledge_doc.id</text>
+    <text class="field" x="12" y="92">seq（文档内顺序）</text>
+    <text class="field" x="12" y="112">heading（标题链）</text>
+    <text class="field" x="12" y="132">content TEXT（上下文增强）</text>
+    <text class="field" x="12" y="152">token_count</text>
+    <text class="field" x="12" y="172">embedding BLOB（float32）</text>
+    <text class="field" x="12" y="192">embed_status（4 态）</text>
+    <text class="field" x="12" y="212">fail_reason</text>
+    <text class="note" x="12" y="240">检索单元 · 余弦 Top-K 应用层</text>
+    <text class="note" x="12" y="258">无向量索引（升级判据 §5.1）</text>
+    <text class="note" x="12" y="276">FAILED 单块可重试</text>
+    <text class="note" x="12" y="294">审计 ×5 未画</text>
+  </g>
+
+  <!-- ai_provider -->
+  <g transform="translate(660,40)">
+    <rect class="box" width="240" height="350" rx="8" />
+    <rect class="box-head" width="240" height="32" rx="8" />
+    <rect class="box-head" y="16" width="240" height="16" />
+    <text class="card-title" x="12" y="21">ai_provider AI 服务商</text>
+    <text class="field pk" x="12" y="52">id  PK（发号）</text>
+    <text class="field" x="12" y="72">code  UK</text>
+    <text class="field" x="12" y="92">kind（1 EMB / 2 LLM / 3 兼容）</text>
+    <text class="field" x="12" y="112">type（SILICONFLOW…）</text>
+    <text class="field" x="12" y="132">name / base_url</text>
+    <text class="field" x="12" y="152">model</text>
+    <text class="field" x="12" y="172">dim</text>
+    <text class="field" x="12" y="192">api_key（dev/test 明文）</text>
+    <text class="field" x="12" y="212">is_default / status</text>
+    <text class="note" x="12" y="240">复刻 sys_storage_provider 模式</text>
+    <text class="note" x="12" y="258">Embedding 全局唯一生效默认</text>
+    <text class="note" x="12" y="276">切换 provider → 重建索引</text>
+    <text class="note" x="12" y="294">连通测试 POST /{id}/test</text>
+    <text class="note" x="12" y="312">密钥不回显、不入日志</text>
+    <text class="note" x="12" y="330">审计 ×5 未画</text>
+  </g>
+
+  <!-- knowledge_file -->
+  <g transform="translate(660,470)">
+    <rect class="box" width="240" height="310" rx="8" />
+    <rect class="box-head" width="240" height="32" rx="8" />
+    <rect class="box-head" y="16" width="240" height="16" />
+    <text class="card-title" x="12" y="21">knowledge_file 知识对象登记</text>
+    <text class="field pk" x="12" y="52">id  PK（发号）</text>
+    <text class="field" x="12" y="72">bucket（共用 blog 桶）</text>
+    <text class="field" x="12" y="92">object_key</text>
+    <text class="field" x="12" y="112">original_name（上传文件名留档）</text>
+    <text class="field" x="12" y="132">mime_type（text/markdown）</text>
+    <text class="field" x="12" y="152">file_size（不限，展示用）</text>
+    <text class="field" x="12" y="172">biz_type=KNOWLEDGE_SOURCE</text>
+    <text class="field fk" x="12" y="192">biz_id → knowledge_doc.id</text>
+    <text class="field" x="12" y="212">storage_code</text>
+    <text class="note" x="12" y="240">仅登记手动上传源文（.md）</text>
+    <text class="note" x="12" y="258">文章正文归 blog sys_file</text>
+    <text class="note" x="12" y="276">put 必登记 · 逻辑删 deleted=1</text>
+    <text class="note" x="12" y="294">审计 ×5 未画</text>
+  </g>
+
+  <!-- 外部服务：云 API -->
+  <g transform="translate(970,60)">
+    <rect class="box-ext" width="170" height="170" rx="8" style="stroke:#0ea5e9;" />
+    <rect class="box-head-oss" width="170" height="32" rx="8" />
+    <rect class="box-head-oss" y="16" width="170" height="16" />
+    <text class="card-title" x="12" y="21">云 API（外部）</text>
+    <text class="field" x="12" y="52">SiliconFlow 默认</text>
+    <text class="field" x="12" y="72">bge-m3（dim=1024）</text>
+    <text class="field" x="12" y="92">embedding 免费额度</text>
+    <text class="field" x="12" y="112">LLM 模型待定（§9 Q1）</text>
+    <text class="note" x="12" y="140">OpenAI 兼容端点</text>
+    <text class="note" x="12" y="158">免费额度→批量节流+重试</text>
+  </g>
+
+  <!-- 外部服务：MinIO -->
+  <g transform="translate(970,480)">
+    <rect class="box-ext" width="170" height="150" rx="8" style="stroke:#0ea5e9;" />
+    <rect class="box-head-oss" width="170" height="32" rx="8" />
+    <rect class="box-head-oss" y="16" width="170" height="16" />
+    <text class="card-title" x="12" y="21">MinIO（外部）</text>
+    <text class="field" x="12" y="52">bucket=blog</text>
+    <text class="field" x="12" y="72">knowledge/{docId}/…</text>
+    <text class="note" x="12" y="100">手动导入源文对象</text>
+    <text class="note" x="12" y="118">经 blog-object-storage SDK</text>
+  </g>
+
+  <!-- knowledge_chat_session -->
+  <g transform="translate(340,860)">
+    <rect class="box" width="240" height="130" rx="8" />
+    <rect class="box-head" width="240" height="32" rx="8" />
+    <rect class="box-head" y="16" width="240" height="16" />
+    <text class="card-title" x="12" y="21">knowledge_chat_session</text>
+    <text class="field pk" x="12" y="52">id  PK（发号）</text>
+    <text class="field fk" x="12" y="72">create_by → 登录用户</text>
+    <text class="note" x="12" y="100">会话最小形态（P0）</text>
+    <text class="note" x="12" y="118">审计 ×5 未画</text>
+  </g>
+
+  <!-- knowledge_chat_message -->
+  <g transform="translate(660,860)">
+    <rect class="box" width="240" height="180" rx="8" />
+    <rect class="box-head" width="240" height="32" rx="8" />
+    <rect class="box-head" y="16" width="240" height="16" />
+    <text class="card-title" x="12" y="21">knowledge_chat_message</text>
+    <text class="field pk" x="12" y="52">id  PK（发号）</text>
+    <text class="field fk" x="12" y="72">session_id → session.id</text>
+    <text class="field" x="12" y="92">role（Q/A）</text>
+    <text class="field" x="12" y="112">content</text>
+    <text class="field" x="12" y="132">refs JSON（引用列表）</text>
+    <text class="note" x="12" y="160">SSE 流式 + 引用来源</text>
+  </g>
+
+  <!-- 关系连线 -->
+  <path class="rel-ext" d="M260 130 L340 130" marker-end="url(#arrowAmber)" />
+  <text class="rel-label" x="262" y="120">source=1 · 事件推送</text>
+
+  <path class="rel-ext" d="M150 240 L150 310" marker-end="url(#arrowAmber)" />
+  <text class="rel-label" x="158" y="282">content_file_id</text>
+
+  <path class="rel-ext" d="M260 385 C300 385 300 210 340 210" marker-end="url(#arrowAmber)" />
+  <text class="rel-label" x="248" y="420">content_version = live file_id</text>
+
+  <path class="rel" d="M460 390 L460 470" marker-end="url(#arrow)" />
+  <text class="rel-label" x="470" y="438">1:N 切块</text>
+
+  <path class="loop" d="M580 560 C620 540 620 620 580 600" marker-end="url(#arrowPurple)" />
+  <text class="rel-label" x="586" y="576" fill="#7c3aed">embedding BLOB</text>
+
+  <path class="rel-oss" d="M900 145 L970 145" marker-end="url(#arrowBlue)" />
+  <text class="rel-label" x="900" y="135" fill="#0369a1">embed / chat</text>
+
+  <path class="rel-oss" d="M780 390 C780 440 640 470 600 560" marker-end="url(#arrowBlue)" />
+  <text class="rel-label" x="676" y="452" fill="#0369a1">向量回写（dim 校验）</text>
+
+  <path class="rel" d="M580 300 C620 300 620 480 660 480" marker-end="url(#arrow)" />
+  <text class="rel-label" x="552" y="415">file_id（source=2 手动导入）</text>
+
+  <path class="rel-oss" d="M900 555 L970 555" marker-end="url(#arrowBlue)" />
+  <text class="rel-label" x="906" y="545" fill="#0369a1">object_key</text>
+
+  <path class="rel" d="M260 925 L340 925" marker-end="url(#arrow)" />
+  <text class="rel-label" x="272" y="915">create_by</text>
+
+  <path class="rel" d="M580 925 L660 925" marker-end="url(#arrow)" />
+  <text class="rel-label" x="588" y="915">1:N 消息</text>
+</svg>
+</div>
+
+<div class="foot">
+  <p><b>口径：</b>表结构以 <code>knowledge-base-design.md</code> §6 为唯一源；无物理外键（逻辑关联，应用层维护）；主键 16 位发号（id 对外 String）；审计字段全表齐套未画。</p>
+  <p><b>状态机：</b>doc：<code>PENDING → VECTORIZING → READY / FAILED / INVALID</code>；chunk.embed_status：<code>PENDING → VECTORIZING → READY / FAILED</code>。</p>
+  <p><b>跨库边界：</b>blog_db（文章/sys_file）与 knowledge_db 无直连，正文经 <code>blog-api</code> 内部接口获取；手动导入源文落 MinIO <code>knowledge/</code> 前缀并登记 <code>knowledge_file</code>。</p>
+</div>
+</body>
+</html>
