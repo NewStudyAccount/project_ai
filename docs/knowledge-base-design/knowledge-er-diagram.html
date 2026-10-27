@@ -54,10 +54,10 @@
 </head>
 <body>
 <header>
-  <h1>知识库（knowledge_db）· ER 图</h1>
+  <h1>知识库（blog_db · knowledge_* 表）· ER 图</h1>
   <p class="sub">
-    与 <code>knowledge-base-design.md</code> §6 草案同步 · 6 张知识库表 + 3 个跨库引用（blog_db 既有表 / 用户 / 云 API）·
-    审计字段 5 列未画入（全表齐套）· <b>独立 knowledge_db，向量在 chunk 行内 BLOB（非表外键）</b>
+    与 <code>knowledge-base-design.md</code> §6 草案同步 · 5 张 MySQL 知识库表 + ES index(knowledge_chunk_v1) + 3 个跨域引用（blog_db 既有表 / 用户 / 云 API）·
+    审计字段 5 列未画入（全表齐套）· <b>knowledge_* 表归属 blog_db（Q5 已裁决合并；MySQL 存业务字段真相源），向量+content 镜像存 ES index（dense_vector kNN + BM25 + RRF）</b>
   </p>
 </header>
 <div class="legend">
@@ -170,12 +170,12 @@
     <text class="field" x="12" y="112">heading（标题链）</text>
     <text class="field" x="12" y="132">content TEXT（上下文增强）</text>
     <text class="field" x="12" y="152">token_count</text>
-    <text class="field" x="12" y="172">embedding BLOB（float32）</text>
-    <text class="field" x="12" y="192">embed_status（4 态）</text>
+    <text class="field" x="12" y="172">向量 → ES index（见 §6.6）</text>
+    <text class="field" x="12" y="192">embed_status（4 态，READY=ES index 成功）</text>
     <text class="field" x="12" y="212">fail_reason</text>
-    <text class="note" x="12" y="240">检索单元 · 余弦 Top-K 应用层</text>
-    <text class="note" x="12" y="258">无向量索引（升级判据 §5.1）</text>
-    <text class="note" x="12" y="276">FAILED 单块可重试</text>
+    <text class="note" x="12" y="240">检索单元 · ES kNN + BM25 + RRF</text>
+    <text class="note" x="12" y="258">向量在 ES dense_vector（cosine HNSW）</text>
+    <text class="note" x="12" y="276">FAILED 单块可重试（重 index ES）</text>
     <text class="note" x="12" y="294">审计 ×5 未画</text>
   </g>
 
@@ -289,13 +289,13 @@
   <text class="rel-label" x="470" y="438">1:N 切块</text>
 
   <path class="loop" d="M580 560 C620 540 620 620 580 600" marker-end="url(#arrowPurple)" />
-  <text class="rel-label" x="586" y="576" fill="#7c3aed">embedding BLOB</text>
+  <text class="rel-label" x="586" y="576" fill="#7c3aed">向量镜像 ES</text>
 
   <path class="rel-oss" d="M900 145 L970 145" marker-end="url(#arrowBlue)" />
   <text class="rel-label" x="900" y="135" fill="#0369a1">embed / chat</text>
 
   <path class="rel-oss" d="M780 390 C780 440 640 470 600 560" marker-end="url(#arrowBlue)" />
-  <text class="rel-label" x="676" y="452" fill="#0369a1">向量回写（dim 校验）</text>
+  <text class="rel-label" x="676" y="452" fill="#0369a1">向量回写 ES index</text>
 
   <path class="rel" d="M580 300 C620 300 620 480 660 480" marker-end="url(#arrow)" />
   <text class="rel-label" x="552" y="415">file_id（source=2 手动导入）</text>
@@ -314,7 +314,7 @@
 <div class="foot">
   <p><b>口径：</b>表结构以 <code>knowledge-base-design.md</code> §6 为唯一源；无物理外键（逻辑关联，应用层维护）；主键 16 位发号（id 对外 String）；审计字段全表齐套未画。</p>
   <p><b>状态机：</b>doc：<code>PENDING → VECTORIZING → READY / FAILED / INVALID</code>；chunk.embed_status：<code>PENDING → VECTORIZING → READY / FAILED</code>。</p>
-  <p><b>跨库边界：</b>blog_db（文章/sys_file）与 knowledge_db 无直连，正文经 <code>blog-api</code> 内部接口获取；手动导入源文落 MinIO <code>knowledge/</code> 前缀并登记 <code>knowledge_file</code>。</p>
+  <p><b>域边界（同库）：</b>knowledge_* 表与 blog 业务表同属 <code>blog_db</code>（Q5 已裁决合并，表前缀隔离域边界，无物理外键），正文经 <code>blog-api</code> 内部接口获取；手动导入源文落 MinIO <code>knowledge/</code> 前缀并登记 <code>knowledge_file</code>。</p>
 </div>
 </body>
 </html>

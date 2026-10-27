@@ -53,6 +53,7 @@
 - 写幂等：`framework` 统一 `@Idempotent`，`Idempotent-Key`（或 `X-Request-Id`）+ Redis（**禁止业务唯一键做幂等**）
 - 消息队列：**RocketMQ**（异步、重试、死信；客户端与 starter 版本见 `docs/version-baseline.md`；收发与消费重试/死信统一 `framework` 封装，禁止业务直接绑死客户端 API）
 - 对象存储：MinIO（S3 兼容）
+- 检索引擎：**Elasticsearch**（**仅知识库域**向量+全文混合检索，index 边界限定 `knowledge_chunk_v1`；blog 及其他系统的业务检索仍走 MySQL「检索先 DB」原则，见 `docs/blog-system/business-design.md` §1.2）
 - 认证中心：**Spring Authorization Server**（OAuth2/OIDC 协议内核，仅认证系统引入）；认证令牌：JWT（实现库 **spring-security-oauth2-jose（Nimbus）**，随 Boot BOM）；令牌时长见 6.7
 - 监控：Spring Boot Actuator（健康、存活、指标）；不引入独立监控产品
 - 链路追踪：Micrometer Tracing（Brave / OpenTelemetry 桥）；后端 OTLP / Zipkin 兼容

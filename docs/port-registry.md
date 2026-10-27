@@ -49,6 +49,8 @@
 | Nacos | **8848** | http | 控制台/开放 API |
 | Nacos gRPC | **9848** | grpc | 客户端注册/配置（= 8848+1000） |
 | MinIO | **9000** | http | S3 兼容（如启用文件服务） |
+| Elasticsearch | **9200** | http | 知识库域向量+全文混合检索（仅 `knowledge_chunk_v1`）；ES 8.14.3 + analysis-ik 8.14.3；接入信息见 test-env §2.5 |
+| Kibana | **5601** | http | ES 可视化管理面板（Dev Tools/索引管理/Discover）；Kibana 8.14.3 与 ES 严格对齐；接入信息见 test-env §2.5 |
 
 ### 1.5 端口分配规则
 
@@ -86,3 +88,5 @@
 |------|------|------|
 | 2026-09-24 | 建立端口登记表 | 基线：admin 5173 / gw 8173 / user 18173 / portal 5174 / auth-admin 5175 / auth 9080 |
 | 2026-10-14 | 登记 blog 系统端口，修正 blog-service 为 19100（以 `application.yml` 为准） | jenkins-pipeline |
+| 2026-10-28 | 中间件段登记 ES 9200（知识库域；ES 8.14.3 + ik 8.14.3） | ES 部署回填 |
+| 2026-10-28 | 中间件段登记 Kibana 5601（ES 管理面板；8.14.3 与 ES 对齐） | Kibana 部署回填 |

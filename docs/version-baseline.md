@@ -22,6 +22,7 @@
 | Spring Authorization Server | 随 Spring Boot BOM（3.5.16 → 1.5.8） | 认证中心 OAuth2/OIDC 协议内核（`spring-boot-starter-oauth2-authorization-server`）；**仅 auth 系统引入**，业务服务禁止依赖 |
 | spring-security-oauth2-jose（Nimbus） | 随 Spring Boot BOM | JWT JOSE 栈（与 SAS 同源）；业务服务经 `spring-boot-starter-oauth2-resource-server`（随 Boot BOM）本地验签，不引 SAS |
 | RocketMQ | 客户端 5.3.1（SCA BOM 管理） | `rocketmq-spring-boot-starter` 2.3.6；收发与消费重试/死信统一 `framework` 封装（CLAUDE.md 6.11） |
+| Elasticsearch（服务端） | 8.14+ 线（部署时锁定具体小版本） | 知识库向量+全文混合检索（dense_vector kNN + BM25，**RRF 需 ≥8.14 GA**）；**仅 knowledge 域** index `knowledge_chunk_v1`（CLAUDE.md §2 检索引擎行）；Java client `co.elastic.clients:elasticsearch-java` 随服务端同版本；ik 分词器插件版本随 ES 对齐 |
 | HikariCP / Lombok / SLF4J+Logback / Micrometer Tracing / MySQL Connector/J / Jackson | 随 Spring Boot 3.5.16 BOM | 不单独锁；实据解析值：HikariCP 6.3.3、Lombok 1.18.46、Logback 1.5.34、SLF4J 2.0.18、micrometer-tracing 1.5.12、mysql-connector-j 9.7.0、jackson-bom 2.21.4 |
 
 **前端主框架**（新增前端工程时取用；`package-lock.json` 按其锁定）：
@@ -58,3 +59,4 @@
 | 2026-09-24 | 新增前端主框架版本行（Vue3/Vite/TS/Pinia/Element Plus 等），随 `scaffold-user-center` 首个前端工程登记 | 规则：新增前端工程时登记（§2） |
 | 2026-10-19 | 前端依赖登记 **md-editor-v3 ^7.1.x**（blog-admin 写正文 Markdown 编辑器） | 变更 `adopt-markdown-editor` 技术选型 |
 | 2026-10-21 | 新增 **flexmark-java 0.64.8**（`flexmark` + `flexmark-ext-tables`，服务端正文 Markdown→HTML 渲染） | 变更 `article-content-server-render` 技术选型 |
+| 2026-10-28 | 新增 **Elasticsearch 8.14+ 线**（知识库向量+全文混合检索；RRF 需 ≥8.14 GA；`elasticsearch-java` client + ik 分词器随版本对齐；**仅 knowledge 域**） | 用户裁决（knowledge 设计「使用 ES」）；CLAUDE.md §2 已同步新增检索引擎行 |

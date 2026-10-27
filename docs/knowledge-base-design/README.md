@@ -6,7 +6,7 @@
 
 | 文档 | 职责 | 状态 |
 |------|------|------|
-| [knowledge-base-design.md](./knowledge-base-design.md) | 主设计：背景、数据流、领域模型、库表草案、接口草案、选型对比、开放问题 | **探索稿 v0.2（主要裁决已定，剩余开放问题见 §9）** |
+| [knowledge-base-design.md](./knowledge-base-design.md) | 主设计：背景、数据流、领域模型、库表草案、接口草案、选型对比、开放问题 | **探索稿 v0.5（开放问题清零）** |
 | [knowledge-er-diagram.html](./knowledge-er-diagram.html) | 表关系 ER 图（浏览器打开） | 与主设计 §6 同步 |
 | [knowledge-prototype.html](./knowledge-prototype.html) | 页面原型：admin 知识文档 / 手动导入 / AI 服务商 + portal 问知识库（浏览器打开，tab 切换） | 布局参照，效力低于设计正文 |
 
@@ -18,12 +18,12 @@
 
 ## 范围一句话
 
-**独立 knowledge-service(19101) + knowledge_db**：已发布文章自动入库 + **手动导入** → Markdown 切块（chunk）→ Embedding **云 API** 向量化（MySQL 存向量，应用层余弦检索）→ LLM 组织生成（RAG 问答，SSE 流式）→ blog-portal **登录用户**问答；blog 系统适配变动（事件推送、内部接口、portal SSO、gateway 路由）；blog-admin 嵌知识库运维菜单。
+**单进程 `blog-server` 承载 `blog-service` + `blog-knowledge-service` + `blog_db` 内 `knowledge_*` 表 + Elasticsearch**：已发布文章自动入库 + **手动导入** → Markdown 切块（chunk）→ Embedding **云 API** 向量化 → 向量+content 入 ES index `knowledge_chunk_v1`（kNN + BM25 RRF 混合检索）→ LLM 组织生成（RAG 问答，SSE 流式）→ blog-portal **登录用户**问答；同进程经 Spring 事件 + 接口注入解耦（portal SSO、gateway 路由适配）；AI 调用进程内独立线程池隔离；blog-admin 嵌知识库运维菜单。
 
-## 状态：探索稿 v0.2
+## 状态：探索稿 v0.5（开放问题清零）
 
-已裁决（2026-10-27）：向量存储=MySQL（ES 重议后维持，见主设计 §5.1 升级路径）｜独立 knowledge-service（**blog 系统内服务**）+ blog 适配｜云 API，Embedding=SiliconFlow bge-m3 免费额度｜手动导入进 P0｜问答不允许匿名｜**权限沿用 blog RBAC**。
-剩余待裁决：LLM 厂商与模型、SSE 透传 PoC、切块参数、portal SSO client——见主设计 §9。
+已裁决（2026-10-27）：**向量检索 = Elasticsearch**（index `knowledge_chunk_v1`，dense_vector kNN + text BM25 + RRF 原生混合检索；推翻早前 MySQL BLOB 方案；MySQL chunk 表去 embedding BLOB 存业务字段真相源，向量+content 镜像存 ES）｜**单进程** `blog-server` 承载 `blog-service` + `blog-knowledge-service`（19100，knowledge 非独立部署）｜云 API，Embedding=SiliconFlow bge-m3 免费额度｜手动导入进 P0｜问答不允许匿名｜**权限沿用 blog RBAC**（同进程直用）｜**AI 调用进程内独立线程池隔离**。
+补充裁决（2026-10-28，Q1-Q11 全部落定，开放问题清零）：**Q8-Q11**——ES 经 CLAUDE.md §2 技术栈登记、ES client 落 blog-knowledge-service、P0 装 ik 分词器、双写补偿 FAILED+对账重 index；**Q1-Q7**——LLM=SiliconFlow 同账号便宜档起步（型号 P0-2 锁定）、SSE 透传 P0-7 落地时一并验证、切块首版按建议值（500–800 字/chunk）、portal SSO 对齐 user-admin-spa 先例、**knowledge_db 合并进 blog_db**（不引入 dynamic-datasource）、AI 降级=关键词检索+模板化回答/池满 429、线程池隔离=P0 独立池+超时（监控后议拆进程）。详见主设计 §9。
 
 > **流程约定：未获用户明确指示，不发起 openspec 提案**；本目录设计文档独立演进，提案时点由用户决定。
 
