@@ -1,0 +1,24 @@
+{
+  "_comment": "knowledge_chunk_v1 index 定义（契约唯一源 docs/knowledge-base-design/table-design.md §3）。执行：先 HEAD /knowledge_chunk_v1 判存在（404 才创建），再 PUT /knowledge_chunk_v1 -H 'Content-Type: application/json' -d @本文件；创建后校验 GET /knowledge_chunk_v1/_mapping 含 embedding.dims=1024、content.analyzer=ik_smart。删除/重建 index 属不可逆操作，执行前按 CLAUDE.md §7 征询。仅此一个 index，不扩 blog 业务检索。",
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "refresh_interval": "1s"
+  },
+  "mappings": {
+    "properties": {
+      "chunk_id":   { "type": "keyword" },
+      "doc_id":     { "type": "long" },
+      "heading":    { "type": "text", "analyzer": "ik_smart" },
+      "content":    { "type": "text", "analyzer": "ik_smart" },
+      "embedding":  { "type": "dense_vector", "dims": 1024,
+                      "index": true, "similarity": "cosine",
+                      "index_options": { "type": "hnsw", "m": 16, "ef_construction": 100 } },
+      "source":     { "type": "byte" },
+      "tags":       { "type": "keyword" },
+      "doc_status": { "type": "byte" },
+      "doc_title":  { "type": "text", "analyzer": "ik_smart" },
+      "doc_url":    { "type": "keyword" }
+    }
+  }
+}

@@ -8,6 +8,12 @@ import MenuList from '@/views/menu/MenuList.vue'
 import RoleList from '@/views/role/RoleList.vue'
 import FileList from '@/views/file/FileList.vue'
 import StorageProviderList from '@/views/storage/StorageProviderList.vue'
+import KnowledgeDocList from '@/views/knowledge/DocList.vue'
+import KnowledgeArticleIngest from '@/views/knowledge/ArticleIngest.vue'
+import KnowledgeImportDoc from '@/views/knowledge/ImportDoc.vue'
+import KnowledgeAiProviderList from '@/views/knowledge/AiProviderList.vue'
+import KnowledgeTaskList from '@/views/knowledge/TaskList.vue'
+import KnowledgeStats from '@/views/knowledge/KnowledgeStats.vue'
 import CategoryList from '@/views/content/CategoryList.vue'
 import TagList from '@/views/content/TagList.vue'
 import ArticleList from '@/views/content/ArticleList.vue'
@@ -24,6 +30,10 @@ const componentByPath: Record<string, unknown> = {
   'views/role/RoleList.vue': RoleList,
   'views/file/FileList.vue': FileList,
   'views/storage/StorageProviderList.vue': StorageProviderList,
+  'views/knowledge/DocList.vue': KnowledgeDocList,
+  'views/knowledge/ArticleIngest.vue': KnowledgeArticleIngest,
+  'views/knowledge/ImportDoc.vue': KnowledgeImportDoc,
+  'views/knowledge/AiProviderList.vue': KnowledgeAiProviderList,
   'views/content/CategoryList.vue': CategoryList,
   'views/content/TagList.vue': TagList,
   'views/content/ArticleList.vue': ArticleList,
@@ -52,6 +62,9 @@ const staticRoutes: RouteRecordRaw[] = [
       { path: 'articles/:id/main', name: 'ArticleMain', component: ArticleMainForm },
       { path: 'articles/:id/content', name: 'ArticleContent', component: ArticleContentEditor },
       { path: 'site-config', name: 'SiteConfig', component: SiteConfig },
+      // 知识库运维页（按钮权限 blog:knowledge:manage，无独立菜单）
+      { path: 'knowledge/tasks', name: 'KnowledgeTasks', component: KnowledgeTaskList },
+      { path: 'knowledge/stats', name: 'KnowledgeStats', component: KnowledgeStats },
     ],
   },
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound },

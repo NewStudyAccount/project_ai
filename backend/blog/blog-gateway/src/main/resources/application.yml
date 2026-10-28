@@ -8,6 +8,14 @@ spring:
   cloud:
     gateway:
       routes:
+        # 知识库 RAG 问答（SSE 长连接）：专用路由放宽响应超时；路由需先于通配 /api/** 匹配
+        - id: blog-knowledge-ask
+          uri: lb://blog-service
+          predicates:
+            - Path=/api/v1/knowledge/ask
+          metadata:
+            response-timeout: 300000
+            connect-timeout: 5000
         - id: blog-service
           uri: lb://blog-service
           predicates:

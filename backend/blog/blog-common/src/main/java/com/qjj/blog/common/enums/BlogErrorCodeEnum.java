@@ -46,6 +46,23 @@ public enum BlogErrorCodeEnum implements ErrorCode {
     PROVIDER_CONFIG_INVALID(203085, "服务商配置非法"),
     PROVIDER_SECRET_DECRYPT_FAILED(203086, "服务商密钥解密失败"),
     NO_STORAGE_PROVIDER_AVAILABLE(203087, "无可用存储服务商配置"),
+    // 知识库段（api-design.md §6：203090–203099 文档/入库；203100–203109 检索/任务；203110–203119 AI 服务商）
+    KNOWLEDGE_DOC_NOT_FOUND(203090, "知识文档不存在"),
+    KNOWLEDGE_DOC_ALREADY_INGESTED(203091, "该文章已入库且内容未变化"),
+    KNOWLEDGE_ARTICLE_NOT_INGESTABLE(203092, "文章未发布或无正文，不可入库"),
+    KNOWLEDGE_DOC_INVALID(203093, "知识文档已失效，请先重新入库"),
+    KNOWLEDGE_DOC_SOURCE_NOT_MANUAL(203095, "仅手动导入的知识可编辑/删除"),
+    KNOWLEDGE_SEARCH_UNAVAILABLE(203100, "检索服务暂不可用"),
+    KNOWLEDGE_EMBED_FAILED(203101, "文本向量化失败"),
+    KNOWLEDGE_LLM_UNAVAILABLE(203102, "AI 组织服务暂不可用"),
+    KNOWLEDGE_TASK_QUEUE_FULL(203103, "任务队列已满，请稍后重试"),
+    KNOWLEDGE_TASK_NOT_FOUND(203104, "任务不存在"),
+    KNOWLEDGE_TASK_STATE_INVALID(203105, "仅失败任务可重跑"),
+    AI_PROVIDER_NOT_FOUND(203110, "AI 服务商不存在"),
+    AI_PROVIDER_CODE_EXISTS(203111, "服务商编码已存在"),
+    AI_PROVIDER_TEST_FAILED(203112, "连通性测试失败"),
+    AI_PROVIDER_IN_USE(203113, "生效默认服务商，禁止删除/停用"),
+    AI_PROVIDER_DIM_MISMATCH(203114, "向量维度与索引不一致，需重建索引"),
     DUPLICATE_REQUEST_IN_PROGRESS(203900, "请求处理中，请勿重复提交");
 
     private final int code;

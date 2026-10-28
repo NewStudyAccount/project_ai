@@ -22,6 +22,19 @@ user:
       base-url: http://user-service:8081
 
 blog:
+  knowledge:
+    elasticsearch:
+      uris:
+        - http://192.168.99.100:9200
+  ai:
+    # 冷启动引导（DB 优先：ai_provider 库表已含 code=siliconflow-embed/-llm 默认行；api_key 经管理端录入，不入仓）
+    providers:
+      - code: siliconflow-embed
+        base-url: https://api.siliconflow.cn/v1
+        api-key: ""
+      - code: siliconflow-llm
+        base-url: https://api.siliconflow.cn/v1
+        api-key: ""
   object-storage:
     # 引导默认服务商（冷启动用；运行时以 sys_storage_provider 库表为准）
     default-provider: minio-local

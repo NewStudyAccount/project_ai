@@ -25,6 +25,8 @@
         <module>blog-object-storage</module>
         <module>blog-api</module>
         <module>blog-service</module>
+        <module>blog-knowledge-api</module>
+        <module>blog-knowledge-service</module>
         <module>blog-gateway</module>
         <module>blog-server</module>
     </modules>
@@ -40,6 +42,7 @@
         <mapstruct.version>1.6.3</mapstruct.version>
         <minio.version>8.5.17</minio.version>
         <flexmark.version>0.64.8</flexmark.version>
+        <elasticsearch-java.version>9.5.5</elasticsearch-java.version>
     </properties>
 
     <dependencyManagement>
@@ -128,6 +131,23 @@
             <dependency>
                 <groupId>com.qjj</groupId>
                 <artifactId>blog-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- 知识库检索引擎客户端（版本基线 docs/version-baseline.md；仅 blog-knowledge-service 使用） -->
+            <dependency>
+                <groupId>co.elastic.clients</groupId>
+                <artifactId>elasticsearch-java</artifactId>
+                <version>${elasticsearch-java.version}</version>
+            </dependency>
+            <!-- 知识库只读契约：文章内容回拉 -->
+            <dependency>
+                <groupId>com.qjj</groupId>
+                <artifactId>blog-knowledge-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.qjj</groupId>
+                <artifactId>blog-knowledge-service</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- 选人只读契约：用户中心 -->

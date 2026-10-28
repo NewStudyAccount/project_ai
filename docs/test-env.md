@@ -103,8 +103,9 @@ OIDC RP（unify-login-facade）：
 | 知识库检索 | 192.168.99.100 | 9200 | **9.5.5**（基线锁定） | elastic | （已关闭 xpack security，无密码） | 单机单节点（discovery.type=single-node）；cluster=`knowledge-es`，node=`es-node-1`；ES_JAVA_OPTS=`-Xms2g -Xmx2g`；**ik 分词器 9.5.5（随 ES 严格对齐，test-env.md P0 满足）**；数据/日志/插件挂载 `/opt/elasticsearch/{data,logs,plugins}`；容器名 `elasticsearch`，加入 `1panel-network`；index 边界限定 `knowledge_chunk_v1` |
 | ES 管理面板 | 192.168.99.100 | 5601 | **9.5.5**（与 ES 严格对齐） | （无认证） | （无密码） | Kibana 容器名 `kibana`，compose 在 `/opt/kibana/`；中文界面 `I18N_LOCALE=zh-CN`；通过 `http://elasticsearch:9200` 连同网 ES；与 ES 同 `1panel-network`；承载索引管理/Dev Tools/Discover |
 
-> ⚠️ **版本升级待执行（2026-10-28 用户裁决）**：版本基线已锁定 **ES 9.5.5**（见 `docs/version-baseline.md`），本表版本列按基线更新为 9.5.5；**测试环境容器当前实际仍为 8.14.3**（含 ik 8.14.3、Kibana 8.14.3），须同步升级 ES / analysis-ik / Kibana 至 9.5.5。升级后校验：`GET http://192.168.99.100:9200` 返回 `version.number=9.5.5`、`_cat/plugins` 显示 `analysis-ik 9.5.5`，并回填确认本注记。
+> ⚠️ **版本升级待执行（2026-10-28 用户裁决）**：版本基线已锁定 **ES 9.5.5**（见 `docs/version-baseline.md`），本表版本列按基线更新为 9.5.5；~~测试环境容器当前实际仍为 8.14.3~~ **已升级完成（2026-10-29）**：ES 服务端 9.5.5 运行中；analysis-ik 9.5.5 已于 2026-10-29 经 `elasticsearch-plugin install`（Infini 官方源）容器内安装并重启生效（`_cat/plugins` 含 analysis-ik、`_analyze` ik_smart 校验通过）。Kibana 9.5.5 升级仍待执行（当前未运行，不影响后端链路）。升级后校验：`GET http://192.168.99.100:9200` 返回 `version.number=9.5.5`、`_cat/plugins` 显示 `analysis-ik 9.5.5`。
 > ES 8/9 默认 xpack 安全；测试环境已关闭（`xpack.security.enabled=false`），测试免密连接 `http://192.168.99.100:9200`；生产部署前须启用安全并设独立密码。ES 启动需要 `vm.max_map_count≥262144`，已通过 `/etc/sysctl.d/99-elasticsearch.conf` 持久化。
+> **SiliconFlow 云 API（知识库 RAG）：** Embedding=`BAAI/bge-m3`（dim=1024）、LLM=**`Qwen/Qwen3-8B`**（2026-10-28 用户裁决锁定，便宜档；base_url `https://api.siliconflow.cn/v1`）；`api_key` 经管理端「AI 服务商」页录入或环境注入 `blog.ai.providers[].api-key`，**禁止入仓**。
 
 ### 2.5.1 Kibana（ES 管理面板）
 
@@ -193,4 +194,6 @@ OIDC RP（unify-login-facade）：
 | 2026-10-14 | 登记 Jenkins 测试环境地址与管理台账号 | jenkins-pipeline-guide |
 | 2026-10-28 | 回填 ES §2.5 实际部署信息（8.14.3 + ik 8.14.3，单节点 9200，关闭 xpack security） | ES 容器部署 |
 | 2026-10-28 | ES 版本基线锁定 **9.5.5**（用户裁决）：§2.5/§2.5.1 版本列更新为 9.5.5（ES/ik/Kibana 随版对齐）；容器现 8.14.3，升级待执行（见 §2.5 注记） | 用户裁决 |
+| 2026-10-29 | ES 升级完成回填：ES 9.5.5 运行中，analysis-ik 9.5.5 已装并生效；Kibana 9.5.5 升级待执行 | blog-knowledge-base |
+| 2026-10-29 | SiliconFlow LLM 型号锁定 `Qwen/Qwen3-8B`（用户裁决，便宜档），Embedding=`BAAI/bge-m3`（dim=1024）；api_key 经管理端录入不入仓 | blog-knowledge-base |
 

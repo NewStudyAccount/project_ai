@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qjj.blog.knowledge.mapper.KnowledgeArticleIndexMapper">
+
+    <!-- 候选查询公共片段：ingestState 判定唯一规则（table-design.md §2.7） -->
+    <sql id="selectCandidates">
+        SELECT i.article_id          AS articleId,
+               i.title               AS title,
+               i.category_id         AS categoryId,
+               i.category_name       AS categoryName,
+               i.publish_time        AS publishTime,
+               i.article_update_time AS articleUpdateTime,
+               i.live_file_id        AS liveFileId,
+               d.id                  AS docId,
+               d.status              AS docStatus,
+               d.chunk_count         AS chunkCount,
+               d.update_time         AS lastIngestTime,
+               CASE
+                   WHEN d.id IS NULL THEN 'UNINGESTED'
+                   WHEN d.status = 4 THEN 'INVALID'
+                   WHEN d.content_version = i.live_file_id THEN 'INGESTED'
+                   ELSE 'STALE'
+               END                   AS ingestState
+        FROM knowledge_article_index i
+        LEFT JOIN knowledge_doc d
+            ON d.source = 1 AND d.source_id = i.article_id AND d.deleted = 0
+        WHERE i.deleted = 0
+        <if test="keyword != null and keyword != ''">
+            AND i.title LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <if test="categoryId != null">
+            AND i.category_id = #{categoryId}
+        </if>
+        <if test="ingestState != null and ingestState != ''">
+            AND (CASE
+                     WHEN d.id IS NULL THEN 'UNINGESTED'
+                     WHEN d.status = 4 THEN 'INVALID'
+                     WHEN d.content_version = i.live_file_id THEN 'INGESTED'
+                     ELSE 'STALE'
+                 END) = #{ingestState}
+        </if>
+    </sql>
+
+    <select id="pageCandidates" resultType="com.qjj.blog.knowledge.dto.CandidateRow">
+        <include refid="selectCandidates"/>
+        <!-- orderBy/order 服务端白名单校验后传入，禁止前端直传 -->
+        ORDER BY ${orderBy} ${order}
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countCandidates" resultType="long">
+        SELECT COUNT(*)
+        FROM knowledge_article_index i
+        LEFT JOIN knowledge_doc d
+            ON d.source = 1 AND d.source_id = i.article_id AND d.deleted = 0
+        WHERE i.deleted = 0
+        <if test="keyword != null and keyword != ''">
+            AND i.title LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <if test="categoryId != null">
+            AND i.category_id = #{categoryId}
+        </if>
+        <if test="ingestState != null and ingestState != ''">
+            AND (CASE
+                     WHEN d.id IS NULL THEN 'UNINGESTED'
+                     WHEN d.status = 4 THEN 'INVALID'
+                     WHEN d.content_version = i.live_file_id THEN 'INGESTED'
+                     ELSE 'STALE'
+                 END) = #{ingestState}
+        </if>
+    </select>
+
+    <select id="candidatesSummary" resultType="map">
+        SELECT COUNT(*)                                                        AS total,
+               COALESCE(SUM(CASE WHEN d.id IS NULL THEN 1 ELSE 0 END), 0)      AS uningested,
+               COALESCE(SUM(CASE WHEN d.id IS NOT NULL AND d.status != 4
+                                      AND d.content_version = i.live_file_id
+                                 THEN 1 ELSE 0 END), 0)                        AS ingested,
+               COALESCE(SUM(CASE WHEN d.id IS NOT NULL AND d.status != 4
+                                      AND d.content_version != i.live_file_id
+                                 THEN 1 ELSE 0 END), 0)                        AS stale,
+               COALESCE(SUM(CASE WHEN d.id IS NOT NULL AND d.status = 4
+                                 THEN 1 ELSE 0 END), 0)                        AS invalid
+        FROM knowledge_article_index i
+        LEFT JOIN knowledge_doc d
+            ON d.source = 1 AND d.source_id = i.article_id AND d.deleted = 0
+        WHERE i.deleted = 0
+    </select>
+
+    <select id="listArticleIds" resultType="long">
+        SELECT article_id FROM knowledge_article_index WHERE deleted = 0
+    </select>
+</mapper>

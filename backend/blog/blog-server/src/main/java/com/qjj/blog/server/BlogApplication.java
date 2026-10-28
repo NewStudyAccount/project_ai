@@ -14,7 +14,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  */
 @SpringBootApplication(scanBasePackages = "com.qjj.blog")
 @EnableFeignClients(clients = UserQueryClient.class)
-@MapperScan(basePackages = "com.qjj.blog.service.mapper")
+@MapperScan(basePackages = {"com.qjj.blog.service.mapper", "com.qjj.blog.knowledge.mapper"})
 public class BlogApplication {
 
     public static void main(String[] args) {

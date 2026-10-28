@@ -56,3 +56,20 @@ blog:
   feign:
     connect-timeout: 1s
     read-timeout: 3s
+  knowledge:
+    # ES 连接（实际节点按 profile 覆盖；仅 knowledge_chunk_v1 一个 index）
+    elasticsearch:
+      uris: []
+      connect-timeout: 5s
+      socket-timeout: 30s
+      index-name: knowledge_chunk_v1
+      top-k: 5
+    # 云 API（Embedding/LLM）超时口径；线程池 knowledgeAiExecutor 固化于 framework
+    ai:
+      connect-timeout: 5s
+      embed-read-timeout: 15s
+      llm-read-timeout: 60s
+      embed-batch-size: 32
+    # AI 服务商冷启动引导（运行时以 ai_provider 库表为准；base_url/api_key 由管理端录入或环境注入，禁止明文密钥入仓）
+  ai:
+    providers: []

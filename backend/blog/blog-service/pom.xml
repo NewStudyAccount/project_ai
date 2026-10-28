@@ -30,6 +30,11 @@
             <groupId>com.qjj</groupId>
             <artifactId>blog-api</artifactId>
         </dependency>
+        <!-- 知识库只读契约（ArticleContentProvider；唯一实现 ArticleContentProviderImpl） -->
+        <dependency>
+            <groupId>com.qjj</groupId>
+            <artifactId>blog-knowledge-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.qjj</groupId>
             <artifactId>user-api</artifactId>

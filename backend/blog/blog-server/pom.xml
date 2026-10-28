@@ -19,6 +19,11 @@
             <groupId>com.qjj</groupId>
             <artifactId>blog-service</artifactId>
         </dependency>
+        <!-- 知识库业务模块（传递带入 blog-knowledge-api + elasticsearch-java） -->
+        <dependency>
+            <groupId>com.qjj</groupId>
+            <artifactId>blog-knowledge-service</artifactId>
+        </dependency>
         <!-- 服务注册（启动期行为，归属启动模块） -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
