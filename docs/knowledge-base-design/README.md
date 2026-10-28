@@ -33,7 +33,7 @@
 
 追加裁决（2026-10-28，候选列表契约）：新增**薄投影表 `knowledge_article_index`**（已发布文章只读投影），候选列表 / `ingestState` 筛选 / 统计在 knowledge 单库精确完成；候选列表**仅含已发布文章**；状态**两维分离**（`ingestState` + `docStatus`）。表级 17 项裁决、**8 张表** DDL 见 [table-design.md](./table-design.md)。
 
-> **流程约定：未获用户明确指示，不发起 openspec 提案**；本目录设计文档独立演进，提案时点由用户决定。
+> **流程约定：** openspec 提案已于 2026-10-28 经用户指示发起：`openspec/changes/blog-knowledge-base/`（proposal / design / tasks / specs×3）。实施只按该变更 `tasks.md` 执行；本目录设计文档仍为字段级契约唯一源，提案制品不复制字段明细、只引用。
 
 ## 相关既有材料（不在本目录）
 
