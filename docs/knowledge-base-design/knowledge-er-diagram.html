@@ -56,7 +56,7 @@
 <header>
   <h1>知识库（blog_db · knowledge_* 表）· ER 图</h1>
   <p class="sub">
-    与 <code>knowledge-base-design.md</code> §6 草案同步 · 5 张 MySQL 知识库表 + ES index(knowledge_chunk_v1) + 3 个跨域引用（blog_db 既有表 / 用户 / 云 API）·
+    与 <code>table-design.md</code> / <code>knowledge-base-design.md</code> §6 同步 · <b>8 张</b> MySQL 知识库表（doc / chunk / file / ai_provider / chat_session / chat_message / task / <b>article_index</b>）+ ES index(knowledge_chunk_v1) + 3 个跨域引用（blog_db 既有表 / 用户 / 云 API）·
     审计字段 5 列未画入（全表齐套）· <b>knowledge_* 表归属 blog_db（Q5 已裁决合并；MySQL 存业务字段真相源），向量+content 镜像存 ES index（dense_vector kNN + BM25 + RRF）</b>
   </p>
 </header>
@@ -69,7 +69,7 @@
 </div>
 
 <div class="wrap">
-<svg viewBox="0 0 1180 1070" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="knowledge base ER diagram">
+<svg viewBox="0 0 1180 1470" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="knowledge base ER diagram">
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
       <path d="M0 0 L10 5 L0 10 z" fill="#64748b" />
@@ -106,9 +106,9 @@
     <text class="field" x="12" y="72">status（1=已发布）</text>
     <text class="field" x="12" y="92">title / category_id</text>
     <text class="field fk" x="12" y="112">content_file_id  FK</text>
-    <text class="note" x="12" y="140">发布/下架事件 Feign 推送</text>
-    <text class="note" x="12" y="158">→ /internal/knowledge/docs/sync</text>
-    <text class="note" x="12" y="176">失败不阻断 blog 业务</text>
+    <text class="note" x="12" y="140">管理端勾选已发布文章入库</text>
+    <text class="note" x="12" y="158">（只读回拉，无事件）</text>
+    <text class="note" x="12" y="176">blog 既有逻辑零改动</text>
   </g>
 
   <!-- 外部：blog_db.sys_file -->
@@ -150,8 +150,8 @@
     <text class="field" x="12" y="172">tags</text>
     <text class="field" x="12" y="192">status（状态机 5 态）</text>
     <text class="field" x="12" y="212">chunk_count</text>
-    <text class="field" x="12" y="232">embed_model / embed_dim</text>
-    <text class="note" x="12" y="260">uk(source, source_id)</text>
+    <text class="field" x="12" y="232">embed_model / embed_dim / fail_reason</text>
+    <text class="note" x="12" y="260">uk(source, source_id)；手动导入 source_id=NULL</text>
     <text class="note" x="12" y="278">content_version 变更触发重建</text>
     <text class="note" x="12" y="296">文章下架 → INVALID（不物理删）</text>
     <text class="note" x="12" y="314">手动导入编辑 → 重新 PENDING</text>
@@ -232,7 +232,7 @@
     <text class="field" x="12" y="52">SiliconFlow 默认</text>
     <text class="field" x="12" y="72">bge-m3（dim=1024）</text>
     <text class="field" x="12" y="92">embedding 免费额度</text>
-    <text class="field" x="12" y="112">LLM 模型待定（§9 Q1）</text>
+    <text class="field" x="12" y="112">LLM：SiliconFlow 便宜档</text>
     <text class="note" x="12" y="140">OpenAI 兼容端点</text>
     <text class="note" x="12" y="158">免费额度→批量节流+重试</text>
   </g>
@@ -275,9 +275,55 @@
     <text class="note" x="12" y="160">SSE 流式 + 引用来源</text>
   </g>
 
+  <!-- knowledge_task -->
+  <g transform="translate(340,1080)">
+    <rect class="box" width="300" height="300" rx="8" />
+    <rect class="box-head" width="300" height="32" rx="8" />
+    <rect class="box-head" y="16" width="300" height="16" />
+    <text class="card-title" x="12" y="21">knowledge_task 任务表（新增）</text>
+    <text class="field pk" x="12" y="52">id  PK（发号）</text>
+    <text class="field" x="12" y="72">task_type（INGEST / REVECTORIZE /</text>
+    <text class="field" x="12" y="90">INVALIDATE / FULL_REINDEX / SYNC_ARTICLES）</text>
+    <text class="field fk" x="12" y="110">doc_id → knowledge_doc.id（0=全局任务）</text>
+    <text class="field" x="12" y="130">payload JSON（参数快照）</text>
+    <text class="field" x="12" y="150">status（0 PENDING / 1 RUNNING / 2 SUCCESS</text>
+    <text class="field" x="12" y="168">/ 3 FAILED / 4 DEAD）</text>
+    <text class="field" x="12" y="188">retry_count / max_retry（默认 3）</text>
+    <text class="field" x="12" y="208">next_retry_time / fail_reason</text>
+    <text class="field" x="12" y="228">start_time / end_time</text>
+    <text class="note" x="12" y="256">入队即投递 AI 线程池（不等轮询）</text>
+    <text class="note" x="12" y="274">启动把遗留 RUNNING 置回 PENDING</text>
+    <text class="note" x="12" y="292">P0 不引定时扫描；失败可由管理端重跑</text>
+  </g>
+
+  <!-- knowledge_article_index（薄投影表） -->
+  <g transform="translate(680,1080)">
+    <rect class="box" width="300" height="300" rx="8" />
+    <rect class="box-head" width="300" height="32" rx="8" />
+    <rect class="box-head" y="16" width="300" height="16" />
+    <text class="card-title" x="12" y="21">knowledge_article_index 薄投影表（新增）</text>
+    <text class="field pk" x="12" y="52">id  PK（发号）· article_id UK</text>
+    <text class="field fk" x="12" y="72">article_id ← blog_article.id（只读投影）</text>
+    <text class="field" x="12" y="92">title / category_id / category_name</text>
+    <text class="field" x="12" y="112">publish_time / article_update_time</text>
+    <text class="field" x="12" y="132">live_file_id（= detail.content_file_id 指纹）</text>
+    <text class="field" x="12" y="152">word_count / synced_at</text>
+    <text class="note" x="12" y="180">只保留 status=1 已发布文章（全量覆盖同步）</text>
+    <text class="note" x="12" y="198">候选列表 = 本表 LEFT JOIN knowledge_doc</text>
+    <text class="note" x="12" y="216">ingestState 单库精确筛选（§2.7）</text>
+    <text class="note" x="12" y="234">doc NOT IN 本表 ⇒ 文章已下架/删除</text>
+    <text class="note" x="12" y="252">依据 CLAUDE.md §5.6.1 薄投影表</text>
+    <text class="note" x="12" y="270">审计 ×5 未画</text>
+  </g>
+
   <!-- 关系连线 -->
+  <path class="loop" d="M340 1230 C280 1210 280 1290 340 1270" marker-end="url(#arrowPurple)" />
+  <text class="rel-label" x="56" y="1246" fill="#7c3aed">驱动 doc 入库 / 重建 / 失效</text>
+
+  <text class="rel-label" x="430" y="1425" fill="#7c3aed">候选列表 = knowledge_article_index LEFT JOIN knowledge_doc（ingestState 单库精确筛选）</text>
+
   <path class="rel-ext" d="M260 130 L340 130" marker-end="url(#arrowAmber)" />
-  <text class="rel-label" x="262" y="120">source=1 · 事件推送</text>
+  <text class="rel-label" x="262" y="120">source=1 · 管理端选择入库</text>
 
   <path class="rel-ext" d="M150 240 L150 310" marker-end="url(#arrowAmber)" />
   <text class="rel-label" x="158" y="282">content_file_id</text>
@@ -312,9 +358,9 @@
 </div>
 
 <div class="foot">
-  <p><b>口径：</b>表结构以 <code>knowledge-base-design.md</code> §6 为唯一源；无物理外键（逻辑关联，应用层维护）；主键 16 位发号（id 对外 String）；审计字段全表齐套未画。</p>
-  <p><b>状态机：</b>doc：<code>PENDING → VECTORIZING → READY / FAILED / INVALID</code>；chunk.embed_status：<code>PENDING → VECTORIZING → READY / FAILED</code>。</p>
-  <p><b>域边界（同库）：</b>knowledge_* 表与 blog 业务表同属 <code>blog_db</code>（Q5 已裁决合并，表前缀隔离域边界，无物理外键），正文经 <code>blog-api</code> 内部接口获取；手动导入源文落 MinIO <code>knowledge/</code> 前缀并登记 <code>knowledge_file</code>。</p>
+  <p><b>口径：</b>表结构以 <code>table-design.md</code> 为唯一源（<code>knowledge-base-design.md</code> §6 为草案）；无物理外键（逻辑关联，应用层维护）；主键 16 位发号（id 对外 String）；审计字段全表齐套未画。</p>
+  <p><b>状态机：</b>doc：<code>PENDING → VECTORIZING → READY / FAILED / INVALID</code>；chunk.embed_status：<code>PENDING → VECTORIZING → READY / FAILED</code>；task：<code>PENDING → RUNNING → SUCCESS / FAILED / DEAD</code>。</p>
+  <p><b>域边界（同库）：</b>knowledge_* 表与 blog 业务表同属 <code>blog_db</code>（Q5 已裁决合并，表前缀隔离域边界，无物理外键），正文经 <code>ArticleContentProvider</code>（同进程**只读**契约）回拉，**无事件**；入库/失效由管理端手动触发并落 <code>knowledge_task</code>；手动导入源文落 MinIO <code>knowledge/</code> 前缀并登记 <code>knowledge_file</code>。</p>
 </div>
 </body>
 </html>

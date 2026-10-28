@@ -100,15 +100,17 @@ OIDC RP（unify-login-facade）：
 
 | 用途 | 主机 | 端口 | 版本 | 用户名 | 密码 | 备注 |
 |------|------|------|------|--------|------|------|
-| 知识库检索 | 192.168.99.100 | 9200 | 8.14.3 | elastic | （已关闭 xpack security，无密码） | 单机单节点（discovery.type=single-node）；cluster=`knowledge-es`，node=`es-node-1`；ES_JAVA_OPTS=`-Xms2g -Xmx2g`；**ik 分词器 8.14.3 已装**（与 ES 严格对齐，test-env.md P0 满足）；数据/日志/插件挂载 `/opt/elasticsearch/{data,logs,plugins}`；容器名 `elasticsearch`，加入 `1panel-network`；index 边界限定 `knowledge_chunk_v1` |
-| ES 管理面板 | 192.168.99.100 | 5601 | 8.14.3 | （无认证） | （无密码） | Kibana 容器名 `kibana`，compose 在 `/opt/kibana/`；中文界面 `I18N_LOCALE=zh-CN`；通过 `http://elasticsearch:9200` 连同网 ES；与 ES 同 `1panel-network`；承载索引管理/Dev Tools/Discover |
-> ES 8 默认 xpack 安全；测试环境已关闭（`xpack.security.enabled=false`），测试免密连接 `http://192.168.99.100:9200`；生产部署前须启用安全并设独立密码。ES 启动需要 `vm.max_map_count≥262144`，已通过 `/etc/sysctl.d/99-elasticsearch.conf` 持久化。
+| 知识库检索 | 192.168.99.100 | 9200 | **9.5.5**（基线锁定） | elastic | （已关闭 xpack security，无密码） | 单机单节点（discovery.type=single-node）；cluster=`knowledge-es`，node=`es-node-1`；ES_JAVA_OPTS=`-Xms2g -Xmx2g`；**ik 分词器 9.5.5（随 ES 严格对齐，test-env.md P0 满足）**；数据/日志/插件挂载 `/opt/elasticsearch/{data,logs,plugins}`；容器名 `elasticsearch`，加入 `1panel-network`；index 边界限定 `knowledge_chunk_v1` |
+| ES 管理面板 | 192.168.99.100 | 5601 | **9.5.5**（与 ES 严格对齐） | （无认证） | （无密码） | Kibana 容器名 `kibana`，compose 在 `/opt/kibana/`；中文界面 `I18N_LOCALE=zh-CN`；通过 `http://elasticsearch:9200` 连同网 ES；与 ES 同 `1panel-network`；承载索引管理/Dev Tools/Discover |
+
+> ⚠️ **版本升级待执行（2026-10-28 用户裁决）**：版本基线已锁定 **ES 9.5.5**（见 `docs/version-baseline.md`），本表版本列按基线更新为 9.5.5；**测试环境容器当前实际仍为 8.14.3**（含 ik 8.14.3、Kibana 8.14.3），须同步升级 ES / analysis-ik / Kibana 至 9.5.5。升级后校验：`GET http://192.168.99.100:9200` 返回 `version.number=9.5.5`、`_cat/plugins` 显示 `analysis-ik 9.5.5`，并回填确认本注记。
+> ES 8/9 默认 xpack 安全；测试环境已关闭（`xpack.security.enabled=false`），测试免密连接 `http://192.168.99.100:9200`；生产部署前须启用安全并设独立密码。ES 启动需要 `vm.max_map_count≥262144`，已通过 `/etc/sysctl.d/99-elasticsearch.conf` 持久化。
 
 ### 2.5.1 Kibana（ES 管理面板）
 
 | 用途 | 主机 | 端口 | 版本 | 用户名 | 密码 | 备注 |
 |------|------|------|------|--------|------|------|
-| ES 可视化管理 | 192.168.99.100 | 5601 | 8.14.3 | — | — | 容器名 `kibana`，compose 在 `/opt/kibana/`；与 ES 严格对齐；通过 `http://elasticsearch:9200` 连同网 ES；中文界面 `I18N_LOCALE=zh-CN`；关闭 xpack security 与遥测 |
+| ES 可视化管理 | 192.168.99.100 | 5601 | **9.5.5**（与 ES 严格对齐） | — | — | 容器名 `kibana`，compose 在 `/opt/kibana/`；与 ES 严格对齐；通过 `http://elasticsearch:9200` 连同网 ES；中文界面 `I18N_LOCALE=zh-CN`；关闭 xpack security 与遥测（容器现 8.14.3，随 §2.5 升级待执行） |
 
 > 访问 `http://192.168.99.100:5601`。**生产部署前须启用 Kibana 自身认证**（与 ES 同步启用 xpack security）。
 
@@ -190,4 +192,5 @@ OIDC RP（unify-login-facade）：
 | 2026-09-24 | 登记 OIDC RP client、redirect/post-logout 白名单与 user-admin 信任域名 | unify-login-facade |
 | 2026-10-14 | 登记 Jenkins 测试环境地址与管理台账号 | jenkins-pipeline-guide |
 | 2026-10-28 | 回填 ES §2.5 实际部署信息（8.14.3 + ik 8.14.3，单节点 9200，关闭 xpack security） | ES 容器部署 |
+| 2026-10-28 | ES 版本基线锁定 **9.5.5**（用户裁决）：§2.5/§2.5.1 版本列更新为 9.5.5（ES/ik/Kibana 随版对齐）；容器现 8.14.3，升级待执行（见 §2.5 注记） | 用户裁决 |
 

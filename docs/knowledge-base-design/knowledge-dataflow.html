@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>knowledge-base · 数据流</title>
+<style>
+  :root {
+    --bg: #f1f5f9; --surface: #ffffff; --ink: #0f172a;
+    --muted: #64748b; --border: #e2e8f0;
+    --blue: #2563eb; --green: #16a34a; --amber: #d97706;
+    --red: #dc2626; --violet: #7c3aed;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--ink); min-height: 100vh; padding: 24px;
+  }
+  header { max-width: 1220px; margin: 0 auto 16px; }
+  h1 { font-size: 20px; font-weight: 600; }
+  .sub { margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 0; max-width: 1220px; font-size: 12px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; }
+  .dot { width: 10px; height: 10px; border-radius: 2px; }
+  .phasebar { max-width: 1220px; margin: 18px auto 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .phase { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; }
+  .phase .no { width: 26px; height: 26px; border-radius: 50%; flex: 0 0 auto; color: #fff; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+  .phase .t { font-size: 13px; font-weight: 600; }
+  .phase .d { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+  .p1 .no { background: var(--blue); } .p2 .no { background: var(--green); }
+  .p3 .no { background: var(--violet); } .p4 .no { background: var(--red); }
+  .flow-wrap { max-width: 1220px; margin: 16px auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .lane { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .lane h2 { font-size: 13px; font-weight: 600; color: var(--ink); padding-bottom: 8px; border-bottom: 2px solid; display: flex; align-items: center; gap: 6px; }
+  .l1 h2 { border-color: var(--blue); } .l2 h2 { border-color: var(--green); }
+  .l3 h2 { border-color: var(--violet); } .l4 h2 { border-color: var(--red); }
+  .node { border: 1px solid var(--border); border-radius: 8px; padding: 8px 9px; font-size: 12px; line-height: 1.45; background: #fff; }
+  .node b { display: block; font-size: 12px; }
+  .node .small { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .box-blue { border-left: 4px solid var(--blue); }
+  .box-green { border-left: 4px solid var(--green); }
+  .box-amber { border-left: 4px solid var(--amber); }
+  .box-violet { border-left: 4px solid var(--violet); }
+  .box-red { border-left: 4px solid var(--red); }
+  .stor { border-style: dashed; background: #f8fafc; }
+  .stor b::before { content: "｜ 存储："; font-weight: 700; color: var(--muted); font-size: 10px; }
+  .api { background: #eff6ff; border-color: #bfdbfe; }
+  .arrow { text-align: center; color: var(--muted); font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .arrow .label { color: #475569; font-weight: 600; }
+  .arrow .shape { color: #94a3b8; letter-spacing: -1px; }
+  .branch { border-left: 2px dashed #cbd5e1; margin-left: 6px; padding-left: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .foot { max-width: 1220px; margin: 6px auto 32px; color: #64748b; font-size: 12px; line-height: 1.8; }
+  .foot code { background: #e2e8f0; padding: 1px 6px; border-radius: 4px; font-size: 11px; }
+  ul { list-style: none; }
+  ul li { margin-top: 4px; padding-left: 14px; position: relative; }
+  ul li::before { content: "•"; position: absolute; left: 2px; color: #94a3b8; }
+  @media (max-width: 980px){ .flow-wrap, .phasebar { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>知识库 · 全链路数据流</h1>
+  <p class="sub">
+    依据 <code>knowledge-base-design.md</code> §3 总体数据流 + §4/§5/§6 映射 ·
+    <b>单进程 blog-server 承载 blog-service + blog-knowledge-service</b>
+    · 数据真相源在 <code>blog_db</code> 的 <code>knowledge_*</code> 表，向量+全文检索镜像在 ES <code>knowledge_chunk_v1</code>
+  </p>
+  <div class="legend">
+    <span><i class="dot" style="background:#2563eb"></i>① 入库</span>
+    <span><i class="dot" style="background:#16a34a"></i>② 向量化+入ES</span>
+    <span><i class="dot" style="background:#7c3aed"></i>③ 检索+生成</span>
+    <span><i class="dot" style="background:#dc2626"></i>④ 同步治理</span>
+    <span><i class="dot" style="border:1.5px dashed #94a3b8; background:#f8fafc"></i>存储/中间件</span>
+    <span><i class="dot" style="background:#eff6ff;border:1px solid #bfdbfe"></i>云 API</span>
+  </div>
+</header>
+
+<div class="phasebar">
+  <div class="phase p1"><div class="no">①</div><div><div class="t">入库</div><div class="d">文章自动 + 手动导入 → doc/chunk 落 blog_db</div></div></div>
+  <div class="phase p2"><div class="no">②</div><div><div class="t">向量化 + 入 ES</div><div class="d">异步线程池 · 云 API Embedding · 镜像 index</div></div></div>
+  <div class="phase p3"><div class="no">③</div><div><div class="t">检索 + 生成</div><div class="d">kNN+BM25+RRF 混合检索 · LLM SSE 流式问答</div></div></div>
+  <div class="phase p4"><div class="no">④</div><div><div class="t">同步治理</div><div class="d">下架失效 · 重建 · 对账补偿 · 一致性</div></div></div>
+</div>
+
+<div class="flow-wrap">
+
+  <section class="lane l1">
+    <h2>① 入库（doc → PENDING）</h2>
+    <div class="node box-blue">
+      <b>来源 A · 文章（管理端手动选择入库）</b>
+      <span class="small">blog-admin「文章入库」页列出已发布文章(未入库/已入库/待更新) → 勾选提交 <code>POST /admin/knowledge/docs/from-articles</code>（无事件，blog 逻辑零改动）</span>
+    </div>
+    <div class="arrow"><div class="shape">⬇</div></div>
+    <div class="node box-blue">
+      <b>knowledge_task(INGEST) → 入库一步到位</b>
+      <span class="small">doc upsert(PENDING) · 经 <code>ArticleContentProvider</code> 同进程只读回拉正文+标题/分类/标签</span>
+    </div>
+    <div class="branch">
+      <div class="node box-blue">
+        <b>来源 B · 手动导入（管理员）</b>
+        <span class="small">blog-admin 上传 .md(多选)+标签 → <code>POST /admin/knowledge/docs</code> · 源文 put MinIO → knowledge_file 登记</span>
+      </div>
+      <div class="arrow"><div class="shape">⬇</div></div>
+      <div class="node"><b>doc 登记 source=MANUAL → 从 MinIO 读源文</b></div>
+    </div>
+    <div class="arrow"><div class="label">共用切块</div><div class="shape">⬇</div></div>
+    <div class="node box-amber">
+      <b>切块器</b>
+      <span class="small">按标题层级+段落聚合 · 500–800 字/chunk(Q3) · content 含上下文增强前缀</span>
+    </div>
+    <div class="arrow"><div class="shape">⬇</div></div>
+    <div class="node stor">
+      <b>knowledge_chunk（MySQL blog_db）</b>
+      <span class="small">seq / heading / content（真相源）· embed_status=PENDING · 主键=ES 文档 _id</span>
+    </div>
+  </section>
+
+  <section class="lane l2">
+    <h2>② 向量化 + 入 ES（独立线程池）</h2>
+    <div class="node stor"><b>knowledge_chunk（PENDING）</b><span class="small">逐 chunk 读业务字段 → 批量调 EmbeddingProvider</span></div>
+    <div class="arrow"><div class="shape">⬇</div></div>
+    <div class="node api">
+      <b>EmbeddingProvider.embed(texts[])</b>
+      <span class="small">云 API · SiliconFlow bge-m3 · 1024 维 · 免费额度，节流+失败可重试</span>
+    </div>
+    <div class="arrow"><div class="shape">⬇</div></div>
+    <div class="node box-green">
+      <b>index 进 ES（异步）</b>
+      <span class="small">chunk_id 为 _id 幂等覆盖 · dense_vector(cosine/HNSW) + content(BM25/ik) + 元数据</span>
+    </div>
+    <div class="branch">
+      <div class="node"><b>ES index 成功</b><span class="small">回写 MySQL embed_status=READY · 全部 READY 且 ES index 完成 → doc.status=READY</span></div>
+      <div class="node box-red"><b>失败 → embed_status=FAILED + fail_reason</b><span class="small">单块可重试 · 对账任务扫描补偿(Q11)</span></div>
+    </div>
+    <div class="arrow"><div class="shape">⬇</div></div>
+    <div class="node stor"><b>ES index knowledge_chunk_v1</b><span class="small">chunk_id / doc_id / heading / content / embedding / source / tags / doc_status + doc_title / doc_url</span></div>
+  </section>
+
+  <section class="lane l3">
+    <h2>③ 检索 + 生成（登录问答，SSE）</h2>
+    <div class="arrow"><div class="shape">⬆ 输入</div></div>
+    <div class="node box-violet">
+      <b>用户问题 q</b>
+      <span class="small"><code>POST /knowledge/ask?sessionId</code> · 登录限流(20次/天+5次/分)</span>
+    </div>
+    <div class="arrow"><div class="shape">⬇</div></div>
+    <div class="node api">
+      <b>EmbeddingProvider.embed(q)</b>
+      <span class="small">问题向量化（失败→如实报错，语义检索无降级）</span>
+    </div>
+    <div class="arrow"><div class="shape">⬇</div></div>
+    <div class="node box-violet">
+      <b>ES 检索 kNN + BM25 + RRF</b>
+      <span class="small">knn(embedding,q) · match(content,q) · filter(doc_status=READY) → RRF 融合 → Top-K(含 content + doc_title/doc_url，无需回 MySQL)</span>
+    </div>
+    <div class="arrow"><div class="shape">⬇</div></div>
+    <div class="node"><b>组装上下文 + 出处</b><span class="small">chunk.content + 出处取自 ES denormalize 的 doc_title/doc_url（全链路不回 MySQL）· LLM 不可用→降级 ES match 关键词+模板回答(Q6)</span></div>
+    <div class="arrow"><div class="shape">⬇</div></div>
+    <div class="node api">
+      <b>LLMProvider.chat(prompt, stream)</b>
+      <span class="small">云 API 流式 · 独立线程池</span>
+    </div>
+    <div class="arrow"><div class="shape">⬇</div></div>
+    <div class="node box-violet">
+      <b>SSE 流式返回 portal</b>
+      <span class="small">答案流式 + 末尾 refs[] 引用来源 · 会话记录落 knowledge_chat_* · ES 不可用→直接 503 无降级</span>
+    </div>
+  </section>
+
+  <section class="lane l4">
+    <h2>④ 同步治理</h2>
+    <div class="node box-red"><b>文章下架 / 删除（管理端手动失效）</b><span class="small">「失效」按钮或对账 → doc INVALID + ES 文档 doc_status=4（不物理删，检索 filter 排除）· <b>无自动事件</b></span></div>
+    <div class="node box-red"><b>文章重发布 / 手动导入编辑（待更新）</b><span class="small">「文章入库」页识别 content_version 变化 → 复用 doc 行重建 · 删除 ES 旧 chunk 文档</span></div>
+    <div class="node box-red"><b>重建索引（单文档 / 全量）</b><span class="small">删 ES index 重建 + MySQL embed_status 全重置 + 重切 + 重向量化（换 provider/model 后）</span></div>
+    <div class="node box-red"><b>对账补偿 / article-index/sync</b><span class="small">已发布文章 diff → 待更新 · 已下架/删除 → INVALID + ES 置 4 · 失败任务重跑(tasks/rerun)</span></div>
+    <div class="node box-red"><b>统计 / 健康度</b><span class="small">doc/chunk 数、READY 比例、ES 文档数、provider 调用量</span></div>
+  </section>
+
+</div>
+
+<div class="foot">
+  <b>关键不变量：</b>
+  <ul>
+    <li><b>边界隔离</b>：ES 仅用于 knowledge 域一个 index <code>knowledge_chunk_v1</code>；blog 文章列表/分类/标签检索仍走 MySQL，不扩。</li>
+    <li><b>真相源</b>：MySQL chunk 业务字段为真相源，ES content+vector 为检索镜像；ES index 失败可凭 content 重建向量+重 index。</li>
+    <li><b>单进程只读契约</b>：仅 <code>ArticleContentProvider</code>(blog-knowledge-api，blog-service 只读实现)；<b>无事件、不改 blog 既有逻辑</b>；入库/失效全部管理端手动触发；拆独立进程时切 Feign，业务代码不变。</li>
+    <li><b>向量不落 MySQL</b>：MySQL chunk 表不再存 embedding BLOB，向量在 ES；切换 provider 须重建索引。</li>
+    <li><b>队列/限流</b>：AI 调用走独立 <code>ThreadPoolTaskExecutor</code>(core2/max8)，线程池满→429；问答限流 20次/天 + 5次/分/用户。</li>
+  </ul>
+</div>
+
+</body>
+</html>

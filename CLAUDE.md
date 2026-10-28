@@ -68,6 +68,7 @@
 - 组件版本基线的**唯一取用处**是 `docs/version-baseline.md`（固定登记、不可删除）；各系统父 `pom.xml` 的 `dependencyManagement` 按其锁定落地，禁止各系统各锁各的版本；版本号**不在本文件**复制。
 - **落点原则（与 5.4 一致）：** 需连接中间件或额外配置才能工作的依赖（ORM、Redis/Redisson、Feign、JWT、MQ/MinIO 客户端、限流/幂等等），**只**在 `{system}-framework` 封装一次；纯编译期工具（Lombok、MapStruct）可随模块引入。
   - **例外（对象存储 SDK）：** 采用独立模块 `{system}-object-storage` 时，MinIO/S3 客户端依赖**唯一落点**为该模块（object-storage-design.md §3.1；已采用：blog）；此时 `{system}-framework` **不再**引入对象存储 SDK，可改为依赖 object-storage 做装配/横切接线。未采用独立模块的存量系统可暂保持 framework 内封装，但多服务商与配置能力仍以 object-storage-design 为准。
+  - **例外（检索引擎 ES client）：** Elasticsearch **仅服务单一限定业务域**（index 边界固定、不用于该域外查询）时，ES Java client 依赖**唯一落点**可为该域业务模块（已采用：blog 的 `blog-knowledge-service`，ES 仅服务 index `knowledge_chunk_v1`，见 `docs/knowledge-base-design/knowledge-base-design.md` §5.3）；此时 `{system}-framework` **不引入** ES client。**回升条件：** 第二个业务域需要 ES 时，必须将 ES client 上提 `{system}-framework` 统一装配，删除本例外。
 - `common` **禁止**依赖 MyBatis-Plus、Redis/Redisson、数据源、Actuator、MQ/MinIO 客户端、JWT 库、Hutool。
 - **网关模块（`{system}-gateway`）凡使用 `lb://` 路由，必须显式声明 Spring Cloud LoadBalancer**，禁止依赖 Gateway starter 的偶然传递；本地联调若见网关对已注册服务仍 503，优先查该依赖（见 `docs/template/fixbug/2026-09-25-unify-login-sso-gateway.md` §5.1）。
 - 禁止同类平行选型、禁止业务自建横切实现；反模式**唯一清单**见 **7.1**，明确不引入的组件**唯一清单**见 **2.2**。

@@ -188,7 +188,8 @@
 <div class="proto-bar">
   <span class="proto-title">knowledge-base · 页面原型</span>
   <div class="proto-tabs">
-    <button class="proto-tab on" data-panel="admin-docs">admin · 知识文档</button>
+    <button class="proto-tab on" data-panel="admin-ingest">admin · 文章入库</button>
+    <button class="proto-tab" data-panel="admin-docs">admin · 知识文档</button>
     <button class="proto-tab" data-panel="admin-import">admin · 手动导入</button>
     <button class="proto-tab" data-panel="admin-provider">admin · AI 服务商</button>
     <button class="proto-tab" data-panel="portal-ask">portal · 问知识库</button>
@@ -196,8 +197,8 @@
   <span class="proto-note">原型外壳仅评审用 · 视觉取值：docs/template/tokens-aurora.css（极光）· 布局参照，效力低于 knowledge-base-design.md 正文 · 菜单/页面嵌 blog-admin 与 blog-portal，不建独立前端</span>
 </div>
 
-<!-- ================= 面板 1：admin · 知识文档列表 ================= -->
-<div class="panel show" id="admin-docs">
+<!-- ================= 面板 0：admin · 文章入库（手动触发向量化） ================= -->
+<div class="panel show" id="admin-ingest">
   <div class="stage">
     <div class="admin-layout">
       <aside class="side">
@@ -206,6 +207,92 @@
         <a class="side-item">文章列表</a>
         <a class="side-item">分类 / 标签</a>
         <div class="side-group">知识库</div>
+        <a class="side-item">知识文档</a>
+        <a class="side-item on">文章入库</a>
+        <a class="side-item">手动导入</a>
+        <a class="side-item">AI 服务商 <span class="badge">1</span></a>
+        <div class="side-group">系统</div>
+        <a class="side-item">存储服务商</a>
+        <a class="side-item">角色 / 菜单</a>
+        <a class="side-item">审计日志</a>
+      </aside>
+      <div class="admin-main">
+        <div class="admin-top">
+          <h2>文章入库</h2>
+          <span class="crumb">知识库 / 文章入库</span>
+          <span class="who"><span class="avatar">Q</span> qjj · 超级管理员</span>
+        </div>
+        <div class="admin-body">
+          <p class="hint" style="margin:0 0 12px">
+            勾选已发布文章 →「入库并向量化」：一步完成 切块 + 向量化 + ES 索引。
+            文章发布 / 下架 / 删除<b>不会</b>自动同步知识库，需在本页手动触发（只读回拉，不动 blog 逻辑）。
+          </p>
+          <div class="toolbar">
+            <select class="select"><option>分类：全部</option><option>技术</option><option>随笔</option></select>
+            <select class="select"><option>入库状态：全部</option><option>未入库</option><option>已入库</option><option>待更新</option></select>
+            <input class="input" placeholder="搜索文章标题…" />
+            <button class="btn ghost mini">对账同步（diff 提示待更新 / 失效）</button>
+            <button class="btn primary mini">入库并向量化（选中 2 篇）</button>
+          </div>
+
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:36px"><input type="checkbox" /></th><th>标题</th><th>分类</th><th>发布时间</th><th>入库状态</th><th>更新时间</th><th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><input type="checkbox" /></td>
+                  <td>JWT 与会话安全最佳实践（旧版）</td><td>技术</td><td>2026-10-20 10:12</td>
+                  <td><span class="tag muted">未入库</span></td><td>2026-10-20 10:12</td>
+                  <td><button class="btn ghost mini">入库</button></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox" /></td>
+                  <td>Elasticsearch 混合检索：kNN + BM25 + RRF</td><td>技术</td><td>2026-10-25 09:40</td>
+                  <td><span class="tag warn">待更新</span></td><td>2026-10-27 18:02</td>
+                  <td><button class="btn ghost mini">入库</button></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox" /></td>
+                  <td>Vue3 组合式 API 实践笔记</td><td>技术</td><td>2026-10-22 14:05</td>
+                  <td><span class="tag ok">已入库 · 9 块</span></td><td>2026-10-22 14:06</td>
+                  <td><button class="btn ghost mini">重建</button><button class="btn ghost mini">失效</button></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox" /></td>
+                  <td>MinIO 签名错误排查记录</td><td>随笔</td><td>2026-10-18 16:30</td>
+                  <td><span class="tag ok">已入库 · 4 块</span></td><td>2026-10-18 16:31</td>
+                  <td><button class="btn ghost mini">重建</button><button class="btn ghost mini">失效</button></td>
+                </tr>
+                <tr>
+                  <td><input type="checkbox" /></td>
+                  <td>网关 lb:// 路由 503 排查</td><td>技术</td><td>2026-10-15 11:08</td>
+                  <td><span class="tag danger">已失效（文章已下架）</span></td><td>2026-10-16 09:00</td>
+                  <td><button class="btn ghost mini">入库</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 面板 1：admin · 知识文档列表 ================= -->
+<div class="panel" id="admin-docs">
+  <div class="stage">
+    <div class="admin-layout">
+      <aside class="side">
+        <div class="side-brand"><i></i>blog-admin</div>
+        <div class="side-group">内容管理</div>
+        <a class="side-item">文章列表</a>
+        <a class="side-item">分类 / 标签</a>
+        <div class="side-group">知识库</div>
+        <a class="side-item">文章入库</a>
         <a class="side-item on">知识文档</a>
         <a class="side-item">手动导入</a>
         <a class="side-item">AI 服务商 <span class="badge">1</span></a>
@@ -306,7 +393,7 @@
       <span class="chip">接口 <b>GET /api/v1/admin/knowledge/docs</b>（分页 + status/source 筛选）</span>
       <span class="chip">权限 <b>blog:knowledge:list</b></span>
       <span class="chip">重建 <b>POST /docs/{id}/revectorize</b> · 全量 <b>POST /reindex</b></span>
-      <span class="chip">对账 <b>POST /sync-articles</b>（Feign 推送失败兜底）</span>
+      <span class="chip">对账 <b>POST /article-index/sync</b>（投影 diff → 待更新 / 失效同步）</span>
       <span class="chip">状态机 <b>PENDING→VECTORIZING→READY/FAILED/INVALID</b></span>
     </div>
   </div>
@@ -322,6 +409,7 @@
         <a class="side-item">文章列表</a>
         <a class="side-item">分类 / 标签</a>
         <div class="side-group">知识库</div>
+        <a class="side-item">文章入库</a>
         <a class="side-item">知识文档</a>
         <a class="side-item on">手动导入</a>
         <a class="side-item">AI 服务商 <span class="badge">1</span></a>
@@ -421,6 +509,7 @@
         <a class="side-item">分类 / 标签</a>
         <div class="side-group">知识库</div>
         <a class="side-item">知识文档</a>
+        <a class="side-item">文章入库</a>
         <a class="side-item">手动导入</a>
         <a class="side-item on">AI 服务商 <span class="badge">1</span></a>
         <div class="side-group">系统</div>
