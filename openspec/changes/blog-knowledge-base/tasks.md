@@ -12,7 +12,7 @@
 ## 2. 表结构与种子 SQL（对应 P0-1 之 SQL）
 
 - [x] 2.1 编写 `deploy/db/migration/blog_db/07_knowledge_tables.sql`：8 张表 DDL 逐字段照抄 `table-design.md` §2（`knowledge_doc`/`knowledge_chunk`/`knowledge_file`/`ai_provider`/`knowledge_chat_session`/`knowledge_chat_message`/`knowledge_task`/`knowledge_article_index`；`IF NOT EXISTS` 可重复执行；审计 5 列齐套；索引命名与数量对齐契约）
-- [x] 2.2 编写 `deploy/db/seed/2026-10-28-blog-knowledge.sql`：RBAC 菜单/按钮（`1004`/`2009–2012`/`90023–90031` + `sys_role_menu 6034–6047`，`INSERT IGNORE` + 按 id `UPDATE` 幂等）+ `ai_provider` 引导两行（`siliconflow-embed` bge-m3 dim=1024 / `siliconflow-llm`，见 `table-design.md` §4.2）
+- [x] 2.2 编写 `deploy/db/seed/2026-10-28-blog-knowledge.sql`：RBAC 菜单/按钮（`1004`/`2010–2013`/`90027–90035` + `sys_role_menu 6039–6052`，**2026-10-29 连库核对后重排**——原号段 2009/90023-90026/6034-6038 与 storage-provider 域冲突，契约 table-design §4.1 已同步改号；`INSERT IGNORE` + 按 id `UPDATE` 幂等）+ `ai_provider` 引导两行（`siliconflow-embed` bge-m3 dim=1024 / `siliconflow-llm`，见 `table-design.md` §4.2）
 - [x] 2.3 编写 `deploy/es/knowledge_chunk_v1.json`：ES index 定义照抄 `table-design.md` §3（settings + mappings；`PUT /knowledge_chunk_v1` 前先 `HEAD` 判存在）；创建后校验 `embedding.dims=1024`、`content.analyzer=ik_smart`
 - [ ] 2.4 人工执行 SQL 与 ES index（**不可逆/生产执行前按 CLAUDE.md §7 征询**）；执行后核对 8 表存在、种子可重复执行不报错
 
@@ -95,4 +95,6 @@
 - [ ] 12.6 回填 tasks.md 勾选；记入 `.workbuddy/memory/`；交付总结（端点清单/启动命令/遗留事项）
 
 > **实施回填（2026-10-29）**：1–11 全部完成；`mvn clean install -DskipTests` 全量通过，blog-admin / blog-portal `lint + type-check` 通过；12.5 grep 复核通过（blog-service 仅新增 1 个只读实现类 + pom 依赖；framework 无 ES client；无明文密钥入仓；ES 仅 knowledge_chunk_v1）。
+> **前置核验复验（2026-10-29，对 192.168.99.100 实测）**：ES 9.5.5 连通、集群 green、版本基线登记齐备（1.2 通过）；发现 ik 实缺已当场补装 `analysis-ik 9.5.5`（Infini 官方源）并复验 `_cat/plugins`/`_analyze(ik_smart)` 生效；Kibana 实为未部署，用户裁决暂不部署（不影响后端链路）；test-env.md §2.5/§2.5.1 登记偏差已同步修正（容器 `1Panel-elasticsearch-Hb3I`、无 plugins 宿主挂载——容器重建须重装 ik）。
+> **菜单种子执行（2026-10-29，用户指令：先连库核对再创建）**：连库发现 storage-provider 域已占用 2009/90023-90026/6034-6038，原号段冲突；已重排为 1004/2010-2013/90027-90035/sys_role_menu 6039-6052（契约 table-design §4.1、api-design §7 同步改号）并在 blog_db 执行完毕——sys_menu +14 行、sys_role_menu +14 行、ai_provider 引导 2 行落库，存储供应商行复核未被覆盖；07 知识库 8 表连库确认已存在。2.4 剩余：ES index `PUT /knowledge_chunk_v1` 与 portal-spa-client 种子未执行。
 > 未勾选项遗留：**2.4** SQL/种子/ES index 脚本已交付但按用户裁决不由实施方执行（需人工执行 `07_knowledge_tables.sql` → `2026-10-28-blog-knowledge.sql` → `2026-10-29-blog-portal-spa-client.sql` → `PUT /knowledge_chunk_v1`，再启动后端）；**12.2/12.3/12.4** 冒烟与降级/权限验证依赖 2.4 完成后进行（api_key 需经管理端「AI 服务商」页录入后冒烟）。

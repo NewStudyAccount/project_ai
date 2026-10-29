@@ -3,8 +3,6 @@ package com.qjj.blog.knowledge.es;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ExpandWildcard;
 import co.elastic.clients.elasticsearch._types.KnnSearch;
-import co.elastic.clients.elasticsearch._types.Rank;
-import co.elastic.clients.elasticsearch._types.RrfRank;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.cluster.HealthRequest;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
@@ -28,6 +26,7 @@ import org.springframework.stereotype.Service;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -166,52 +165,84 @@ public class KnowledgeChunkIndexService {
     }
 
     /**
-     * 混合检索：kNN + match(BM25) + filter(doc_status=2) → ES 原生 RRF → Top-K。
-     * 出处 denormalize 自 ES 文档（chunk_id/doc_id/doc_title/doc_url/score）。
+     * 混合检索：kNN(embedding) + match(content, BM25) 双路各取候选窗 → <b>应用层 RRF</b> 融合 → Top-K。
+     * <p>不用 ES 原生 RRF：{@code rank.rrf} 属铂金 license 功能，basic license 直接
+     * {@code security_exception}（2026-10-29 裁决改应用层融合，RRF 公式与原 rankConstant=60 对齐）。
+     * 出处 denormalize 自 ES 文档（chunk_id/doc_id/doc_title/doc_url/score），全链路不回 MySQL。
      */
     public List<EsSearchHit> search(List<Float> queryVector, String question, int topK) {
         try {
-            SearchRequest request = new SearchRequest.Builder()
+            int window = Math.max(topK * 4, 20);
+            Query visible = Query.of(q -> q.term(t -> t.field("doc_status").value(2)));
+
+            SearchRequest knnRequest = new SearchRequest.Builder()
                     .index(props.getIndexName())
                     .knn(List.of(new KnnSearch.Builder()
                             .field("embedding")
                             .queryVector(queryVector)
-                            .k(topK)
-                            .numCandidates(Math.max(topK * 10, 50))
-                            .filter(Query.of(q -> q.term(t -> t.field("doc_status").value(2))))
+                            .k(window)
+                            .numCandidates(Math.max(window * 10, 50))
+                            .filter(visible)
                             .build()))
-                    .query(Query.of(q -> q.bool(b -> b
-                            .must(m -> m.match(mm -> mm.field("content").query(question)))
-                            .filter(f -> f.term(t -> t.field("doc_status").value(2))))))
-                    .rank(Rank.of(r -> r.rrf(new RrfRank.Builder()
-                            .rankConstant(60L)
-                            .rankWindowSize((long) Math.max(topK * 4, 20))
-                            .build())))
-                    .size(topK)
+                    .size(window)
                     .allowNoIndices(true)
                     .expandWildcards(ExpandWildcard.None)
                     .build();
-            SearchResponse<Map> resp = client.search(request, Map.class);
-            List<EsSearchHit> hits = new ArrayList<>();
-            for (Hit<Map> hit : resp.hits().hits()) {
-                Map<?, ?> src = hit.source();
-                if (src == null) {
-                    continue;
-                }
-                hits.add(new EsSearchHit(
-                        String.valueOf(src.get("chunk_id")),
-                        String.valueOf(src.get("doc_id")),
-                        src.get("doc_title") == null ? "" : String.valueOf(src.get("doc_title")),
-                        src.get("doc_url") == null ? "" : String.valueOf(src.get("doc_url")),
-                        src.get("content") == null ? "" : String.valueOf(src.get("content")),
-                        hit.score() == null ? 0d : hit.score()));
-            }
-            return hits;
+            SearchRequest bm25Request = new SearchRequest.Builder()
+                    .index(props.getIndexName())
+                    .query(Query.of(q -> q.bool(b -> b
+                            .must(m -> m.match(mm -> mm.field("content").query(question)))
+                            .filter(visible))))
+                    .size(window)
+                    .allowNoIndices(true)
+                    .expandWildcards(ExpandWildcard.None)
+                    .build();
+
+            SearchResponse<Map> knnResp = client.search(knnRequest, Map.class);
+            SearchResponse<Map> bm25Resp = client.search(bm25Request, Map.class);
+
+            // 应用层 RRF：score(chunk) = Σ_r 1 / (k + rank_r)，k=60（对齐原 ES rrf rankConstant）
+            final double rrfK = 60d;
+            Map<String, EsSearchHit> hitByChunk = new LinkedHashMap<>();
+            Map<String, Double> scores = new LinkedHashMap<>();
+            accumulateRrf(knnResp, hitByChunk, scores, rrfK);
+            accumulateRrf(bm25Resp, hitByChunk, scores, rrfK);
+
+            return scores.entrySet().stream()
+                    .sorted((a, b) -> Double.compare(b.getValue(), a.getValue()))
+                    .limit(topK)
+                    .map(e -> {
+                        EsSearchHit h = hitByChunk.get(e.getKey());
+                        return new EsSearchHit(h.chunkId(), h.docId(), h.docTitle(), h.docUrl(), h.content(), e.getValue());
+                    })
+                    .toList();
         } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.warn("ES search failed: {}", e.getMessage(), e);
             throw new BizException(BlogErrorCodeEnum.KNOWLEDGE_SEARCH_UNAVAILABLE);
+        }
+    }
+
+    /** 单路检索结果按 RRF 公式累加得分（rank 从 1 起），并登记出处命中 */
+    private void accumulateRrf(SearchResponse<Map> resp, Map<String, EsSearchHit> hitByChunk,
+                               Map<String, Double> scores, double rrfK) {
+        List<Hit<Map>> hits = resp.hits().hits();
+        for (int i = 0; i < hits.size(); i++) {
+            Hit<Map> hit = hits.get(i);
+            Map<?, ?> src = hit.source();
+            if (src == null) {
+                continue;
+            }
+            String chunkId = String.valueOf(src.get("chunk_id"));
+            scores.merge(chunkId, 1d / (rrfK + i + 1d), Double::sum);
+            hitByChunk.putIfAbsent(chunkId, new EsSearchHit(
+                    chunkId,
+                    String.valueOf(src.get("doc_id")),
+                    src.get("doc_title") == null ? "" : String.valueOf(src.get("doc_title")),
+                    src.get("doc_url") == null ? "" : String.valueOf(src.get("doc_url")),
+                    src.get("content") == null ? "" : String.valueOf(src.get("content")),
+                    0d));
         }
     }
 

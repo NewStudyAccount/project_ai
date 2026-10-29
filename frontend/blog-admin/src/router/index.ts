@@ -89,6 +89,12 @@ router.beforeEach(async (to) => {
     return false
   }
   installDynamicRoutes(auth.menus)
+  // 动态路由（knowledge/* 等）在本守卫里才注册，而 vue-router 在导航开始时已解析完 to：
+  // 硬加载 / OIDC 登录回跳 / F5 时 to 已命中 NotFound 兜底，注册后 return true 也回不到目标页。
+  // 故命中 NotFound 但按最新路由表可解析时，返回重定向触发二次解析（二次进入时 to 已正确匹配，不会循环）。
+  if (to.name === 'NotFound' && router.resolve(to.fullPath).name !== 'NotFound') {
+    return { path: to.fullPath, replace: true }
+  }
   return true
 })
 

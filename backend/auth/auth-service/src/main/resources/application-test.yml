@@ -23,7 +23,11 @@ auth:
       - https://user-admin.example.local
       - https://auth-portal.example.local
       - https://auth-admin.example.local
+      - https://blog-admin.example.local
+      - https://blog-portal.example.local
     post-logout-redirect-uris:
       - https://user-admin.example.local/logged-out
       - https://auth-admin.example.local/logged-out
+      - https://blog-admin.example.local/logged-out
+      - https://blog-portal.example.local/logged-out
       - https://auth-portal.example.local/

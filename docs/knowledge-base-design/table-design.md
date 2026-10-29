@@ -342,7 +342,7 @@ PUT /knowledge_chunk_v1
 | `doc_url` 取值 | 文章 doc = 公开详情 URL；**手动导入 doc = 空值**（portal 引用降级为纯文本标题 +「站内知识」标记，不暴露 admin 路由；§5 裁决 7） |
 | `doc_status` | **与 `knowledge_doc.status` 严格同源**：0 PENDING / 1 VECTORIZING / 2 READY / 3 FAILED / 4 INVALID；检索 filter 仅放行 `2` |
 | 分词 | `content` / `heading` 用 `ik_smart`（**P0 装 ik 分词器插件**，版本随 ES 9.5.5 严格对齐）；`ik_max_word` 留 P1 对比调优 |
-| 检索 DSL | `knn(embedding)` + `match(content)`（BM25）+ `filter(doc_status=2)` → ES 原生 RRF 融合 → Top-K（含 `content`/`doc_title`/`doc_url`，出处无需回 MySQL） |
+| 检索 DSL | `knn(embedding)` + `match(content)`（BM25）双路各取 max(K×4,20) 候选窗 + `filter(doc_status=2)` → **应用层 RRF 融合**（k=60；ES 原生 `rank.rrf` 属铂金 license、basic 报 `security_exception`，2026-10-29 裁决改应用层融合）→ Top-K（含 `content`/`doc_title`/`doc_url`，出处无需回 MySQL） |
 | 分片/副本 | 测试单机：1 分片 0 副本；**生产：副本 ≥1** |
 | dims 校验 | `dims=1024` 必须与生效 `ai_provider.dim` 一致；换 model/dim 必须「重建索引」 |
 | 演进 | index 名带 `_v1`；mapping 破坏性变更须升 `_v2` + alias 滚动（**P2**，P0 全量重建有停机窗口） |
@@ -355,30 +355,30 @@ PUT /knowledge_chunk_v1
 ### 4.1 RBAC 菜单 / 按钮（`sys_menu`）
 
 > 号段遵循 `docs/template/rbac-design.md` §2.0：目录 `100x`、二级菜单 `200x`、按钮 `90000x`。
-> **占用现状（blog 已用）：** `1001–1003`、`2001–2008`、`90001–90022`、`sys_role_menu 6001–6033`。
-> **本域续号：** `1004`、`2009–2012`、`90023–90031`、`sys_role_menu 6034–6047`。
+> **占用现状（blog 已用，2026-10-29 连库核对）：** `1001–1003`、`2001–2009`、`90001–90026`、`sys_role_menu 6001–6038`（其中 `2009`/`90023–90026`/`6034–6038` 为 storage-provider 域占用，原续号计划与之冲突，已改号）。
+> **本域续号：** `1004`、`2010–2013`、`90027–90035`、`sys_role_menu 6039–6052`。
 
 | id | parent | type | 名称 | permission | path / component |
 |----|--------|------|------|-----------|------------------|
 | 1004 | 0 | 1 | 知识库 | — | 目录（icon 待定） |
-| 2009 | 1004 | 2 | 知识文档 | `blog:knowledge:list` | `/knowledge/docs` · `views/knowledge/DocList.vue` |
+| 2013 | 1004 | 2 | 知识文档 | `blog:knowledge:list` | `/knowledge/docs` · `views/knowledge/DocList.vue` |
 | 2012 | 1004 | 2 | **文章入库** | `blog:knowledge:ingest` | `/knowledge/ingest` · `views/knowledge/ArticleIngest.vue` |
 | 2011 | 1004 | 2 | 手动导入 | `blog:knowledge:create` | `/knowledge/import` · `views/knowledge/ImportDoc.vue` |
 | 2010 | 1004 | 2 | AI 服务商 | `blog:ai-provider:list` | `/knowledge/ai-providers` · `views/knowledge/AiProviderList.vue` |
-| 90023 | 2009 | 3 | 编辑知识 | `blog:knowledge:update` | — |
-| 90024 | 2009 | 3 | 删除知识 | `blog:knowledge:delete` | — |
-| 90025 | 2009 | 3 | 重建本文 | `blog:knowledge:revectorize` | 单文档重切 + 重向量化（§5 裁决 2） |
-| 90026 | 2009 | 3 | 重建索引 | `blog:knowledge:reindex` | 全量重建（删 index 重建，有停机窗口） |
-| 90027 | 2009 | 3 | 知识库运维 | `blog:knowledge:manage` | 对账同步 + 统计/ES 健康度 + 重跑失败任务 |
+| 90032 | 2013 | 3 | 编辑知识 | `blog:knowledge:update` | — |
+| 90033 | 2013 | 3 | 删除知识 | `blog:knowledge:delete` | — |
+| 90034 | 2013 | 3 | 重建本文 | `blog:knowledge:revectorize` | 单文档重切 + 重向量化（§5 裁决 2） |
+| 90035 | 2013 | 3 | 重建索引 | `blog:knowledge:reindex` | 全量重建（删 index 重建，有停机窗口） |
+| 90027 | 2013 | 3 | 知识库运维 | `blog:knowledge:manage` | 对账同步 + 统计/ES 健康度 + 重跑失败任务 |
 | 90028 | 2010 | 3 | 新建服务商 | `blog:ai-provider:create` | — |
 | 90029 | 2010 | 3 | 编辑服务商 | `blog:ai-provider:update` | — |
 | 90030 | 2010 | 3 | 删除服务商 | `blog:ai-provider:delete` | — |
 | 90031 | 2010 | 3 | 测试连通 | `blog:ai-provider:test` | — |
 
-- 菜单排序：`2009` sort=1 / `2012` sort=2 / `2011` sort=3 / `2010` sort=4。
-- `component` 路径实施时须与 `blog-admin` 路由（`componentByPath`）对齐；原型 tab 与菜单对应：知识文档 `2009` / 手动导入 `2011` / AI 服务商 `2010`（原型需补「文章入库」tab，见 [knowledge-prototype.html](./knowledge-prototype.html)）。
+- 菜单排序：`2013` sort=1 / `2012` sort=2 / `2011` sort=3 / `2010` sort=4。
+- `component` 路径实施时须与 `blog-admin` 路由（`componentByPath`）对齐；原型 tab 与菜单对应：知识文档 `2013` / 手动导入 `2011` / AI 服务商 `2010`（原型需补「文章入库」tab，见 [knowledge-prototype.html](./knowledge-prototype.html)）。
 - **文章入库**（§5 裁决 14）与**手动导入**（§5 裁决 4）均为独立菜单页、各自独立权限位（`ingest` / `create`），均为**手动触发**。
-- `sys_role_menu` 绑定 `admin(9001)`：`6034→1004`、`6035→2009`、`6036→2012`、`6037→2011`、`6038→2010`、`6039–6047→90023–90031`。
+- `sys_role_menu` 绑定 `admin(9001)`：`6039→1004`、`6040→2013`、`6041→2012`、`6042→2011`、`6043→2010`、`6044–6047→90032–90035`、`6048→90027`、`6049–6052→90028–90031`。
 - 种子写法沿用 `INSERT IGNORE` + 按 id `UPDATE`（幂等，可重复执行）。
 
 ### 4.2 `ai_provider` 引导默认
@@ -410,7 +410,7 @@ VALUES
 | # | 项 | 裁决方向 | 落点 |
 |---|----|----------|------|
 | 1 | `knowledge_file.storage_code` 列宽 | **VARCHAR(64)**（主设计 §6.3 草案写 32） | §2.2；对齐 `sys_storage_provider.code` / `sys_file.storage_code` |
-| 2 | 单文档重建权限位 | **独立 `blog:knowledge:revectorize`**（与全量 `reindex` 分权） | §4.1 `90025`；主设计 §7.1 权限位列表补一项 |
+| 2 | 单文档重建权限位 | **独立 `blog:knowledge:revectorize`**（与全量 `reindex` 分权） | §4.1 `90034`；主设计 §7.1 权限位列表补一项 |
 | 3 | 会话归属用户列 | **不另设**，取审计 `create_by` | §2.4；消除与审计 5 列重复 |
 | 4 | 手动导入页形态 | **独立菜单页 `2011`**（权限位 = `blog:knowledge:create`） | §4.1；对齐原型 tab |
 | 5 | `ai_provider` 模型承载 | **拆 `kind=1` / `kind=2` 两行**（主设计 §5.2 的 `kind=3` 单行改） | §2.3、§4.2；主设计 §5.2 seed 同步改 |

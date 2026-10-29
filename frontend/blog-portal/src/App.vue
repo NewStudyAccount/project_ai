@@ -15,6 +15,7 @@ const navItems = [
   { to: '/articles', label: '文章' },
   { to: '/categories', label: '分类' },
   { to: '/tags', label: '标签' },
+  { to: '/ask', label: '问知识库' },
   { to: '/about', label: '关于' },
 ]
 

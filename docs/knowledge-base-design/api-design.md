@@ -349,7 +349,7 @@
 | **权限** | 登录态（网关 JWT；**无匿名通道**）；`/api/v1/knowledge/**` 不入 public-paths |
 | **请求头** | `Accept: text/event-stream`；`Idempotent-Key` **不需要**（重复提问属用户意图） |
 | **限流** | `@RateLimit`：**5 次/分钟/用户** + **20 次/天/用户**；超限 HTTP **429** + `code=10003`（`msg` 区分"请求过于频繁"/"今日配额已用尽，请明日再试"） |
-| **逻辑** | q 向量化 → ES `knn + match` + `filter(doc_status=2)` → RRF → Top-K → 组装上下文 → LLM 流式 → 落库会话 |
+| **逻辑** | q 向量化 → ES `knn + match` 双查询 + `filter(doc_status=2)` → 应用层 RRF → Top-K → 组装上下文 → LLM 流式 → 落库会话 |
 | **涉及表** | `knowledge_chat_session`、`knowledge_chat_message`（ES 为检索源，全链路不回 MySQL 取正文） |
 
 **入参（Body）**
@@ -415,12 +415,12 @@ data: {"messageId":"2026102800000452","sessionId":"2026102800000123","costMs":31
 
 | 权限位 | 用途 | 菜单/按钮（[table-design.md](./table-design.md) §4.1） |
 |--------|------|------|
-| `blog:knowledge:list` | 知识文档列表 | 菜单 `2009` |
+| `blog:knowledge:list` | 知识文档列表 | 菜单 `2013` |
 | `blog:knowledge:ingest` | 文章入库页（含候选/同步/提交） | 菜单 `2012` |
 | `blog:knowledge:create` | 手动导入 | 菜单 `2011` |
-| `blog:knowledge:update` / `delete` | 编辑 / 删除知识 | 按钮 `90023` / `90024` |
-| `blog:knowledge:revectorize` | 单文档重建 | 按钮 `90025` |
-| `blog:knowledge:reindex` | 全量重建 | 按钮 `90026` |
+| `blog:knowledge:update` / `delete` | 编辑 / 删除知识 | 按钮 `90032` / `90033` |
+| `blog:knowledge:revectorize` | 单文档重建 | 按钮 `90034` |
+| `blog:knowledge:reindex` | 全量重建 | 按钮 `90035` |
 | `blog:knowledge:manage` | 任务/统计/对账 | 按钮 `90027` |
 | `blog:ai-provider:list / create / update / delete / test` | AI 服务商 | 菜单 `2010` + 按钮 `90028–90031` |
 

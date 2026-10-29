@@ -22,6 +22,7 @@ import com.qjj.blog.knowledge.mapper.KnowledgeDocMapper;
 import com.qjj.blog.knowledge.mapper.KnowledgeFileMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -103,12 +104,10 @@ public class VectorizeService implements KnowledgeTaskServiceImpl.TaskHandler {
         var embedRow = providerResolver.activeRow(com.qjj.blog.knowledge.enums.AiProviderKindEnum.EMBEDDING);
 
         // 旧 chunk 清理：MySQL 逻辑删 + ES 删该 doc 全部 chunk 文档
-        List<KnowledgeChunk> oldChunks = chunkMapper.selectList(new LambdaQueryWrapper<KnowledgeChunk>()
+        //（必须走 Mapper.delete：@TableLogic 字段会被 updateById 的 SET 排除，
+        //  setDeleted(1)+updateById 静默无效、旧 chunk 残留 deleted=0）
+        chunkMapper.delete(new LambdaQueryWrapper<KnowledgeChunk>()
                 .eq(KnowledgeChunk::getDocId, docId));
-        for (KnowledgeChunk old : oldChunks) {
-            old.setDeleted(1);
-            chunkMapper.updateById(old);
-        }
         chunkIndexService.ensureIndex();
         chunkIndexService.deleteByDoc(docId);
 
@@ -154,13 +153,18 @@ public class VectorizeService implements KnowledgeTaskServiceImpl.TaskHandler {
                     docs.add(new KnowledgeChunkIndexService.EsChunkDoc(
                             String.valueOf(chunk.getId()), docId,
                             chunk.getHeading(), chunk.getContent(), vec,
-                            doc.getSource(), splitTags(doc.getTags()),
+                            doc.getSource(), loaded.tags(),
                             KnowledgeDocStatusEnum.READY.getCode(),
                             loaded.title(), loaded.docUrl()));
-                    chunk.setEmbedStatus(KnowledgeEmbedStatusEnum.READY.getCode());
-                    chunk.setFailReason("");
                 }
                 chunkIndexService.bulkIndex(docs);
+                // 批次写 ES 成功后才回写 READY（并落库）：此前只改内存漏 updateById，embed_status 停在 PENDING；
+                // 失败批次保持 PENDING 内存态，由 catch 统一标 FAILED
+                for (KnowledgeChunk chunk : batch) {
+                    chunk.setEmbedStatus(KnowledgeEmbedStatusEnum.READY.getCode());
+                    chunk.setFailReason("");
+                    chunkMapper.updateById(chunk);
+                }
             }
         } catch (Exception e) {
             // 批次失败：失败块及后续 PENDING 块标 FAILED，doc FAILED；任务重试将整篇重跑（幂等覆盖）
@@ -183,6 +187,8 @@ public class VectorizeService implements KnowledgeTaskServiceImpl.TaskHandler {
         doc.setChunkCount(chunks.size());
         doc.setEmbedModel(embedRow == null ? "" : embedRow.getModel());
         doc.setEmbedDim(embedRow == null ? 0 : (embedRow.getDim() == null ? 0 : embedRow.getDim()));
+        // 回填标签（文章入库此前不落 knowledge_doc.tags，ES tags/前缀两来源不一致）
+        doc.setTags(String.join(",", loaded.tags()));
         doc.setFailReason("");
         docMapper.updateById(doc);
         refreshProjection(doc, loaded);
@@ -310,8 +316,15 @@ public class VectorizeService implements KnowledgeTaskServiceImpl.TaskHandler {
                              String docUrl, ArticleContent articleContent) {
     }
 
-    /** 投影刷新委托（ArticleIndexService 实现注入，避免 mapper 直连循环依赖） */
+    /**
+     * 投影刷新委托（ArticleIndexServiceImpl 实现注入，避免 mapper 直连循环依赖）。
+     * <p>必须 {@code @Lazy}：ArticleIndexServiceImpl（构造注入 KnowledgeTaskService）→
+     * KnowledgeTaskServiceImpl（构造注入 TaskHandler=本类）→ 本字段（ProjectionRefresher=ArticleIndexServiceImpl）
+     * 构成单例 Bean 环；Spring Boot 3 默认禁止循环依赖，此处注入懒代理断环，
+     * 首次 {@link #refreshProjection} 调用时才解析真实 Bean。
+     */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
+    @Lazy
     private ProjectionRefresher projectionRefresher;
 
     public interface ProjectionRefresher {

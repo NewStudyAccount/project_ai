@@ -7,6 +7,7 @@ import TagView from '@/views/TagView.vue'
 import AboutView from '@/views/AboutView.vue'
 import AskView from '@/views/AskView.vue'
 import OidcCallback from '@/views/OidcCallback.vue'
+import LoggedOutView from '@/views/LoggedOutView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
 import { hasValidAccessToken, redirectForLogin } from '@/utils/oidc'
 
@@ -20,6 +21,8 @@ const routes: RouteRecordRaw[] = [
   // 知识问答（登录态守卫；blog-knowledge-base 提案 tasks 11.5）
   { path: '/ask', name: 'Ask', component: AskView, meta: { requiresAuth: true } },
   { path: '/callback', name: 'OidcCallback', component: OidcCallback },
+  // 登出回跳落点（oidc.ts postLogoutRedirectUri = {origin}/logged-out）
+  { path: '/logged-out', name: 'LoggedOut', component: LoggedOutView },
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFoundView },
 ]
 

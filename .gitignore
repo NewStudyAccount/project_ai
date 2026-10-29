@@ -19,3 +19,4 @@ docs/secrets/
 **/node_modules/
 **/dist/
 /logs/
+/backend/blog/blog-server/logs/

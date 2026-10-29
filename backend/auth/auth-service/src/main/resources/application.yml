@@ -26,18 +26,23 @@ auth:
       - http://localhost:5174
       - http://localhost:5175
       - http://localhost:5100
+      # blog-portal（问知识库）：换票 fetch 跨域 POST /oauth2/token，缺此来源会被 CORS 拒为 403
+      - http://localhost:5200
       - http://127.0.0.1:5173
       - http://127.0.0.1:5174
       - http://127.0.0.1:5175
       - http://127.0.0.1:5100
+      - http://127.0.0.1:5200
     post-logout-redirect-uris:
       - http://localhost:5173/logged-out
       - http://localhost:5175/logged-out
       - http://localhost:5100/logged-out
+      - http://localhost:5200/logged-out
       - http://localhost:5174/
       - http://127.0.0.1:5173/logged-out
       - http://127.0.0.1:5175/logged-out
       - http://127.0.0.1:5100/logged-out
+      - http://127.0.0.1:5200/logged-out
       - http://127.0.0.1:5174/
 mybatis-plus:
   global-config:

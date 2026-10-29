@@ -173,6 +173,8 @@ READY ──手动导入编辑──► 重新 PENDING（内容版本变更触�
 
 **裁决（2026-10-27 纠正）：** 向量检索改用 **Elasticsearch**（推翻早前"MySQL 存 BLOB + 应用层余弦"方案）。ES 同时承载 dense_vector kNN（语义检索）+ text match BM25（关键词检索），原生 RRF 融合，是"混合检索质量"诉求下的不可替代方案。
 
+> **修订（2026-10-29）：** ES 原生 RRF（`rank.rrf`）属**铂金 license** 功能，basic license 直接 `security_exception`（实测）。检索实现改为 **kNN + BM25 双查询 + 应用层 RRF 融合**（k=60，与原 `rankConstant` 对齐）：融合位置从 ES 移到应用层，检索质量与语义不变，去掉 license 依赖；ES 选型结论不受影响。
+
 **为何 ES：**
 
 | 理由 | 说明 |
