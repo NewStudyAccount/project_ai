@@ -9,8 +9,10 @@
 | business-design.md | 业务逻辑总览：领域模型、状态机、业务规则、边界 | 设计中 |
 | table-design.md | 库表契约：表结构、索引、字段裁决、开放问题 | 设计中 |
 | api-design.md | 接口契约：全局约定、八元组、错误码语义 | 设计中 |
-| er-diagram.html | ER 可视化（低效力层） | 可选 |
-| prototype.html | 原型可视化（低效力层） | 可选 |
+| er-diagram.html | ER 可视化（table-design 定稿后生成，效力低于正文） | 待生成 |
+| prototype.html | 原型可视化（business-design 前端边界定稿后生成；纯后端域省略时在此登记原因） | 待生成/省略 |
+
+> 生成规则：可视化从正文**派生**——er-diagram 依据 table-design 关系一览，prototype 依据前端边界 + api-design 接口总表并标注契约锚点。发现不一致，改可视化、查正文。
 
 ## 实施状态
 

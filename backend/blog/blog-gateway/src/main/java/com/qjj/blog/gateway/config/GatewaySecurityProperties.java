@@ -17,6 +17,7 @@ public class GatewaySecurityProperties {
 
     private List<String> publicPaths = List.of("/actuator/health", "/internal/**");
 
-    private List<String> trustedOrigins = List.of("http://localhost:5100", "http://127.0.0.1:5100");
+    private List<String> trustedOrigins = List.of("http://localhost:5100", "http://127.0.0.1:5100",
+            "http://localhost:5200", "http://127.0.0.1:5200");
 }
 

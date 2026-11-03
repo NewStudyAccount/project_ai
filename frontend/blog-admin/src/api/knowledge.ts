@@ -68,6 +68,18 @@ export interface ImportDocsResult {
   rejected: { originalName: string; reason: string; code: number }[]
 }
 
+export interface KnowledgeDocContent {
+  id: string
+  source: number
+  sourceId: string | null
+  title: string
+  content: string
+  contentVersion: string
+  liveVersion: string
+  stale: boolean
+  docUrl: string
+}
+
 export interface KnowledgeTask {
   id: string
   taskType: string
@@ -141,6 +153,8 @@ export const knowledgeApi = {
   // ---- 知识文档 ----
   docsPage: (params: Record<string, unknown>) =>
     http.get<PageResult<KnowledgeDoc>>(`${BASE}/docs`, params),
+  docContent: (id: string) =>
+    http.get<KnowledgeDocContent>(`${BASE}/docs/${id}/content`),
   importDocs: (files: File[], tags: string) => {
     const form = new FormData()
     files.forEach((f) => form.append('files', f))

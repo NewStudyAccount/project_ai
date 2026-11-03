@@ -5,6 +5,7 @@ import com.qjj.blog.knowledge.dto.DocPageQuery;
 import com.qjj.blog.knowledge.dto.FromArticlesRequest;
 import com.qjj.blog.knowledge.vo.FromArticlesResultVO;
 import com.qjj.blog.knowledge.vo.ImportDocsResultVO;
+import com.qjj.blog.knowledge.vo.KnowledgeDocContentVO;
 import com.qjj.blog.knowledge.vo.KnowledgeDocVO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,4 +36,7 @@ public interface KnowledgeDocService {
 
     /** 知识文档分页（含 readyChunkCount 向量健康度） */
     PageResult<KnowledgeDocVO> pageDocs(DocPageQuery query);
+
+    /** 查看原文（api-design.md §2.9；按来源回源 Markdown 源文，纯读不改 doc 状态） */
+    KnowledgeDocContentVO content(String id);
 }

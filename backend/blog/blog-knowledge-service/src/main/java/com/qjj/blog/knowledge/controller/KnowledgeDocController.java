@@ -5,6 +5,7 @@ import com.qjj.blog.common.result.Result;
 import com.qjj.blog.knowledge.dto.DocPageQuery;
 import com.qjj.blog.knowledge.service.KnowledgeDocService;
 import com.qjj.blog.knowledge.vo.ImportDocsResultVO;
+import com.qjj.blog.knowledge.vo.KnowledgeDocContentVO;
 import com.qjj.blog.knowledge.vo.KnowledgeDocVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -36,6 +37,12 @@ public class KnowledgeDocController {
     @GetMapping
     public Result<PageResult<KnowledgeDocVO>> page(DocPageQuery query) {
         return Result.ok(docService.pageDocs(query));
+    }
+
+    @Operation(summary = "查看原文（按来源回源 Markdown 源文 + stale 提示）")
+    @GetMapping("/{id}/content")
+    public Result<KnowledgeDocContentVO> content(@PathVariable String id) {
+        return Result.ok(docService.content(id));
     }
 
     @Operation(summary = "手动导入（≤20 个 .md、单文件 ≤10MB；一文件一 doc）")

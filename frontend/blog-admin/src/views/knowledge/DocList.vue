@@ -35,10 +35,9 @@
     <el-table :data="rows" v-loading="loading" border stripe>
       <el-table-column label="标题" min-width="220">
         <template #default="{ row }">
-          <div class="title">{{ row.title }}</div>
+          <div class="title link" @click="openPreview(row)">{{ row.title }}</div>
           <div class="key">
-            <span v-if="row.docUrl" class="link" @click="openDoc(row.docUrl)">{{ row.docUrl }}</span>
-            <span v-else-if="row.source === 2" class="pill pill-manual">站内知识</span>
+            <span v-if="row.source === 2" class="pill pill-manual">站内知识</span>
             <span v-else class="key">文章 #{{ row.sourceId }}</span>
           </div>
         </template>
@@ -63,8 +62,9 @@
       <el-table-column prop="embedModel" label="Embedding" width="160" show-overflow-tooltip />
       <el-table-column prop="failReason" label="失败原因" min-width="140" show-overflow-tooltip />
       <el-table-column prop="updateTime" label="更新时间" width="170" />
-      <el-table-column label="操作" width="150" fixed="right">
+      <el-table-column label="操作" width="210" fixed="right">
         <template #default="{ row }">
+          <el-button link type="primary" @click="openPreview(row)">查看原文</el-button>
           <el-button
             v-if="hasPermission('blog:knowledge:revectorize') && row.status !== 4"
             link
@@ -77,7 +77,7 @@
             type="danger"
             @click="onDelete(row)"
           >删除</el-button>
-          <span v-if="row.status === 4" class="key">已失效（重新入库可恢复）</span>
+          <div v-if="row.status === 4" class="key">已失效（重新入库可恢复）</div>
         </template>
       </el-table-column>
     </el-table>
@@ -91,13 +91,40 @@
       @current-change="(p: number) => { query.current = p; load() }"
       @size-change="(s: number) => { query.size = s; query.current = 1; load() }"
     />
+
+    <el-drawer v-model="previewVisible" :title="previewDoc?.title || '查看原文'" size="60%">
+      <div v-loading="previewLoading" class="preview-wrap">
+        <template v-if="previewContent">
+          <el-alert
+            v-if="previewContent.stale"
+            class="stale-tip"
+            type="warning"
+            :closable="false"
+            title="源文已变更，向量索引待重建"
+            description="当前显示的是最新源文；知识库检索与问答仍基于旧版内容，可回列表执行「重建」。"
+          />
+          <div class="preview-meta">
+            <span class="key">指纹 {{ previewContent.contentVersion || '—' }} → {{ previewContent.liveVersion || '—' }}</span>
+            <el-button
+              v-if="previewContent.docUrl"
+              type="primary"
+              link
+              @click="openDoc(previewContent.docUrl)"
+            >跳转前台原文</el-button>
+          </div>
+          <MdPreview :model-value="previewContent.content" />
+        </template>
+      </div>
+    </el-drawer>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { knowledgeApi, type KnowledgeDoc } from '@/api/knowledge'
+import { MdPreview } from 'md-editor-v3'
+import 'md-editor-v3/lib/style.css'
+import { knowledgeApi, type KnowledgeDoc, type KnowledgeDocContent } from '@/api/knowledge'
 import { hasPermission } from '@/utils/permission'
 
 const DOC_STATUS: Record<number, string> = {
@@ -130,8 +157,31 @@ function statusClass(status: number): string {
   return 'is-pending'
 }
 
+/** portal 基址（跳转前台原文用；docUrl 为 portal 相对路径 /articles/…） */
+const PORTAL_BASE = ((import.meta.env.VITE_PORTAL_BASE as string) || 'http://localhost:5200').replace(/\/+$/, '')
+
 function openDoc(url: string) {
-  window.open(url, '_blank')
+  window.open(url.startsWith('http') ? url : PORTAL_BASE + url, '_blank')
+}
+
+// ---- 查看原文（抽屉为主、跳转为辅） ----
+const previewVisible = ref(false)
+const previewLoading = ref(false)
+const previewDoc = ref<KnowledgeDoc | null>(null)
+const previewContent = ref<KnowledgeDocContent | null>(null)
+
+async function openPreview(row: KnowledgeDoc) {
+  previewDoc.value = row
+  previewContent.value = null
+  previewVisible.value = true
+  previewLoading.value = true
+  try {
+    previewContent.value = await knowledgeApi.docContent(row.id)
+  } catch {
+    ElMessage.error('原文加载失败，可能已失效或源文不可用')
+  } finally {
+    previewLoading.value = false
+  }
 }
 
 async function onRevectorize(row: KnowledgeDoc) {
@@ -175,4 +225,7 @@ onMounted(load)
 .status-pill.is-on { background: var(--el-color-success-light-8); color: var(--el-color-success); }
 .status-pill.is-off { background: var(--el-color-danger-light-8); color: var(--el-color-danger); }
 .status-pill.is-pending { background: var(--el-color-warning-light-8); color: var(--el-color-warning); }
+.preview-wrap { display: flex; flex-direction: column; gap: 12px; }
+.preview-meta { display: flex; align-items: center; justify-content: space-between; }
+.stale-tip { margin-bottom: 4px; }
 </style>

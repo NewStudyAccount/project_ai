@@ -212,8 +212,8 @@
 | failReason | string | doc 级失败原因（`status=3` 时有值） |
 | embedModel | string | 生效 embedding 模型 |
 | embedDim | number | 维度 |
-| contentVersion | string | 内容指纹 |
-| docUrl | string | 文章公开 URL；手动导入为 `""` |
+| contentVersion | string | 内容指纹（最近一次成功向量化的源文指纹） |
+| docUrl | string | 文章 id 形态公开 URL `/articles/{sourceId}`（`idOrSlug` 兼容，列表免回源）；手动导入为 `""` |
 | updateTime | string | |
 
 ### 2.2 手动导入（文件上传）　**幂等**
@@ -305,6 +305,31 @@
 | **出参 `data`** | `{ docTotal, docByStatus:{pending,vectorizing,ready,failed,invalid}, chunkTotal, chunkReadyRatio, esDocCount, esHealthy:boolean, taskFailed, providerCalls:{embed,chat} }` |
 
 > `esDocCount` / `esHealthy` 取自 ES（`_count` + 集群健康）；ES 不可用时置 `null`/`false`，接口本身仍 200。
+
+### 2.9 知识文档原文（查看）
+
+| 项 | 内容 |
+|----|------|
+| **方法/路径** | `GET /api/v1/admin/knowledge/docs/{id}/content` |
+| **权限** | `blog:knowledge:list`（纯读，不写审计） |
+| **逻辑** | 按来源回源返回 **Markdown 源文**：source=1 经文章只读契约取 live 正文（`docUrl=/articles/{slug}`，live 指纹 = live `sys_file.id`）；source=2 经 `doc.fileId` → `knowledge_file` → 对象存储读 `.md`（`docUrl=""`，live 指纹 = `knowledge_file.id`）。**纯读**：失败只返回错误码，不修改 doc 状态 |
+| **涉及表** | `knowledge_doc`、`knowledge_file`（source=2）；source=1 回源走只读契约 |
+
+**出参 `data`**：`KnowledgeDocContentVO`
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | string | doc id |
+| source | number | 1 文章 / 2 手动导入 |
+| sourceId | string | 文章 id（source=1）；否则 `null` |
+| title | string | |
+| content | string | **Markdown 源文**（当前源文，非入库快照） |
+| contentVersion | string | 入库指纹（最近一次成功向量化的源文指纹） |
+| liveVersion | string | 当前源文指纹 |
+| stale | boolean | `contentVersion ≠ liveVersion`（源文已变更、向量索引待重建；source=2 恒 `false`） |
+| docUrl | string | source=1 为 `/articles/{slug}`；source=2 为 `""` |
+
+**错误**：doc 不存在 `203090`；doc 已失效 `203093`；文章已下架/源文对象缺失/回源失败 `203096`
 
 ---
 
@@ -437,6 +462,7 @@ data: {"messageId":"2026102800000452","sessionId":"2026102800000123","costMs":31
 | 203092 | KNOWLEDGE_ARTICLE_NOT_INGESTABLE | 文章未发布或无正文，不可入库 | 候选校验 |
 | 203093 | KNOWLEDGE_DOC_INVALID | 知识文档已失效，请先重新入库 | 重建失效文档 |
 | 203095 | KNOWLEDGE_DOC_SOURCE_NOT_MANUAL | 仅手动导入的知识可编辑/删除 | 对 source=1 误操作 |
+| 203096 | KNOWLEDGE_DOC_CONTENT_UNAVAILABLE | 知识文档原文不可用 | 查看原文回源失败/文章下架/对象缺失（§2.9） |
 | 203100 | KNOWLEDGE_SEARCH_UNAVAILABLE | 检索服务暂不可用 | ES 故障（HTTP 503） |
 | 203101 | KNOWLEDGE_EMBED_FAILED | 文本向量化失败 | Embedding 云 API 失败 |
 | 203102 | KNOWLEDGE_LLM_UNAVAILABLE | AI 组织服务暂不可用 | LLM 故障（降级时**不抛**，仅记日志） |
@@ -465,4 +491,5 @@ data: {"messageId":"2026102800000452","sessionId":"2026102800000123","costMs":31
 
 | 日期 | 变更 |
 |------|------|
+| 2026-11-03 | 增 §2.9 知识文档原文查看（`GET …/docs/{id}/content`，Markdown 源文 + stale）；§2.1 `docUrl` 改 id 形态公开链接（`/articles/{sourceId}`，去列表逐行回源）；§6 增 `203096`（变更 `knowledge-doc-view-original`） |
 | 2026-10-28 | 建立：文章入库（`candidates` / `candidates/summary` / `article-index/sync` / `from-articles`）、知识文档、AI 服务商、SSE 问答帧格式、错误码段位（`203090–203114`） |

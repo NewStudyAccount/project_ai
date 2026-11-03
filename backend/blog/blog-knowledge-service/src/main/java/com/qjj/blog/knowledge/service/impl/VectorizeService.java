@@ -189,6 +189,12 @@ public class VectorizeService implements KnowledgeTaskServiceImpl.TaskHandler {
         doc.setEmbedDim(embedRow == null ? 0 : (embedRow.getDim() == null ? 0 : embedRow.getDim()));
         // 回填标签（文章入库此前不落 knowledge_doc.tags，ES tags/前缀两来源不一致）
         doc.setTags(String.join(",", loaded.tags()));
+        // 入库指纹回写为本次源文指纹（stale 判定基于最近一次成功向量化内容；api-design.md §2.9）
+        if (loaded.articleContent() != null && loaded.articleContent().getLiveFileId() != null) {
+            doc.setContentVersion(String.valueOf(loaded.articleContent().getLiveFileId()));
+        } else if (doc.getFileId() != null) {
+            doc.setContentVersion(String.valueOf(doc.getFileId()));
+        }
         doc.setFailReason("");
         docMapper.updateById(doc);
         refreshProjection(doc, loaded);

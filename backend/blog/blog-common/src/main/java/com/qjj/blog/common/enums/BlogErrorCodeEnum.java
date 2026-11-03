@@ -52,6 +52,7 @@ public enum BlogErrorCodeEnum implements ErrorCode {
     KNOWLEDGE_ARTICLE_NOT_INGESTABLE(203092, "文章未发布或无正文，不可入库"),
     KNOWLEDGE_DOC_INVALID(203093, "知识文档已失效，请先重新入库"),
     KNOWLEDGE_DOC_SOURCE_NOT_MANUAL(203095, "仅手动导入的知识可编辑/删除"),
+    KNOWLEDGE_DOC_CONTENT_UNAVAILABLE(203096, "知识文档原文不可用"),
     KNOWLEDGE_SEARCH_UNAVAILABLE(203100, "检索服务暂不可用"),
     KNOWLEDGE_EMBED_FAILED(203101, "文本向量化失败"),
     KNOWLEDGE_LLM_UNAVAILABLE(203102, "AI 组织服务暂不可用"),

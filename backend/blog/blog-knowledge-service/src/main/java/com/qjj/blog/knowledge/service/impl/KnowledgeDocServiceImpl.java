@@ -29,6 +29,7 @@ import com.qjj.blog.knowledge.service.KnowledgeDocService;
 import com.qjj.blog.knowledge.service.KnowledgeTaskService;
 import com.qjj.blog.knowledge.vo.FromArticlesResultVO;
 import com.qjj.blog.knowledge.vo.ImportDocsResultVO;
+import com.qjj.blog.knowledge.vo.KnowledgeDocContentVO;
 import com.qjj.blog.knowledge.vo.KnowledgeDocVO;
 import com.qjj.blog.objectstorage.ObjectStorageClient;
 import com.qjj.blog.objectstorage.ProviderConfig;
@@ -354,6 +355,58 @@ public class KnowledgeDocServiceImpl implements KnowledgeDocService {
         return PageResult.of(records, page.getTotal(), size, current);
     }
 
+    // ---------- §2.9 查看原文 ----------
+
+    @Override
+    public KnowledgeDocContentVO content(String id) {
+        KnowledgeDoc doc = requireDoc(id);
+        if (KnowledgeDocStatusEnum.INVALID.getCode().equals(doc.getStatus())) {
+            throw new BizException(BlogErrorCodeEnum.KNOWLEDGE_DOC_INVALID);
+        }
+        KnowledgeDocContentVO vo = new KnowledgeDocContentVO();
+        vo.setId(String.valueOf(doc.getId()));
+        vo.setSource(doc.getSource());
+        vo.setSourceId(doc.getSourceId() == null ? null : String.valueOf(doc.getSourceId()));
+        vo.setTitle(doc.getTitle());
+        vo.setContentVersion(doc.getContentVersion() == null ? "" : doc.getContentVersion());
+        if (KnowledgeDocSourceEnum.ARTICLE.getCode().equals(doc.getSource())) {
+            // source=1：只读契约回拉 live Markdown 源文（纯读，失败不改 doc 状态）
+            ArticleContent article;
+            try {
+                article = articleContentProvider.fetchArticle(doc.getSourceId());
+            } catch (Exception e) {
+                log.warn("content fetch article failed docId={} sourceId={}", doc.getId(), doc.getSourceId(), e);
+                throw new BizException(BlogErrorCodeEnum.KNOWLEDGE_DOC_CONTENT_UNAVAILABLE);
+            }
+            if (article == null || article.getContent() == null || article.getContent().isBlank()) {
+                // 已下架/删除或无 live 正文（fetchArticle 仅回已发布）
+                throw new BizException(BlogErrorCodeEnum.KNOWLEDGE_DOC_CONTENT_UNAVAILABLE);
+            }
+            vo.setContent(article.getContent());
+            vo.setLiveVersion(String.valueOf(article.getLiveFileId() == null ? 0L : article.getLiveFileId()));
+            vo.setDocUrl(article.getSlug() == null || article.getSlug().isBlank()
+                    ? "" : "/articles/" + article.getSlug());
+        } else {
+            // source=2：knowledge_file → 对象存储读 .md 源文
+            KnowledgeFile file = doc.getFileId() == null ? null : fileMapper.selectById(doc.getFileId());
+            if (file == null) {
+                throw new BizException(BlogErrorCodeEnum.KNOWLEDGE_DOC_CONTENT_UNAVAILABLE);
+            }
+            byte[] bytes;
+            try {
+                bytes = storageClient.getBytes(file.getStorageCode(), file.getObjectKey());
+            } catch (Exception e) {
+                log.warn("content read object failed docId={} fileId={}", doc.getId(), file.getId(), e);
+                throw new BizException(BlogErrorCodeEnum.KNOWLEDGE_DOC_CONTENT_UNAVAILABLE);
+            }
+            vo.setContent(new String(bytes, java.nio.charset.StandardCharsets.UTF_8));
+            vo.setLiveVersion(String.valueOf(file.getId()));
+            vo.setDocUrl("");
+        }
+        vo.setStale(!vo.getContentVersion().equals(vo.getLiveVersion()));
+        return vo;
+    }
+
     // ---------- 私有 ----------
 
     private KnowledgeDoc requireDoc(String id) {
@@ -443,18 +496,11 @@ public class KnowledgeDocServiceImpl implements KnowledgeDocService {
         return vo;
     }
 
-    /** 文章 doc = /articles/{slug}（经只读契约回拉 slug；手动导入为 ""） */
+    /** 文章 doc = /articles/{sourceId}（id 形态公开链接，idOrSlug 兼容，列表免回源；手动导入为 ""） */
     private String resolveDocUrl(KnowledgeDoc doc) {
-        if (!KnowledgeDocSourceEnum.ARTICLE.getCode().equals(doc.getSource())) {
+        if (!KnowledgeDocSourceEnum.ARTICLE.getCode().equals(doc.getSource()) || doc.getSourceId() == null) {
             return "";
         }
-        try {
-            ArticleContent content = articleContentProvider.fetchArticle(doc.getSourceId());
-            return content == null || content.getSlug() == null || content.getSlug().isBlank()
-                    ? "" : "/articles/" + content.getSlug();
-        } catch (Exception e) {
-            log.warn("resolveDocUrl failed docId={}", doc.getId(), e);
-            return "";
-        }
+        return "/articles/" + doc.getSourceId();
     }
 }

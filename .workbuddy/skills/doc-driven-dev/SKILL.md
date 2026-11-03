@@ -42,10 +42,12 @@ agent_created: true
 
 ## Step B：写 L1 领域设计三件套
 
+0. **设计前置（必做，不得跳过）**：三件套是设计的**表达**，不是设计的**发生地**。先与用户完成设计裁决——AI 产出「设计要点提案」（领域模型草案、状态机草案、关键取舍三元组、待裁决清单含默认取值），**不写任何文档**；用户逐条裁决确认后，才进入模板填充。未裁决项登记进开放问题清单，不得替用户拍板。
 1. 读 `references/l1-domain-design.md` 获取三件套（README / business-design / table-design / api-design）各章节的模板与要点。
-2. 将 `assets/l1-starter/` 下的四个模板复制到 `docs/<domain>/`，按模板填充。
+2. 将 `assets/l1-starter/` 下的四个模板复制到 `docs/<domain>/`，按模板填充，**只写已裁决的内容**；填充中新出现的设计点回到前置裁决，不允许边填边拍板。
 3. 通用能力用「裁剪取值」方式登记差异，**不复制通用条文**（见 key-mechanisms §3）。
-4. 完成后跑 L1 质量门自查（见 quality-gate 设计层部分）。
+4. 正文定稿后**生成可视化**（详见 l1-domain-design §4）：`er-diagram.html` 必做（依据 table-design 关系一览，mermaid erDiagram）；`prototype.html` 有前端边界的域必做（依据路由树 + 接口总表，页面元素标注契约锚点）。可视化从正文派生，不得反向发明设计。
+5. 完成后跑 L1 质量门自查（见 quality-gate 设计层部分）。
 
 ## Step C：SDD 落码闭环
 
