@@ -1,0 +1,13 @@
+# 后端可执行 jar 镜像模板 —— 复制到 backend/<system>/<module>/Dockerfile 后替换 {{...}}
+#
+# 前提（缺一个都会失败）：
+#   1. 该模块 pom.xml 声明 spring-boot-maven-plugin + repackage（否则 jar 无 Main-Class）
+#   2. Jenkins 已先执行 mvn package，target/ 下有 fat jar
+#   3. target/ 下只能有一个 *.jar（*.jar.original 不会被匹配，无需担心）
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+COPY target/*.jar app.jar
+EXPOSE {{PORT}}
+# profile 由代码 application.yml 的 spring.profiles.active 决定，流水线不传
+# 若确需运行时覆盖：docker run 追加 -e SPRING_PROFILES_ACTIVE=xxx（本项目约定不这么做）
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

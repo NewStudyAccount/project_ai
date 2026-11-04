@@ -9,7 +9,7 @@ metadata:
 
 # 为指定项目创建 Jenkins 流水线
 
-面向本仓库（多系统单仓）的流水线接入流程。**本 skill 是流程与门禁；事实数据在 `deploy/jenkins/jobs.yaml`；机器在 `deploy/jenkins/*.py`。三者不要互相抄。**
+面向「多系统单仓 + Docker 发布」项目的流水线接入流程。**本 skill 是流程与门禁；事实数据在 `deploy/jenkins/jobs.yaml`；机器在 `deploy/jenkins/*.py`（技能自带一份快照，可安装到新项目）。三者不要互相抄。**
 
 ## 0. 先认清四份东西各管什么
 
@@ -19,18 +19,32 @@ metadata:
 | `deploy/jenkins/templates/*.tmpl` | Pipeline 脚本与 Job XML 模板（占位符 `{{KEY}}`） | 阶段结构变化才改 |
 | `deploy/jenkins/{preflight,render,create-jobs,jenkins_api}.py` | 预检 / 渲染 / 应用 / REST | 逻辑缺陷才改 |
 | `docs/jenkins-pipeline-guide.md` | 人读手册 + 边界说明（不再手抄 Job 表） | 约定变化时改 |
+| `assets/deploy-jenkins/` | 上述机器的**可搬迁快照** + `jobs.example.yaml` | 用 `bootstrap.ps1 -Mode Export` 回收 |
 
 铁律：**`jobs.yaml` 之外不得出现第二份 Job 清单；任何 `*.py`/`*.md` 都不得写入密码或 Token。**
+
+## 步骤 0 — 目标项目里还没有这套机器时，先装
+
+```powershell
+# 判断：deploy/jenkins/preflight.py 存在吗？不存在就走这里
+powershell -NoProfile -File .claude/skills/jenkins-pipeline-onboarding/scripts/bootstrap.ps1 -DryRun
+powershell -NoProfile -File .claude/skills/jenkins-pipeline-onboarding/scripts/bootstrap.ps1
+```
+
+它会装出 `deploy/jenkins/`（4 个 py + 3 个模板 + `jobs.yaml` 模板）和 `docs/jenkins-pipeline-guide.md` 骨架，
+**不会**覆盖已有 `jobs.yaml`，也**不会**生成 Dockerfile。装完按 `references/bootstrap.md` §3 改 7 项。
+若目标项目目录布局不是 `frontend/<system>` / `backend/<system>/<module>`，见 `bootstrap.md` §4（`unit_path`）。
 
 ## 1. 判定走哪条路
 
 | 用户诉求 | 走法 |
 |---|---|
+| 新项目第一次接入 | 步骤 0（bootstrap）→ 本表下一行 |
 | 新系统/新服务要发布（本仓库内） | §2 全流程（新增一条 job 条目） |
 | 已有服务改构建/发布方式 | §2 全流程，但只动该条 job + 必要时模板 |
 | 「流水线跑失败了」 | 直接跳 `references/failure-modes.md`，**先取证**再改 |
 | 只改 `deploy/nginx`、`docs/`、`openspec/` | 不需要流水线，告知即可 |
-| 前/后端还没 Dockerfile | 先补 Dockerfile（见 `references/failure-modes.md`「缺 Dockerfile」），**不得**跳过 |
+| 前/后端还没 Dockerfile | 抄 `assets/Dockerfile.*.tmpl` 补上（见 `references/failure-modes.md`「缺 Dockerfile」），**不得**跳过 |
 
 本仓库固定形态（不要发明第二种）：
 
@@ -125,9 +139,24 @@ python deploy/jenkins/create-jobs.py --only <job-name>  # 只一条
 
 | 文件 | 什么时候读 |
 |---|---|
+| `references/bootstrap.md` | 步骤 0，把机器装到新项目 / 换目录布局 / 与快照对账 |
 | `references/input-contract.md` | 步骤 1，字段取值与校验规则 |
 | `references/failure-modes.md` | 流水线失败、预检报错、初次接入踩坑 |
 | `references/jenkins-profiles.md` | 怀疑形态选错了（入仓 Jenkinsfile / Multibranch / K8s） |
 | `references/credentials.md` | 步骤 5 前，凭据怎么给、谁能建 |
 | `references/job-registry.md` | 登记与覆盖缺口、文档映射 |
 | `assets/acceptance-checklist.md` | 步骤 6 |
+| `assets/Dockerfile.{frontend,backend}.tmpl`、`assets/nginx.conf.tmpl` | 目标项目缺 Dockerfile / 缺 `/healthz` 时抄 |
+
+## 6. 技能自己的维护（改完必须做）
+
+```powershell
+# 1) 项目里跑通后，把实现回收成技能快照
+powershell -NoProfile -File .claude/skills/jenkins-pipeline-onboarding/scripts/bootstrap.ps1 -Mode Export
+# 2) 校验快照与项目实现是否一致（防止两边漂移）
+powershell -NoProfile -File .claude/skills/jenkins-pipeline-onboarding/scripts/bootstrap.ps1 -Mode Check
+# 3) 同步到其它 AI 工具的镜像目录
+powershell -NoProfile -File .agents/sync-skills.ps1
+```
+
+规则：**谁跑通了以谁为准**，再 Export → Check → sync。

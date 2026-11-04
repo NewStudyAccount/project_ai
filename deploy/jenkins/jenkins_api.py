@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Jenkins REST 访问的最小封装（crumb + Cookie 会话 + Basic Auth）。
 
 凭据来源（按优先级）：
@@ -37,7 +37,7 @@ def _load_local_env() -> dict[str, str]:
     if not LOCAL_ENV.is_file():
         return {}
     out: dict[str, str] = {}
-    for line in LOCAL_ENV.read_text(encoding="utf-8").splitlines():
+    for line in LOCAL_ENV.read_text(encoding="utf-8-sig").splitlines():
         line = line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue

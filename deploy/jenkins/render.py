@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """把 deploy/jenkins/jobs.yaml 渲染成 Jenkins Job 的 config.xml。
 
 只做纯渲染，不联网、不写 Jenkins、不含任何凭据：
@@ -9,6 +9,7 @@
 """
 from __future__ import annotations
 
+import posixpath
 import re
 from pathlib import Path
 from typing import Any
@@ -31,7 +32,7 @@ def load_spec(path: Path | str = DEFAULT_SPEC) -> dict[str, Any]:
     p = Path(path)
     if not p.is_file():
         raise SpecError(f"找不到 Job 清单：{p}")
-    with p.open(encoding="utf-8") as f:
+    with p.open(encoding="utf-8-sig") as f:
         raw = yaml.safe_load(f)
     if not isinstance(raw, dict):
         raise SpecError(f"{p} 顶层必须是映射（mapping）")
@@ -72,11 +73,15 @@ def resolve(job: dict[str, Any], defaults: dict[str, Any]) -> dict[str, str]:
     prefix = str(defaults.get("image_prefix", "project_ai"))
 
     if kind == "frontend":
-        unit_dir = Path("frontend") / system
         module = ""
+        default_dir = Path("frontend") / system
     else:
         module = str(job.get("module") or target)
-        unit_dir = Path("backend") / system / module
+        default_dir = Path("backend") / system / module
+
+    # 目录布局可覆盖：默认按 <frontend|backend>/<system>[/<module>] 推导，
+    # 别的项目布局不同时在 jobs.yaml 里显式写 unit_path（相对仓库根）。
+    unit_dir = Path(str(job["unit_path"])) if job.get("unit_path") else default_dir
 
     return {
         "name": str(job["name"]),
@@ -104,8 +109,16 @@ def resolve(job: dict[str, Any], defaults: dict[str, Any]) -> dict[str, str]:
         "network": str(defaults.get("docker_network", "project-ai")),
         "node_image": str(defaults.get("node_image", "node:24-alpine")),
         "maven_image": str(defaults.get("maven_image", "maven:3.9-eclipse-temurin-21")),
-        "agent_label": str(defaults.get("agent_label", "any")),
+        "agent": agent_directive(str(defaults.get("agent_label", "any"))),
     }
+
+
+def agent_directive(label: str) -> str:
+    """把 agent_label 翻成 declarative 的 agent 段：any → `any`，其余 → `label 'xxx'`。"""
+    label = label.strip()
+    if not label or label.lower() == "any":
+        return "any"
+    return f"label '{label}'"
 
 
 def ensure_utf8_stdout() -> None:
@@ -124,7 +137,7 @@ def ensure_utf8_stdout() -> None:
 
 
 def _render_template(name: str, values: dict[str, str]) -> str:
-    text = (TEMPLATES / name).read_text(encoding="utf-8")
+    text = (TEMPLATES / name).read_text(encoding="utf-8-sig")
     missing: list[str] = []
 
     def sub(m: re.Match[str]) -> str:
@@ -159,8 +172,10 @@ def render_script(job: dict[str, str]) -> str:
         "NODE_IMAGE": job["node_image"],
         "MAVEN_IMAGE": job["maven_image"],
         "APP_DIR": job["unit_dir"],
-        "SYS_DIR": f"backend/{job['system']}",
-        "MODULE": job["module"],
+        # 后端 SYS_DIR = 可部署单元的父目录（mvn -pl 的根），随 unit_path 自动适配
+        "SYS_DIR": posixpath.dirname(job["unit_dir"]),
+        "MODULE": posixpath.basename(job["unit_dir"]) if job["kind"] == "backend" else "",
+        "AGENT": job["agent"],
     }
     tpl = "frontend.groovy.tmpl" if job["kind"] == "frontend" else "backend.groovy.tmpl"
     return _render_template(tpl, values)

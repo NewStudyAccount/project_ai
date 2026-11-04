@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """为 jobs.yaml 里的每条流水线做「开工前预检」——只读，不改任何东西。
 
 设计意图：把 docs/jenkins-pipeline-guide.md 里「禁止编造主机/端口/凭据」
@@ -67,7 +67,12 @@ def check_units(spec: dict, findings: list[Finding]) -> None:
             if not pkg.is_file():
                 findings.append(Finding("ERROR", name, f"缺少 package.json：{resolved['unit_dir']}"))
             else:
-                data = json.loads(pkg.read_text(encoding="utf-8"))
+                # utf-8-sig：容忍 Windows 编辑器写入的 BOM；解析失败要报 ERROR 而不是抛异常
+                try:
+                    data = json.loads(pkg.read_text(encoding="utf-8-sig"))
+                except (json.JSONDecodeError, UnicodeDecodeError) as e:
+                    findings.append(Finding("ERROR", name, f"package.json 不是合法 JSON：{e}"))
+                    data = {}
                 scripts = data.get("scripts") or {}
                 need = ["lint", "type-check", "build"]
                 lost = [s for s in need if s not in scripts]

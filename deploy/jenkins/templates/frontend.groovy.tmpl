@@ -1,5 +1,5 @@
 pipeline {
-  agent any
+  agent {{AGENT}}
   parameters {
     string(name: 'BRANCH', defaultValue: '{{BRANCH}}', description: 'Git branch to build and deploy', trim: true)
   }

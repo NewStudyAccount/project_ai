@@ -1,0 +1,94 @@
+pipeline {
+  agent {{AGENT}}
+  parameters {
+    string(name: 'BRANCH', defaultValue: '{{BRANCH}}', description: 'Git branch to build and deploy', trim: true)
+  }
+  environment {
+    APP_DIR        = '{{APP_DIR}}'
+    GIT_URL        = '{{GIT_URL}}'
+    GIT_CRED_ID    = '{{GIT_CRED_ID}}'
+    DEPLOY_HOST    = '{{DEPLOY_HOST}}'
+    DEPLOY_USER    = '{{DEPLOY_USER}}'
+    SSH_CRED       = '{{SSH_CRED}}'
+    REGISTRY       = '{{REGISTRY}}'
+    REGISTRY_CRED  = '{{REGISTRY_CRED}}'
+    IMAGE_REPO     = '{{IMAGE}}'
+    CONTAINER_NAME = '{{CONTAINER}}'
+    APP_PORT       = '{{PORT}}'
+    HEALTH_URL     = '{{HEALTH_URL}}'
+    GIT_BRANCH     = "${params.BRANCH?.trim() ?: '{{BRANCH}}'}"
+    NODE_IMAGE     = '{{NODE_IMAGE}}'
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        echo "Build branch: ${env.GIT_BRANCH}"
+        checkout([$class: 'GitSCM',
+          branches: [[name: "*/${env.GIT_BRANCH}"]],
+          userRemoteConfigs: [[url: env.GIT_URL, credentialsId: env.GIT_CRED_ID]]])
+      }
+    }
+    stage('Quality') {
+      steps {
+        sh '''
+          set -e
+          docker run --rm -v "${WORKSPACE}/${APP_DIR}":/app -w /app "${NODE_IMAGE}" sh -c "
+            set -e
+            npm ci
+            npm run lint
+            npm run type-check
+            npm run build
+          "
+        '''
+      }
+    }
+    stage('Image') {
+      steps {
+        script {
+          env.SHORT_COMMIT = sh(returnStdout: true, script: 'git rev-parse --short=12 HEAD').trim()
+          sh """
+            set -e
+            docker build -t "${IMAGE_REPO}:${SHORT_COMMIT}" -t "${IMAGE_REPO}:latest" "${APP_DIR}"
+          """
+        }
+      }
+    }
+    stage('Deploy') {
+      steps {
+        withCredentials([sshUserPrivateKey(credentialsId: "${SSH_CRED}", keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+          withCredentials([usernamePassword(credentialsId: "${REGISTRY_CRED}", usernameVariable: 'RUSER', passwordVariable: 'RPASS')]) {
+            sh """
+              set -e
+              echo "$RPASS" | docker login "${REGISTRY}" -u "$RUSER" --password-stdin
+              docker push "${IMAGE_REPO}:${SHORT_COMMIT}"
+              docker push "${IMAGE_REPO}:latest"
+              ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "${DEPLOY_USER}@${DEPLOY_HOST}" "
+                docker network create {{NETWORK}} 2>/dev/null || true
+                docker rm -f {{CONTAINER}} 2>/dev/null || true
+                docker pull {{IMAGE}}:${SHORT_COMMIT}
+                docker run -d --name {{CONTAINER}} --restart unless-stopped \
+                  --network {{NETWORK}} -p {{PORT}}:80 \
+                  {{IMAGE}}:${SHORT_COMMIT}
+              "
+            """
+          }
+        }
+      }
+    }
+    stage('Smoke') {
+      steps {
+        withCredentials([sshUserPrivateKey(credentialsId: "${SSH_CRED}", keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+          sh """
+            set -e
+            ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "${DEPLOY_USER}@${DEPLOY_HOST}" "curl -fsS --retry 5 --retry-delay 3 --max-time 20 '{{HEALTH_URL}}'"
+          """
+        }
+      }
+    }
+  }
+  post {
+    failure {
+      echo "Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER} branch=${env.GIT_BRANCH}"
+    }
+  }
+}

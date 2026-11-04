@@ -1,0 +1,19 @@
+# 前端静态镜像模板 —— 复制到 frontend/<system>/Dockerfile 后替换 {{...}}
+#
+# 前提：该目录已有 package.json + package-lock.json（流水线用 npm ci，必须锁版本）
+# 构建上下文 = 该前端目录；Jenkins 在 node:24-alpine 容器内先跑质量门再调本文件
+FROM node:24-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+# 若需要构建期变量（VITE_*），用 ARG 显式接收，不要在 Dockerfile 里写死环境值
+# ARG VITE_API_BASE=/api
+# ENV VITE_API_BASE=$VITE_API_BASE
+RUN npm run build
+
+FROM nginx:1.27-alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+# 必须带 /healthz（流水线 Smoke 阶段 curl 的就是它）；配置见 assets/nginx.conf.tmpl
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80

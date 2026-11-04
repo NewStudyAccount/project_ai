@@ -1,0 +1,50 @@
+# Jenkins 流水线 Job 清单 —— 模板（由 bootstrap 复制为 deploy/jenkins/jobs.yaml）
+#
+# 使用方式：
+#   1. 把所有 <TODO: ...> 换成真实值（禁止猜：仓库地址、镜像仓库、部署主机、凭据 ID 都要有出处）
+#   2. jobs: 下留一条真实服务，删掉示例；按 input-contract.md 补字段
+#   3. python deploy/jenkins/preflight.py   # ERROR 清零
+#   4. python deploy/jenkins/create-jobs.py --dry-run
+#
+# 规则：
+#   - 本文件是 Job 集合的唯一事实源；其它文档只放指针，不抄清单
+#   - 只写凭据 ID，禁止写密码/Token/私钥（值放 Jenkins Credentials）
+
+version: 1
+updated: "<TODO: YYYY-MM-DD>"
+
+defaults:
+  branch: "<TODO: 默认分支，如 main>"
+  git_url: "<TODO: 仓库地址>"
+  git_cred_id: "<TODO: Jenkins 里的 Git 凭据 ID，如 git-token>"
+  deploy_host: "<TODO: 部署机 IP>"
+  deploy_user: "<TODO: SSH 用户，如 root>"
+  ssh_cred_id: "<TODO: SSH 凭据 ID，如 ssh-deploy-test>"
+  registry: "<TODO: 镜像仓库地址:端口>"
+  image_prefix: "<TODO: 镜像名分组，如 myproject>"
+  registry_cred_id: "<TODO: 镜像仓库推送凭据 ID，如 registry-push-test>"
+  docker_network: "<TODO: docker 网络名，如 myproject>"
+  node_image: node:24-alpine
+  maven_image: maven:3.9-eclipse-temurin-21
+  agent_label: any
+  owner: "<TODO: 负责人>"
+
+jobs:
+  # ---- 前端示例（复制一份改 4 个字段即可）----
+  - name: example-admin-cd
+    kind: frontend
+    system: example-admin
+    target: example-admin
+    port: 5100                          # 必须已在端口登记文件里登记
+    health_path: /healthz
+    # unit_path: frontend/example-admin  # 布局不同才写（默认就是 frontend/<system>）
+
+  # ---- 后端示例 ----
+  - name: example-service-cd
+    kind: backend
+    system: example
+    target: example-service
+    module: example-service              # 启动模块目录名（有 Dockerfile + repackage 的那个）
+    port: 18100
+    health_path: /actuator/health
+    # notes: "构建单元为何是这个模块"
