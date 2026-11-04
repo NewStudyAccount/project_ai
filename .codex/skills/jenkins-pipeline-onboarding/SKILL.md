@@ -1,4 +1,4 @@
----
+﻿---
 name: jenkins-pipeline-onboarding
 description: 为指定项目/服务创建或修改 Jenkins 流水线（Job）时的执行流程与硬门禁。当用户说「给 X 建 Jenkins 流水线」「新建 Jenkins Job」「接入 CI/CD」「A 服务怎么发布」「补一条 cd 流水线」「流水线跑失败了」时使用。包含输入契约、预检门禁、离线渲染、幂等应用、验收清单与失败排查。
 metadata:
@@ -9,7 +9,9 @@ metadata:
 
 # 为指定项目创建 Jenkins 流水线
 
-面向「多系统单仓 + Docker 发布」项目的流水线接入流程。**本 skill 是流程与门禁；事实数据在 `deploy/jenkins/jobs.yaml`；机器在 `deploy/jenkins/*.py`（技能自带一份快照，可安装到新项目）。三者不要互相抄。**
+面向「多系统单仓 + Docker 发布」项目的流水线接入流程。
+
+> 人读版（给团队看的用法/FAQ）：项目内 docs/jenkins-pipeline-onboarding-usage-guide.md；不存在则以本文件 + eferences/ 为准。**本 skill 是流程与门禁；事实数据在 `deploy/jenkins/jobs.yaml`；机器在 `deploy/jenkins/*.py`（技能自带一份快照，可安装到新项目）。三者不要互相抄。**
 
 ## 0. 先认清四份东西各管什么
 

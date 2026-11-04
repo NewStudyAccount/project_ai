@@ -2,6 +2,7 @@
 
 > 面向：需要为 `frontend/<system>` 或 `backend/<system>/<module>` 新建自动构建/部署流水线的人。
 > **AI 工具请走 skill：`.claude/skills/jenkins-pipeline-onboarding/`**（含输入契约、预检门禁、失败排查、验收清单）。
+> **人的第一入口**：[jenkins-pipeline-onboarding 使用文档](jenkins-pipeline-onboarding-usage-guide.md)（怎么用、场景、FAQ、命令速查）。
 > 本文只保留**人与 AI 都需要知道的稳定约定**与**索引**；Job 明细、输入字段、阶段模板一律不在本文重复。
 > 不包含：Jenkins 安装、K8s 发布、部署服务器密钥（凭据只进 Jenkins Credentials）。
 
