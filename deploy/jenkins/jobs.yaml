@@ -1,0 +1,111 @@
+# Jenkins 流水线 Job 清单 —— 唯一事实源
+#
+# 所有 Job 的「名字 / 系统 / 可部署单元 / 端口 / 健康检查 / 归属」只在本文件登记一次。
+# 文档（docs/jenkins-pipeline-guide.md §7、deploy/jenkins/README.md §1）不再手抄第二份表，
+# 只引用本文件；改 Job 集合 = 改本文件 + 跑 scripts。
+#
+# 校验：python deploy/jenkins/preflight.py
+# 预览：python deploy/jenkins/create-jobs.py --dry-run
+# 应用：见 deploy/jenkins/README.md（需要 Jenkins 凭据环境变量，仓库内不含任何密码）
+
+version: 1
+updated: "2026-11-04"
+
+# 全组共用的环境事实（值来自 docs/test-env.md，此处只保留非密钥部分）
+defaults:
+  branch: feature-base-design              # Job 参数 BRANCH 的默认值
+  git_url: https://github.com/NewStudyAccount/project_ai.git
+  git_cred_id: github-token                # 只写 Credentials ID，禁止写值
+  deploy_host: 192.168.99.100
+  deploy_user: root
+  ssh_cred_id: ssh-deploy-test             # 只写 ID
+  registry: 192.168.99.100:5000
+  image_prefix: project_ai
+  registry_cred_id: registry-push-test     # 只写 ID
+  docker_network: project-ai
+  node_image: node:24-alpine
+  maven_image: maven:3.9-eclipse-temurin-21
+  agent_label: any                         # 本项目 agent any + 全 Docker 构建
+  owner: qjj
+
+# kind:
+#   frontend  前端静态镜像（node 容器内质量门 → nginx 镜像 → 端口映射 :80）
+#   backend   可执行 jar 镜像（maven 容器内 test/package → jar 镜像）
+# 字段说明：
+#   system       与 frontend/<system>、backend/<system> 目录一致
+#   target       镜像名/容器名/Job 名主干（Job 名 = {target}-cd）
+#   module       仅 backend：mvn -pl 的模块目录名，也是 docker build 上下文末级目录；
+#                省略时等于 target（启动模块与业务模块同名的情况）
+#   port         宿主机端口，必须已在 docs/port-registry.md 登记
+#   health_path  容器内健康检查路径（前端 /healthz；后端 /actuator/health）
+#   notes        已知问题/待裁决事项，preflight 会原样打印，不会被静默忽略
+jobs:
+  - name: user-admin-cd
+    kind: frontend
+    system: user-admin
+    target: user-admin
+    port: 5173
+    health_path: /healthz
+
+  - name: auth-admin-cd
+    kind: frontend
+    system: auth-admin
+    target: auth-admin
+    port: 5175
+    health_path: /healthz
+
+  - name: auth-portal-cd
+    kind: frontend
+    system: auth-portal
+    target: auth-portal
+    port: 5174
+    health_path: /healthz
+
+  - name: blog-admin-cd
+    kind: frontend
+    system: blog-admin
+    target: blog-admin
+    port: 5176
+    health_path: /healthz
+
+  - name: auth-service-cd
+    kind: backend
+    system: auth
+    target: auth-service
+    port: 9080
+    health_path: /actuator/health
+
+  - name: blog-gateway-cd
+    kind: backend
+    system: blog
+    target: blog-gateway
+    port: 9100
+    health_path: /actuator/health
+
+  # 2026-11-04 修正：原脚本把 docker build 上下文写成 backend/blog/blog-service，
+  # 该目录无 Dockerfile，Image 阶段必然失败。可部署单元是 blog-server
+  # （含 Dockerfile + spring-boot-maven-plugin + finalName=blog-service），
+  # 镜像名/容器名仍沿用 blog-service 不变。
+  # 出处：openspec/changes/blog-server-module-split 任务 6.7（该变更已批准，当时只改了文档未改脚本）。
+  - name: blog-service-cd
+    kind: backend
+    system: blog
+    target: blog-service
+    module: blog-server
+    port: 19100
+    health_path: /actuator/health
+    notes: "构建单元已由 blog-service 修正为 blog-server（docker build 需要 Dockerfile；见 blog-server-module-split 6.7）"
+
+  - name: user-gateway-cd
+    kind: backend
+    system: user
+    target: user-gateway
+    port: 8173
+    health_path: /actuator/health
+
+  - name: user-service-cd
+    kind: backend
+    system: user
+    target: user-service
+    port: 18173
+    health_path: /actuator/health

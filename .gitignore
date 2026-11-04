@@ -20,3 +20,12 @@ docs/secrets/
 **/dist/
 /logs/
 /backend/blog/blog-server/logs/
+
+# Jenkins 本地凭据（禁止提交）
+deploy/jenkins/.jenkins.env
+
+# 本地运行产物
+__pycache__/
+*.pyc
+# DSH 沙箱 ACL 修复报告（本机排障留档）
+.dsh-acl-report/

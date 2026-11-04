@@ -137,7 +137,7 @@ OIDC RP（unify-login-facade）：
 |----|-----|
 | Jenkins URL | `http://192.168.99.100:8080/` |
 | 登录用户 | `qjj`（密码见 §6.1） |
-| 常用 Job | 见 `docs/jenkins-pipeline-guide.md` §7 登记表 |
+| 常用 Job | 见 `deploy/jenkins/jobs.yaml`（唯一事实源；人读指引见 `docs/jenkins-pipeline-guide.md` §7） |
 | `DEPLOY_ENV` | `test` |
 | Spring profile | `test` |
 | 健康检查 | `http://<服务>:<端口>/actuator/health` |
@@ -164,7 +164,7 @@ OIDC RP（unify-login-facade）：
 | MySQL | test | root  | 123456 | |
 | Redis | test | root  | 123456 | |
 | Nacos | test | nacos | nacos  | |
-| Jenkins | test | qjj | Qjj327846@!! | 管理台 `http://192.168.99.100:8080/`；同步见 `jenkins-pipeline-guide.md` |
+| Jenkins | test | qjj | Qjj327846@!! | 管理台 `http://192.168.99.100:8080/`；**本表是账号密码唯一登记处**，脚本从环境变量取，不入仓 |
 
 ### 6.2 生产（禁止写入本仓库）
 
