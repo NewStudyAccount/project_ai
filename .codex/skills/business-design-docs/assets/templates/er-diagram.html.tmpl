@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{{DOMAIN}} · ER 图</title>
+<style>
+  /* 壳层骨架：单文件自包含；与 table-design.md / {{DOMAIN}}-design.md §6 同步 */
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --border: #e2e8f0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--ink); min-height: 100vh; padding: 24px;
+  }
+  header { max-width: 1200px; margin: 0 auto 16px; }
+  h1 { font-size: 20px; font-weight: 600; }
+  .sub { margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px auto 0; max-width: 1200px; font-size: 12px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; }
+  .dot { width: 10px; height: 10px; border-radius: 2px; }
+  .wrap { max-width: 1200px; margin: 16px auto; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: auto; }
+  svg { display: block; width: 100%; min-width: 980px; height: auto; }
+  .card-title { font-size: 13px; font-weight: 600; fill: #f8fafc; }
+  .field { font-size: 11px; fill: #334155; font-family: "JetBrains Mono", Consolas, monospace; }
+  .field.pk { fill: #1d4ed8; font-weight: 600; }
+  .field.fk { fill: #b45309; font-weight: 600; }
+  .note { font-size: 11px; fill: #64748b; }
+  .rel-label { font-size: 11px; fill: #475569; }
+  .foot { max-width: 1200px; margin: 0 auto 32px; color: #64748b; font-size: 12px; line-height: 1.7; }
+  code { font-family: "JetBrains Mono", Consolas, monospace; background: #e2e8f0; padding: 1px 6px; border-radius: 4px; font-size: 11px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>{{DOMAIN_CN}}（{{DB}} · <前缀>_ 表）· ER 图</h1>
+  <p class="sub">
+    与 <code>table-design.md</code> / <code>{{DOMAIN}}-design.md</code> §6 同步 · <b>N 张</b>表 + <检索索引，如有> + 跨域引用 ·
+    审计字段 5 列未画入（全表齐套）· <一句话边界声明>
+  </p>
+</header>
+
+<div class="legend">
+  <span><i class="dot" style="background:#1d4ed8"></i>主键</span>
+  <span><i class="dot" style="background:#b45309"></i>关联字段（无物理外键）</span>
+  <span><i class="dot" style="background:#64748b"></i>跨域引用（虚线）</span>
+</div>
+
+<div class="wrap">
+  <!-- 替换：每张表一个表卡（标题条 + 字段行），关系线按 table-design 的逻辑关系连接；
+       字段只画关键列（主键/关联字段/状态/业务键），其余在 table-design.md 查 -->
+  <svg viewBox="0 0 1160 720" xmlns="http://www.w3.org/2000/svg">
+    <g transform="translate(40,40)">
+      <rect width="240" height="120" rx="10" fill="#1e293b"/>
+      <text class="card-title" x="14" y="24">&lt;table_a&gt;（示例表卡）</text>
+      <text class="field pk" x="14" y="48">id  PK · BIGINT（16 位发号）</text>
+      <text class="field fk" x="14" y="68">&lt;ref_id&gt;  FK → &lt;table_b&gt;.id</text>
+      <text class="field" x="14" y="88">status  TINYINT（状态机 §4.1）</text>
+      <text class="note" x="14" y="108">审计 5 列未画入</text>
+    </g>
+    <path d="M 280 100 C 360 100, 360 100, 440 100" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+    <text class="rel-label" x="320" y="90">1:N</text>
+    <g transform="translate(440,40)">
+      <rect width="240" height="120" rx="10" fill="#1e293b"/>
+      <text class="card-title" x="14" y="24">&lt;table_b&gt;（示例表卡）</text>
+      <text class="field pk" x="14" y="48">id  PK · BIGINT</text>
+      <text class="field" x="14" y="68">&lt;字段&gt;  &lt;类型&gt;</text>
+      <text class="note" x="14" y="88">…</text>
+    </g>
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+      </marker>
+    </defs>
+  </svg>
+</div>
+
+<p class="foot">
+  效力声明：本图仅为展示与交互参照，<b>效力低于设计正文</b>；字段/关系以 <code>table-design.md</code> 为准。<br/>
+  同步规则：新增/删除表、改关联字段时先改 <code>table-design.md</code>，再更新本图（README 状态列同步）。
+</p>
+</body>
+</html>

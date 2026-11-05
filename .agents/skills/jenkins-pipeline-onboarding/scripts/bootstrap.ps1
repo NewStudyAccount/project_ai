@@ -54,6 +54,9 @@ $dest = Join-Path $Target 'deploy/jenkins'
 $ignore = @('.DS_Store', 'Thumbs.db')
 $codeFiles = @('preflight.py', 'render.py', 'create-jobs.py', 'jenkins_api.py')
 $templateFiles = @('frontend.groovy.tmpl', 'backend.groovy.tmpl', 'job.xml.tmpl')
+$commandFiles = @('init.md', 'add.md', 'check.md', 'apply.md')
+$commandSrc = Join-Path $skillRoot 'assets/commands'
+$commandDst = Join-Path $Target '.claude/commands/jenkins'
 
 function Get-Hash([string]$p) {
     if (-not (Test-Path $p)) { return '' }
@@ -78,6 +81,17 @@ if ($Mode -eq 'Check') {
             Write-Output "[MISSING] templates/$f（快照有=$([bool]$a) 目标有=$([bool]$b)）"; $drift++; continue
         }
         if ($a -ne $b) { Write-Output "[DIFF]    templates/$f"; $drift++ }
+    }
+    if (Test-Path $commandDst) {
+        foreach ($f in $commandFiles) {
+            $a = Get-Hash (Join-Path $commandSrc $f)
+            $b = Get-Hash (Join-Path $commandDst $f)
+            if ($b -eq '') { Write-Output "[WARN]    命令未安装：/jenkins:$($f.Replace('.md',''))"; continue }
+            if ($a -ne $b) { Write-Output "[DIFF]    commands/$f"; $drift++ }
+        }
+    }
+    else {
+        Write-Output "[WARN]    目标未安装 slash 命令（可选）：$commandDst"
     }
     if (-not (Test-Path (Join-Path $dest 'jobs.yaml'))) {
         Write-Output "[WARN]    目标没有 jobs.yaml（尚未初始化）"
@@ -132,6 +146,10 @@ Write-Output ""
 if ($DryRun) {
     foreach ($p in $plan) { Write-Output ("(DryRun) {0} -> {1}" -f (Split-Path $p.From -Leaf), $p.To) }
     if ($needJobs) { Write-Output "(DryRun) jobs.example.yaml -> $jobsDst" }
+    foreach ($f in $commandFiles) {
+        $to = Join-Path $commandDst $f
+        if (-not (Test-Path $to)) { Write-Output ("(DryRun) 安装命令 /jenkins:{0}" -f $f.Replace('.md', '')) }
+    }
     Write-Output "`n(DryRun) 未写入任何文件"
     exit 0
 }
@@ -144,6 +162,18 @@ foreach ($p in $plan) {
 if ($needJobs) {
     Copy-Item (Join-Path $snapshot 'jobs.example.yaml') $jobsDst
     Write-Output "生成 jobs.yaml（含 <TODO: ...> 占位，必须逐项填真实值）"
+}
+
+# slash 命令（可选便利层）：只在缺失时安装；-Force 时覆盖
+if (Test-Path $commandSrc) {
+    New-Item -ItemType Directory -Force -Path $commandDst | Out-Null
+    foreach ($f in $commandFiles) {
+        $to = Join-Path $commandDst $f
+        if ($Force -or -not (Test-Path $to)) {
+            Copy-Item (Join-Path $commandSrc $f) $to -Force
+            Write-Output ("安装命令 /jenkins:{0}" -f $f.Replace('.md', ''))
+        }
+    }
 }
 
 # 文档骨架（只在缺失时创建，绝不覆盖已有手册）
@@ -197,5 +227,11 @@ Write-Output @"
   5. python deploy/jenkins/preflight.py          # ERROR 必须清零
   6. python deploy/jenkins/create-jobs.py --dry-run
   7. 设置 JENKINS_URL / JENKINS_USER / JENKINS_TOKEN 后再 create-jobs.py
+
+装了 slash 命令（Claude Code）后可以少打字：
+  /jenkins:init            初始化（bootstrap + 填 jobs.yaml + 预检 + dry-run）
+  /jenkins:add <服务>      加一条流水线
+  /jenkins:check           体检（预检 + 快照一致性 + 镜像一致性）
+  /jenkins:apply [Job]     同步到 Jenkins
 "@
 exit 0

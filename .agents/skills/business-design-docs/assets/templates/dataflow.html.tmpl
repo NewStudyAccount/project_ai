@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{{DOMAIN}} · 数据流</title>
+<style>
+  /* 壳层骨架：单文件自包含；与 {{DOMAIN}}-design.md §3 同步 */
+  :root {
+    --bg: #f1f5f9; --surface: #fff; --ink: #0f172a; --muted: #64748b; --border: #e2e8f0;
+    --p1: #2b7fd4; --p2: #6d5df6; --p3: #0f9960; --p4: #b7791f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--ink); padding: 24px; }
+  header, .phasebar, .lane, .foot { max-width: 1100px; margin-left: auto; margin-right: auto; }
+  h1 { font-size: 20px; font-weight: 600; }
+  .sub { margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .phasebar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px auto; }
+  .phase { display: flex; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+  .phase .no { width: 26px; height: 26px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; flex: none; }
+  .phase .t { font-size: 13px; font-weight: 600; }
+  .phase .d { font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+  .p1 .no { background: var(--p1); } .p2 .no { background: var(--p2); } .p3 .no { background: var(--p3); } .p4 .no { background: var(--p4); }
+  .lane { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
+  .lane h2 { font-size: 14px; margin-bottom: 10px; }
+  .lane.l1 { border-left: 4px solid var(--p1); }
+  .lane.l2 { border-left: 4px solid var(--p2); }
+  .lane.l3 { border-left: 4px solid var(--p3); }
+  .lane.l4 { border-left: 4px solid var(--p4); }
+  .step { font-family: "JetBrains Mono", Consolas, monospace; font-size: 12px; color: #334155; line-height: 2; }
+  .step b { color: var(--ink); }
+  .foot { margin: 22px auto 32px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+  code { font-family: "JetBrains Mono", Consolas, monospace; background: #e2e8f0; padding: 1px 6px; border-radius: 4px; font-size: 11px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>{{DOMAIN_CN}} · 全链路数据流</h1>
+  <p class="sub">与 <code>{{DOMAIN}}-design.md</code> §3 同步 · <阶段一句话概述> · 效力低于设计正文</p>
+</header>
+
+<!-- 替换：阶段条与泳道按主设计 §3 的阶段划分 -->
+<div class="phasebar">
+  <div class="phase p1"><div class="no">①</div><div><div class="t"><阶段一></div><div class="d"><一句话></div></div></div>
+  <div class="phase p2"><div class="no">②</div><div><div class="t"><阶段二></div><div class="d"><一句话></div></div></div>
+  <div class="phase p3"><div class="no">③</div><div><div class="t"><阶段三></div><div class="d"><一句话></div></div></div>
+  <div class="phase p4"><div class="no">④</div><div><div class="t"><治理/兜底></div><div class="d"><一句话></div></div></div>
+</div>
+
+<section class="lane l1">
+  <h2>① <阶段一>（<触发 → 结果状态>）</h2>
+  <div class="step">
+    <b>入口</b>：<谁触发、什么动作> <br/>
+    <b>处理</b>：<步骤 → 步骤> <br/>
+    <b>落点</b>：<表/对象/索引，写清真相源> <br/>
+    <b>失败</b>：<失败分支与状态>
+  </div>
+</section>
+
+<section class="lane l2">
+  <h2>② <阶段二>（<异步/同步>）</h2>
+  <div class="step">
+    <b>触发</b>：… <br/>
+    <b>处理</b>：… <br/>
+    <b>回写</b>：…（<状态机取值>）<br/>
+    <b>失败</b>：…
+  </div>
+</section>
+
+<section class="lane l3">
+  <h2>③ <阶段三></h2>
+  <div class="step">
+    <b>输入</b>：… <br/>
+    <b>处理</b>：… <br/>
+    <b>输出</b>：…
+  </div>
+</section>
+
+<section class="lane l4">
+  <h2>④ <治理/兜底></h2>
+  <div class="step">
+    <b>失效</b>：… <br/>
+    <b>重建</b>：… <br/>
+    <b>对账</b>：…
+  </div>
+</section>
+
+<p class="foot">
+  效力声明：本图仅为展示参照，<b>效力低于设计正文</b>；链路细节以 <code>{{DOMAIN}}-design.md</code> §3 为准。
+  状态取值以 <code>table-design.md</code> / <code>api-design.md</code> 为准。
+</p>
+</body>
+</html>

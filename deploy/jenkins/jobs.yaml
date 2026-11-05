@@ -22,7 +22,7 @@ defaults:
   registry: 192.168.99.100:5000
   image_prefix: project_ai
   registry_cred_id: registry-push-test     # 只写 ID
-  docker_network: project-ai
+  docker_network: 1panel-network
   node_image: node:24-alpine
   maven_image: maven:3.9-eclipse-temurin-21
   agent_label: any                         # 本项目 agent any + 全 Docker 构建
@@ -40,72 +40,4 @@ defaults:
 #   health_path  容器内健康检查路径（前端 /healthz；后端 /actuator/health）
 #   notes        已知问题/待裁决事项，preflight 会原样打印，不会被静默忽略
 jobs:
-  - name: user-admin-cd
-    kind: frontend
-    system: user-admin
-    target: user-admin
-    port: 5173
-    health_path: /healthz
 
-  - name: auth-admin-cd
-    kind: frontend
-    system: auth-admin
-    target: auth-admin
-    port: 5175
-    health_path: /healthz
-
-  - name: auth-portal-cd
-    kind: frontend
-    system: auth-portal
-    target: auth-portal
-    port: 5174
-    health_path: /healthz
-
-  - name: blog-admin-cd
-    kind: frontend
-    system: blog-admin
-    target: blog-admin
-    port: 5176
-    health_path: /healthz
-
-  - name: auth-service-cd
-    kind: backend
-    system: auth
-    target: auth-service
-    port: 9080
-    health_path: /actuator/health
-
-  - name: blog-gateway-cd
-    kind: backend
-    system: blog
-    target: blog-gateway
-    port: 9100
-    health_path: /actuator/health
-
-  # 2026-11-04 修正：原脚本把 docker build 上下文写成 backend/blog/blog-service，
-  # 该目录无 Dockerfile，Image 阶段必然失败。可部署单元是 blog-server
-  # （含 Dockerfile + spring-boot-maven-plugin + finalName=blog-service），
-  # 镜像名/容器名仍沿用 blog-service 不变。
-  # 出处：openspec/changes/blog-server-module-split 任务 6.7（该变更已批准，当时只改了文档未改脚本）。
-  - name: blog-service-cd
-    kind: backend
-    system: blog
-    target: blog-service
-    module: blog-server
-    port: 19100
-    health_path: /actuator/health
-    notes: "构建单元已由 blog-service 修正为 blog-server（docker build 需要 Dockerfile；见 blog-server-module-split 6.7）"
-
-  - name: user-gateway-cd
-    kind: backend
-    system: user
-    target: user-gateway
-    port: 8173
-    health_path: /actuator/health
-
-  - name: user-service-cd
-    kind: backend
-    system: user
-    target: user-service
-    port: 18173
-    health_path: /actuator/health

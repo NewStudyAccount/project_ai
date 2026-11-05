@@ -1,0 +1,37 @@
+# {{DOMAIN}} · 设计文档索引
+
+> 本目录是 **{{DOMAIN_CN}}**的设计文档集合（独立文档，非 openspec 提案）。
+> 定位：<一句话：属于哪个系统/业务域，做什么>。
+> 契约口径以根目录 `CLAUDE.md` 为准；<通用裁剪源，如有>以其为准。
+
+| 文档 | 职责 | 状态 |
+|------|------|------|
+| [{{DOMAIN}}-design.md](./{{DOMAIN}}-design.md) | 主设计：背景、数据流、领域模型、库表草案、接口草案、选型对比、开放问题 | **探索稿 v0.1** |
+| [table-design.md](./table-design.md) | **库表契约**：<N> 张新增表 DDL、种子、裁决记录 | 设计稿 |
+| [api-design.md](./api-design.md) | **接口契约**：逐字段入参/出参、<特殊帧，如有>、错误码段位 | 设计稿 |
+| [{{DOMAIN}}-er-diagram.html](./{{DOMAIN}}-er-diagram.html) | 表关系 ER 图（浏览器打开） | 与主设计 §6 / table-design 同步 |
+| [{{DOMAIN}}-prototype.html](./{{DOMAIN}}-prototype.html) | 页面原型（浏览器打开，tab 切换） | 布局参照，效力低于设计正文 |
+| [{{DOMAIN}}-dataflow.html](./{{DOMAIN}}-dataflow.html) | 全链路数据流图 | 与主设计 §3 同步 |
+
+**阅读顺序：** {{DOMAIN}}-design.md → table-design.md → api-design.md → {{DOMAIN}}-er-diagram.html → {{DOMAIN}}-prototype.html。
+
+**效力顺序：** `CLAUDE.md`（契约） > table-design.md（库表）/ api-design.md（接口） > 主设计正文 > HTML（ER/原型，仅展示与交互参照）。
+
+---
+
+## 范围一句话
+
+<一段话讲清：在哪个系统、什么链路、什么形态、什么边界——参照范例 README「范围一句话」的密度。>
+
+## 状态：探索稿 v0.1
+
+<裁决批次摘要；开放问题清零后在此声明。>
+
+## 相关既有材料（不在本目录）
+
+| 路径 | 关系 |
+|------|------|
+| `CLAUDE.md` | 契约口径唯一源 |
+| `docs/<相关域>/` | <关系说明> |
+| `docs/template/rbac-design.md` | 权限标识与菜单短号 |
+| `docs/port-registry.md` / `docs/test-env.md` / `docs/version-baseline.md` | 端口 / 接入账密 / 版本基线唯一登记处 |

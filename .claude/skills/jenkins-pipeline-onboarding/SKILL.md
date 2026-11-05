@@ -149,6 +149,8 @@ python deploy/jenkins/create-jobs.py --only <job-name>  # 只一条
 | `references/job-registry.md` | 登记与覆盖缺口、文档映射 |
 | `assets/acceptance-checklist.md` | 步骤 6 |
 | `assets/Dockerfile.{frontend,backend}.tmpl`、`assets/nginx.conf.tmpl` | 目标项目缺 Dockerfile / 缺 `/healthz` 时抄 |
+| `assets/启动指令.md` | 用户问「一句话怎么让 AI 开始」时，直接给里面的句子 |
+| `assets/commands/*.md` | Claude Code 的 slash 命令源（/jenkins:init|add|check|apply），由 bootstrap 安装 |
 
 ## 6. 技能自己的维护（改完必须做）
 

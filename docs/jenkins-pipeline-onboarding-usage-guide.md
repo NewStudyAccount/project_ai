@@ -1,4 +1,4 @@
-# Jenkins 流水线技能使用文档
+﻿# Jenkins 流水线技能使用文档
 
 > 技能本体：`.claude/skills/jenkins-pipeline-onboarding/`（AI 执行指令）
 > 本文：给人看的**怎么用、什么时候用、出问题怎么办**
@@ -33,6 +33,8 @@
 | 先 dry-run，别碰 Jenkins | 只跑到渲染与自查，停在第 ④ 步 |
 | 用 jenkins-pipeline-onboarding 帮我建流水线 | 显式点名，必定命中 |
 
+新项目第一次接入，复制即用的句子见 `assets/启动指令.md`（技能内）。
+
 不需要记命令。命令是给脚本和排查时用的，见 §5。
 
 ### 1.2 我是 AI —— 读 SKILL.md
@@ -56,6 +58,46 @@ SKILL.md
 ```powershell
 powershell -NoProfile -File .claude/skills/jenkins-pipeline-onboarding/scripts/bootstrap.ps1
 ```
+
+### 1.4 我只想敲一条命令 —— slash 命令
+
+技能自带走四个命令（Claude Code 下可用，bootstrap 时自动安装到 `.claude/commands/jenkins/`）：
+
+| 命令 | 作用 | 会写 Jenkins 吗 |
+|---|---|---|
+| `/jenkins:init` | 新项目初始化：bootstrap → 一次问齐 5 项 → 填 jobs.yaml → 预检 → dry-run | ❌ 只到 dry-run |
+| `/jenkins:add <服务>` | 加一条流水线：取证 → 写 jobs.yaml → 预检 → dry-run → 问你要不要下发 | ⚠️ 需你确认 |
+| `/jenkins:check` | 体检：预检 + 机器与快照一致性 + 技能镜像一致性 | ❌ 只读 |
+| `/jenkins:apply [Job]` | 同步到 Jenkins：预检通过 → 备份 → 创建/更新 → 回读校验 | ✅ 会 |
+
+说明：
+
+- 命令只是**便利层**，内容仍是「读 SKILL.md + 跑脚本」，所以两者不会漂移；
+- 命令由 `bootstrap.ps1` 安装；也可手动复制 `assets/commands/*.md`；
+- 不用 Claude Code（如 Trae / Codex / 纯终端）时看 §1.5。
+
+### 1.5 我不是 Claude Code（Trae / Codex / MimoCode / 终端）
+
+斜杠命令是 Claude Code 的机制，其它工具没有「命令目录」，但**命令文件本身只是提示词**，读它照做即可。
+
+| 工具 | 技能在哪 | 怎么用 |
+|---|---|---|
+| Claude Code | `.claude/skills/...` | `/jenkins:init` 等四条命令 |
+| Trae | `.trae/skills/...` | 通用句式（下）或直接点名技能 |
+| Codex | `.codex/skills/...` | 同上 |
+| MimoCode | `.agents/skills/...`（+ `instructions` 注入 `CLAUDE.md`） | 同上 |
+| 纯终端 | 不需要技能 | 直接跑 `deploy/jenkins/*.py` |
+
+**通用句式**（把 `<技能根>` 换成本机实际路径）：
+
+```
+读 <技能根>/assets/commands/add.md 并严格按它执行，参数：blog-portal
+读 <技能根>/assets/commands/check.md 并严格按它执行
+```
+
+例：Trae 里就是 `读 .trae/skills/jenkins-pipeline-onboarding/assets/commands/add.md 并严格按它执行，参数：blog-portal`。
+
+命令正文已写成**路径无关**（用 `<技能根>` 指代），所以搬到任何工具都不会出现「指向 .claude 的死路径」。索引见 `assets/commands/README.md`。
 
 ---
 

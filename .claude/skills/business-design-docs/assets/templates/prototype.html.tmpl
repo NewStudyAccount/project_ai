@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{{DOMAIN}} · 页面原型</title>
+<style>
+  /* ============ Token 子集（唯一取处处：docs/template/tokens-aurora.css） ============ */
+  :root {
+    --bg-page: #f3f5fb;
+    --bg-surface: #ffffff;
+    --bg-code: #f2f1fb;
+    --text-primary: #1c1740;
+    --text-regular: #3f3a6b;
+    --text-secondary: #8580ad;
+    --border: #e6e4f4;
+    --primary: #6d5df6;
+    --primary-hover: #5a49e8;
+    --primary-light: #eeecff;
+    --ok: #0f9960;
+    --ok-light: #e3f7ef;
+    --warn: #b7791f;
+    --warn-light: #fdf3e3;
+    --danger: #e05260;
+    --danger-light: #fdeef0;
+    --info: #2b7fd4;
+    --info-light: #e9f3fc;
+    --accent-gradient: linear-gradient(135deg, #6d5df6 0%, #8b5cf6 45%, #22d3ee 100%);
+    --page-radius: 16px;
+    --control-radius: 10px;
+    --button-radius: 999px;
+    --shadow-card: 0 1px 2px rgba(28,23,64,.05), 0 12px 28px rgba(88,70,200,.09);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #eceaf6; color: var(--text-primary); font-size: 14px; line-height: 1.6; }
+
+  /* ============ 原型外壳（仅评审用，非页面本体） ============ */
+  .proto-bar { position: sticky; top: 0; z-index: 50; background: #241a52; color: #edeaff; padding: 10px 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .proto-title { font-weight: 600; font-size: 14px; letter-spacing: .3px; }
+  .proto-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .proto-tab { border: 1px solid rgba(255,255,255,.18); background: transparent; color: #cfc9f2; border-radius: 999px; padding: 5px 14px; font-size: 12.5px; cursor: pointer; }
+  .proto-tab.on { background: var(--accent-gradient); color: #fff; border-color: transparent; }
+  .proto-note { width: 100%; font-size: 11.5px; color: #a9a2d8; }
+  .panel { display: none; }
+  .panel.show { display: block; }
+  .stage { max-width: 1280px; margin: 22px auto 40px; background: var(--bg-page); border-radius: 20px; box-shadow: 0 24px 64px rgba(28,23,64,.18); overflow: clip; min-height: 720px; }
+
+  /* ============ admin 布局 ============ */
+  .admin-layout { display: grid; grid-template-columns: 216px 1fr; min-height: 720px; }
+  .side { background: #241a52; color: #cfc9f2; padding: 18px 12px; }
+  .side-brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 700; font-size: 15px; padding: 4px 10px 16px; }
+  .side-brand i { width: 22px; height: 22px; border-radius: 7px; background: var(--accent-gradient); display: inline-block; }
+  .side-group { font-size: 11px; color: #8a80c8; letter-spacing: 1px; padding: 14px 10px 6px; }
+  .side-item { display: block; color: #cfc9f2; text-decoration: none; padding: 8px 10px; border-radius: 8px; font-size: 13px; margin: 1px 0; }
+  .side-item.on { background: rgba(109,93,246,.4); color: #fff; font-weight: 600; }
+  .admin-main { padding: 0; display: flex; flex-direction: column; }
+  .admin-top { background: var(--bg-surface); border-bottom: 1px solid var(--border); padding: 14px 26px; display: flex; align-items: center; gap: 12px; }
+  .admin-top h2 { margin: 0; font-size: 17px; }
+  .admin-top .crumb { color: var(--text-secondary); font-size: 12px; }
+  .admin-top .who { margin-left: auto; color: var(--text-regular); font-size: 12.5px; }
+  .admin-body { padding: 22px 26px 30px; }
+
+  .toolbar { background: var(--bg-surface); border-radius: var(--page-radius); box-shadow: var(--shadow-card); padding: 14px 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+  .select, .input { border: 1px solid var(--border); border-radius: var(--control-radius); padding: 8px 12px; font-size: 13px; background: var(--bg-page); color: var(--text-regular); min-width: 130px; }
+  .input { flex: 1; min-width: 200px; }
+  .btn { border: none; border-radius: var(--button-radius); padding: 8px 18px; font-size: 13px; cursor: pointer; font-weight: 600; }
+  .btn.primary { background: var(--primary); color: #fff; }
+  .btn.ghost { background: var(--primary-light); color: var(--primary); }
+
+  .table-card { background: var(--bg-surface); border-radius: var(--page-radius); box-shadow: var(--shadow-card); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 11px 14px; text-align: left; font-size: 13px; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-secondary); font-weight: 600; background: var(--bg-page); }
+  .anchor { font-size: 11px; color: var(--info); background: var(--info-light); border-radius: 6px; padding: 1px 7px; margin-left: 6px; white-space: nowrap; }
+  .proto-foot { max-width: 1280px; margin: 0 auto 32px; font-size: 12px; color: var(--text-secondary); line-height: 1.8; }
+</style>
+</head>
+<body>
+
+<div class="proto-bar">
+  <div class="proto-title">{{DOMAIN_CN}} · 页面原型</div>
+  <div class="proto-tabs">
+    <!-- 替换：tab = 页面清单，与 api-design 权限/菜单对照一致 -->
+    <button class="proto-tab on" data-panel="admin-page-1"><{{SYSTEM}}-admin> · <页面一></button>
+    <button class="proto-tab" data-panel="admin-page-2"><{{SYSTEM}}-admin> · <页面二></button>
+    <button class="proto-tab" data-panel="portal-page-1"><{{SYSTEM}}-portal> · <用户端页面></button>
+  </div>
+  <div class="proto-note">布局参照，效力低于设计正文；元素上的 <span class="anchor">→ 接口</span> 为契约锚点（对应 api-design.md）。</div>
+</div>
+
+<!-- ============ 面板 1：管理端页面一 ============ -->
+<div class="panel show" id="admin-page-1">
+  <div class="stage">
+    <div class="admin-layout">
+      <aside class="side">
+        <div class="side-brand"><i></i> {{SYSTEM}}-admin</div>
+        <div class="side-group">MENU</div>
+        <a class="side-item on" href="javascript:;"><页面一（菜单短号）></a>
+        <a class="side-item" href="javascript:;"><页面二></a>
+      </aside>
+      <main class="admin-main">
+        <div class="admin-top">
+          <h2><页面一标题></h2>
+          <span class="crumb"><导航路径></span>
+          <span class="who"><用户> · <角色></span>
+        </div>
+        <div class="admin-body">
+          <div class="toolbar">
+            <select class="select"><option><筛选项></option></select>
+            <input class="input" placeholder="<搜索>" />
+            <button class="btn primary"><主操作> <span class="anchor">→ POST /api/v1/...</span></button>
+            <button class="btn ghost"><次操作></button>
+          </div>
+          <div class="table-card">
+            <table>
+              <thead><tr><th><列一></th><th><列二></th><th><状态></th><th>操作</th></tr></thead>
+              <tbody>
+                <tr><td><示例值></td><td><示例值></td><td><状态徽标></td>
+                  <td><button class="btn ghost">编辑</button> <button class="btn ghost">删除</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 面板 2：复制面板 1 结构改内容 ============ -->
+<div class="panel" id="admin-page-2">
+  <div class="stage"><div class="admin-body"><p>（复制面板 1 的 admin-layout 结构，替换为页面二内容；契约锚点按 api-design 标注）</p></div></div>
+</div>
+
+<!-- ============ 面板 3：用户端页面 ============ -->
+<div class="panel" id="portal-page-1">
+  <div class="stage"><div class="admin-body"><p>（用户端布局；登录态/权限要求在此注明；契约锚点按 api-design 标注）</p></div></div>
+</div>
+
+<p class="proto-foot">
+  效力声明：本原型仅为布局与交互参照，<b>效力低于设计正文</b>；接口/字段/枚举以 <code>api-design.md</code> / <code>table-design.md</code> 为准。<br/>
+  视觉 token 取自 <code>docs/template/tokens-aurora.css</code>（子集复制）；实装与原型差异回写 README。
+</p>
+
+<script>
+  var tabs = document.querySelectorAll('.proto-tab');
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () {
+      tabs.forEach(function (x) { x.classList.remove('on'); });
+      t.classList.add('on');
+      document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('show'); });
+      document.getElementById(t.dataset.panel).classList.add('show');
+    });
+  });
+</script>
+</body>
+</html>
