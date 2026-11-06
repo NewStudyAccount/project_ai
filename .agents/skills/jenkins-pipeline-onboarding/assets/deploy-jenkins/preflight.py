@@ -85,6 +85,25 @@ def check_units(spec: dict, findings: list[Finding]) -> None:
                 findings.append(Finding("ERROR", name, f"缺少 pom.xml：{resolved['unit_dir']}"))
 
 
+def _evidence_container_port(resolved: dict) -> tuple[str | None, str]:
+    """从代码取证容器内监听端口（后端 application.yml server.port，前端 nginx.conf listen）。
+
+    返回 (取证值|None, 证据文件相对路径)；文件不存在返回 (None, "")。
+    """
+    unit = REPO / resolved["unit_dir"]
+    if resolved["kind"] == "frontend":
+        conf = unit / "nginx.conf"
+        if conf.is_file():
+            m = re.search(r"listen\s+(\d+)", _read_text_lenient(conf))
+            return (m.group(1) if m else None), conf.relative_to(REPO).as_posix()
+        return None, ""
+    yml = unit / "src" / "main" / "resources" / "application.yml"
+    if yml.is_file():
+        m = re.search(r"server:\s*\r?\n\s*port:\s*(\d+)", _read_text_lenient(yml))
+        return (m.group(1) if m else None), yml.relative_to(REPO).as_posix()
+    return None, ""
+
+
 def check_ports(spec: dict, findings: list[Finding]) -> None:
     registry_text = _read_text_lenient(PORT_REGISTRY) if PORT_REGISTRY.is_file() else ""
     if not PORT_REGISTRY.is_file():
@@ -110,6 +129,15 @@ def check_ports(spec: dict, findings: list[Finding]) -> None:
         expect = "/healthz" if resolved["kind"] == "frontend" else "/actuator/health"
         if resolved["health_path"] != expect:
             findings.append(Finding("WARN", name, f"健康检查路径为 {resolved['health_path']}，本项目约定 {expect}"))
+
+        # container_port 必须与代码取证一致：宿主机端口可换，容器内端口由代码决定
+        cport = resolved.get("container_port", "")
+        ev, src = _evidence_container_port(resolved)
+        if ev is None:
+            if src:
+                findings.append(Finding("WARN", name, f"未能从 {src} 取证容器内监听端口，container_port={cport} 未经校验"))
+        elif ev != cport:
+            findings.append(Finding("ERROR", name, f"container_port={cport} 与代码不一致：{src} 实际监听 {ev}"))
 
 
 def check_secrets(spec_path: Path, findings: list[Finding]) -> None:
@@ -245,7 +273,8 @@ def main(argv: list[str]) -> int:
         bad = [f for f in own if f.level == "ERROR"]
         mark = "FAIL" if bad else "OK  "
         port = resolved["port"]
-        print(f"[{mark}] {resolved['name']:<18} {resolved['unit_dir']:<32} port {port}")
+        cport = resolved.get("container_port", "?")
+        print(f"[{mark}] {resolved['name']:<18} {resolved['unit_dir']:<32} port {port}->{cport}")
         for f in own:
             print(f"        - {f.level}: {f.message}")
 

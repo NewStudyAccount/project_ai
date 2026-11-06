@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """把 deploy/jenkins/jobs.yaml 渲染成 Jenkins Job 的 config.xml。
 
 只做纯渲染，不联网、不写 Jenkins、不含任何凭据：
@@ -75,9 +75,16 @@ def resolve(job: dict[str, Any], defaults: dict[str, Any]) -> dict[str, str]:
     if kind == "frontend":
         module = ""
         default_dir = Path("frontend") / system
+        # 前端容器内固定监听 80（nginx），可省略
+        container_port = str(job.get("container_port") or 80)
     else:
         module = str(job.get("module") or target)
         default_dir = Path("backend") / system / module
+        # 后端必须显式声明 container_port（= application.yml 的 server.port），
+        # 宿主机端口（port）由此解耦，两者不必相等
+        if job.get("container_port") in (None, ""):
+            raise SpecError(f"{job.get('name', '?')}：backend 必须声明 container_port（= application.yml 的 server.port）")
+        container_port = str(job["container_port"])
 
     # 目录布局可覆盖：默认按 <frontend|backend>/<system>[/<module>] 推导，
     # 别的项目布局不同时在 jobs.yaml 里显式写 unit_path（相对仓库根）。
@@ -90,7 +97,10 @@ def resolve(job: dict[str, Any], defaults: dict[str, Any]) -> dict[str, str]:
         "target": target,
         "module": module,
         "unit_dir": unit_dir.as_posix(),
+        # port = 宿主机发布端口（唯一冲突面，port-registry.md 登记）；
+        # container_port = 容器内监听端口（= 代码 server.port / nginx listen，容器间可重复）
         "port": port,
+        "container_port": container_port,
         "health_path": health_path,
         "health_url": f"http://127.0.0.1:{port}{health_path}",
         "image": f"{registry}/{prefix}/{target}",
@@ -109,6 +119,10 @@ def resolve(job: dict[str, Any], defaults: dict[str, Any]) -> dict[str, str]:
         "network": str(defaults.get("docker_network", "project-ai")),
         "node_image": str(defaults.get("node_image", "node:24-alpine")),
         "maven_image": str(defaults.get("maven_image", "maven:3.9-eclipse-temurin-21")),
+        # 后端容器运行期依赖地址：同 docker 网络内按容器名解析
+        "mysql_host": str(defaults.get("mysql_host", "crm-mysql")),
+        "redis_host": str(defaults.get("redis_host", "crm-redis")),
+        "nacos_addr": str(defaults.get("nacos_addr", "crm-nacos:8848")),
         "agent": agent_directive(str(defaults.get("agent_label", "any"))),
     }
 
@@ -167,6 +181,7 @@ def render_script(job: dict[str, str]) -> str:
         "IMAGE": job["image"],
         "CONTAINER": job["container"],
         "PORT": job["port"],
+        "CONTAINER_PORT": job["container_port"],
         "HEALTH_URL": job["health_url"],
         "NETWORK": job["network"],
         "NODE_IMAGE": job["node_image"],
@@ -175,6 +190,9 @@ def render_script(job: dict[str, str]) -> str:
         # 后端 SYS_DIR = 可部署单元的父目录（mvn -pl 的根），随 unit_path 自动适配
         "SYS_DIR": posixpath.dirname(job["unit_dir"]),
         "MODULE": posixpath.basename(job["unit_dir"]) if job["kind"] == "backend" else "",
+        "MYSQL_HOST": job["mysql_host"],
+        "REDIS_HOST": job["redis_host"],
+        "NACOS_ADDR": job["nacos_addr"],
         "AGENT": job["agent"],
     }
     tpl = "frontend.groovy.tmpl" if job["kind"] == "frontend" else "backend.groovy.tmpl"

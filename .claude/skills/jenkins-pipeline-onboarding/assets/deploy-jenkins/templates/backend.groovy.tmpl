@@ -15,10 +15,14 @@ pipeline {
     REGISTRY_CRED  = '{{REGISTRY_CRED}}'
     IMAGE_REPO     = '{{IMAGE}}'
     CONTAINER_NAME = '{{CONTAINER}}'
-    APP_PORT       = '{{PORT}}'
+    HOST_PORT      = '{{PORT}}'
+    CONTAINER_PORT = '{{CONTAINER_PORT}}'
     HEALTH_URL     = '{{HEALTH_URL}}'
     GIT_BRANCH     = "${params.BRANCH?.trim() ?: '{{BRANCH}}'}"
     MAVEN_IMAGE    = '{{MAVEN_IMAGE}}'
+    MYSQL_HOST     = '{{MYSQL_HOST}}'
+    REDIS_HOST     = '{{REDIS_HOST}}'
+    NACOS_ADDR     = '{{NACOS_ADDR}}'
   }
   stages {
     stage('Checkout') {
@@ -74,7 +78,10 @@ pipeline {
                 docker rm -f {{CONTAINER}} 2>/dev/null || true
                 docker pull {{IMAGE}}:${SHORT_COMMIT}
                 docker run -d --name {{CONTAINER}} --restart unless-stopped \
-                  --network {{NETWORK}} -p {{PORT}}:{{PORT}} \
+                  --network {{NETWORK}} -p {{PORT}}:{{CONTAINER_PORT}} \
+                  -e MYSQL_HOST={{MYSQL_HOST}} \
+                  -e REDIS_HOST={{REDIS_HOST}} \
+                  -e NACOS_ADDR={{NACOS_ADDR}} \
                   {{IMAGE}}:${SHORT_COMMIT}
               "
             """

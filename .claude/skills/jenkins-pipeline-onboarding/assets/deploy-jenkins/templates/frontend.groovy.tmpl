@@ -14,7 +14,8 @@ pipeline {
     REGISTRY_CRED  = '{{REGISTRY_CRED}}'
     IMAGE_REPO     = '{{IMAGE}}'
     CONTAINER_NAME = '{{CONTAINER}}'
-    APP_PORT       = '{{PORT}}'
+    HOST_PORT      = '{{PORT}}'
+    CONTAINER_PORT = '{{CONTAINER_PORT}}'
     HEALTH_URL     = '{{HEALTH_URL}}'
     GIT_BRANCH     = "${params.BRANCH?.trim() ?: '{{BRANCH}}'}"
     NODE_IMAGE     = '{{NODE_IMAGE}}'
@@ -67,7 +68,7 @@ pipeline {
                 docker rm -f {{CONTAINER}} 2>/dev/null || true
                 docker pull {{IMAGE}}:${SHORT_COMMIT}
                 docker run -d --name {{CONTAINER}} --restart unless-stopped \
-                  --network {{NETWORK}} -p {{PORT}}:80 \
+                  --network {{NETWORK}} -p {{PORT}}:{{CONTAINER_PORT}} \
                   {{IMAGE}}:${SHORT_COMMIT}
               "
             """

@@ -1,4 +1,4 @@
-﻿---
+---
 name: jenkins-pipeline-onboarding
 description: 为指定项目/服务创建或修改 Jenkins 流水线（Job）时的执行流程与硬门禁。当用户说「给 X 建 Jenkins 流水线」「新建 Jenkins Job」「接入 CI/CD」「A 服务怎么发布」「补一条 cd 流水线」「流水线跑失败了」时使用。包含输入契约、预检门禁、离线渲染、幂等应用、验收清单与失败排查。
 metadata:
@@ -72,7 +72,7 @@ powershell -NoProfile -File .claude/skills/jenkins-pipeline-onboarding/scripts/b
 
 ### 步骤 2 — 写进唯一事实源
 
-在 `jobs.yaml` 的 `jobs:` 下追加一条（字段含义见表内注释）。同系统同构的服务只差 4 个字段：`name / target / port / health_path`。
+在 `jobs.yaml` 的 `jobs:` 下追加一条（字段含义见表内注释）。同系统同构的服务只差 5 个字段：`name / target / port / container_port / health_path`。
 
 ### 步骤 3 — 预检（硬门禁，ERROR 必须清零）
 
