@@ -12,7 +12,8 @@
 | `system` | 是 | 目录名，`frontend/<system>` 或 `backend/<system>` | 必须真实存在；与 `port-registry.md` 的组件名一致 |
 | `target` | 是 | 镜像名/容器名/Job 名主干 | 小写连字符；不得与其它 job 的 `target` 相同 |
 | `module` | backend 必填 | `backend/<system>/` 下**有 Dockerfile 且是启动模块**的那个目录 | 该目录必须同时有 `pom.xml` + `Dockerfile`；省略时等于 `target` |
-| `port` | 是 | `docs/port-registry.md` 已登记的值 | 全局唯一；未登记 → 先去登记再建流水线 |
+| `port` | 是 | **宿主机发布端口**（`-p` 左侧），取 `docs/port-registry.md` 已登记的值 | 全局唯一（唯一冲突面）；未登记 → 先去登记再建流水线 |
+| `container_port` | backend 是（frontend 可省，默认 80） | **容器内监听端口**（`-p` 右侧）= 代码事实：后端 `application.yml` 的 `server.port`，前端 nginx `listen` | 与 `port` 解耦；容器间可重复；preflight 会与代码取证比对，不一致报 ERROR |
 | `health_path` | 是 | 前端 `/healthz`；后端 `/actuator/health` | 必须以 `/` 开头；容器内可达 |
 | `owner` | 是 | 负责人 | 默认取 `defaults.owner` |
 
@@ -37,7 +38,7 @@
 |---|---|
 | `image` | `{defaults.registry}/{defaults.image_prefix}/{target}` |
 | `container` | `= target` |
-| `health_url` | `http://127.0.0.1:{port}{health_path}` |
+| `health_url` | `http://127.0.0.1:{port}{health_path}`（`port` = 宿主机端口） |
 | `description` | 前端 `{target} frontend docker static`；后端 `{target} docker jar` |
 | `unit_dir` | 前端 `frontend/{system}`；后端 `backend/{system}/{module}` |
 

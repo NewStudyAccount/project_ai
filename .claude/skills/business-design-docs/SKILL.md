@@ -3,8 +3,8 @@ name: business-design-docs
 description: 为新业务域/新系统产出完整业务设计产物集（docs/<domain>-design/：README 索引、主设计、库表契约 table-design、接口契约 api-design、ER 图、页面原型、数据流图）的执行流程与硬门禁。当用户说「给 X 做业务设计」「写 X 的设计文档」「设计三件套」「出库表设计/接口设计」「画 ER 图/原型/数据流图」「评审/修订设计文档」时使用。以 docs/knowledge-base-design/ 为唯一范例；包含输入契约、裁决收口、产物骨架、质量门与验收清单。
 metadata:
   author: project_ai
-  version: "1.1"
-  updated: "2026-11-05"
+  version: "1.2"
+  updated: "2026-11-09"
 ---
 
 # 为业务域产出完整设计产物集（L1 领域设计）
@@ -36,11 +36,12 @@ metadata:
 | 2 | `<domain>-design.md` | 主设计：背景/边界、现状盘点、数据流、领域模型、选型对比、库表草案、接口草案、实施切期、开放问题、裁决记录 | 正文 | **必备** | knowledge-base-design.md |
 | 3 | `table-design.md` | 库表契约：结论清单先行、DDL、索引/检索索引、种子、裁决记录、执行约定 | 字段级契约 | **必备**（有落库时） | table-design.md |
 | 4 | `api-design.md` | 接口契约：全局约定、错误码段位、接口八元组、SSE 等特殊帧契约、权限/菜单对照 | 字段级契约 | **必备**（有接口时） | api-design.md |
-| 5 | `<domain>-er-diagram.html` | 表关系 ER 图（浏览器打开） | 低（展示） | 建议（有表时） | knowledge-er-diagram.html |
-| 6 | `<domain>-prototype.html` | 页面原型（tab 切换多页面，标注契约锚点） | 低（交互参照） | 建议（有界面时） | knowledge-prototype.html |
+| 5 | `<domain>-er-diagram.html` | 表关系 ER 图（浏览器打开） | 低（展示） | **必备**（有表时） | knowledge-er-diagram.html |
+| 6 | `<domain>-prototype.html` | 页面原型（tab 切换多页面，标注契约锚点） | 低（交互参照） | **必备**（有界面时） | knowledge-prototype.html |
 | 7 | `<domain>-dataflow.html` | 全链路数据流图（按阶段泳道） | 低（展示） | 可选（链路复杂时） | knowledge-dataflow.html |
 | 8 | `<domain>-<topic>.html` | 科普/说明材料 | **非契约** | 可选 | knowledge-vector.html |
 
+- **跳过「必备」产物（含条件必备）须经用户确认**，并在 README 与交付回话登记原因；AI 不得以「建议」「装饰」「新业务无范例」为由自行省略。
 - 范例文件的完整路径与逐节对照见 `references/exemplar-map.md`（项目绑定内容）+ `references/project-bindings.md` §5。
 - 目录命名：`docs/<domain>-design/`（kebab-case；与目录约定见 project-bindings §3）；主设计与目录同名。
 - 状态标记（README 职责表状态列 + 各文档头部）：**探索稿 vN.N**（有开放问题）→ **设计稿**（开放问题清零、字段级契约落定）→ 实装后按变更回写。
@@ -99,7 +100,9 @@ metadata:
 
 ### Step 5 — 可视化 HTML（低效力层）
 
-从 `assets/templates/*.html.tmpl` 起步或参照范例 HTML 手写：
+**硬门禁：全量流程必须产出 ER 图（有表时）与页面原型（有界面时）**——业务全新、项目无范例也一样：规范壳在 `assets/templates/*.html.tmpl`，**不依赖范例**（范例只提升完成度）。数据流图与科普件才可选；ER/原型「不适用」仅限**无表 / 无界面**，其余跳过须经用户确认。
+
+从 `assets/templates/*.html.tmpl` 起步；范例 HTML 存在时可参照它手写提升完成度：
 
 - 全部**单文件自包含**（内联 CSS/JS，浏览器直接打开），页脚声明「效力低于设计正文」。
 - 原型视觉 token 取**唯一取值处**（project-bindings §2 视觉 token；复制子集并注释出处）；原型 tab = 页面清单，元素上**标注契约锚点**（对应接口/规则）。
@@ -121,7 +124,8 @@ metadata:
 ```
 业务设计：<domain>（docs/<domain>-design/，状态：探索稿 vN.N | 设计稿）
 产物：    README / 主设计 / table-design / api-design / ER / 原型 / 数据流 / 科普
-          （逐项 列出 或 标注「不适用/未做，原因」）
+          （逐项 列出；「不适用」= 条件不成立（无表→ER、无界面→原型）或经用户确认并登记原因；
+           ER/原型「未做」= 交付不合格，须补做）
 裁决：    Q1…Qn 共 m 项——已裁决 x / 未裁决 y（未裁决项列出编号+一句话）
 质量门：  通过 a/b；未过项与原因
 自洽性：  表数/枚举/错误码/菜单短号/权限位跨文档一致（是|否，差异清单）
@@ -132,6 +136,7 @@ metadata:
 ## 5. 禁止清单（踩了就是错）
 
 - **替业务拍板**：开放问题/待裁决事项未获用户裁决就写成定稿。
+- **省略必备产物**：有表/有界面却不出 ER/原型，或未经用户确认把「必备/条件必备」标「不适用」（HTML 不是装饰，是产物集成员）。
 - 把 L0 契约条文、通用设计条文**抄进**设计文档（指针引用；裁剪源模式只登记取值差异）。
 - **凭推导编造**接口/枚举/错误码/字段（先查真实契约与登记处；查不到标「待核实」）。
 - 错误码段位不经错误码登记处分配就写；跨系统撞号。

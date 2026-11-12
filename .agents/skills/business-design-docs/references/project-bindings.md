@@ -82,5 +82,5 @@
 1. 改本文件 §1–7 为新项目取值（**主体工作**）。
 2. `SKILL.md` 里的**范例名**（2 处：frontmatter `description`、§1 产物集表「范例文件」列）。
 3. 按 §6 改模板绑定段。
-4. `references/exemplar-map.md` 替换为新范例对照（或删除并在 SKILL.md §6 表注明）。
+4. `references/exemplar-map.md` 替换为新范例对照（或删除并在 SKILL.md §6 表注明）。**无范例/范例被删不影响产物生成**——可视化规范壳在 `assets/templates/`，ER/原型照常产出（范例只提升完成度）。
 5. 脚本 `-RootMarker` 默认值（仅契约文件名不同才改）。
